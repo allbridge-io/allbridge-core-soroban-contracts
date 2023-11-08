@@ -1,0 +1,10 @@
+use bridge_storage::*;
+use shared::error::Error;
+use soroban_sdk::Env;
+
+pub fn set_gas_usage(env: Env, chain_id: u32, gas_usage: u128) -> Result<(), Error> {
+    Admin::require_exist_auth(&env)?;
+    GasUsage::set(&env, chain_id as u8, gas_usage);
+
+    Ok(())
+}
