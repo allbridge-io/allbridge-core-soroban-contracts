@@ -1,5 +1,5 @@
 use shared::event::Event;
-use shared::{error::Error, soroban_data::AnySimpleSorobanData};
+use shared::{error::Error, soroban_data::SimpleSorobanData};
 use soroban_sdk::{token, Address, Env};
 
 use crate::events::RewardsClaimed;

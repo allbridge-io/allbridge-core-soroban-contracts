@@ -1,5 +1,5 @@
 use send_and_swap_to_vusd::send_and_swap_to_v_usd;
-use shared::{error::Error, event::Event, soroban_data::AnySimpleSorobanData};
+use shared::{error::Error, event::Event, soroban_data::SimpleSorobanData};
 use soroban_sdk::{Address, BytesN, Env};
 
 use crate::{

@@ -1,4 +1,4 @@
-use shared::soroban_data::AnySimpleSorobanData;
+use shared::soroban_data::SimpleSorobanData;
 use shared::{consts::CHAIN_ID, error::Error, event::Event};
 use soroban_sdk::{token, Address, BytesN, Env};
 

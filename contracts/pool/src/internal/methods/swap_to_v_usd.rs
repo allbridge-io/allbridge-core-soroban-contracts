@@ -1,7 +1,7 @@
 use crate::events::SwappedToVUsd;
 use crate::storage::bridge_address::Bridge;
 use shared::event::Event;
-use shared::{error::Error, soroban_data::AnySimpleSorobanData};
+use shared::{error::Error, soroban_data::SimpleSorobanData};
 use soroban_sdk::{Address, Env};
 
 use crate::storage::pool::Pool;

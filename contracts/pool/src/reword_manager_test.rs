@@ -3,7 +3,7 @@ extern crate std;
 #[allow(unused_imports)]
 use std::prelude::*;
 
-use shared::soroban_data::AnySimpleSorobanData;
+use shared::soroban_data::SimpleSorobanData;
 use soroban_sdk::{contract, contractimpl, testutils::Address as _, Address, Env};
 
 pub fn assert_rel_eq(a: u128, b: u128, d: u128) {

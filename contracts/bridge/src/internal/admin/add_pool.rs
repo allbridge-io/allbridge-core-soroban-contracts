@@ -1,5 +1,5 @@
 use bridge_storage::*;
-use shared::soroban_data::AnySimpleSorobanData;
+use shared::soroban_data::SimpleSorobanData;
 use shared::{
     consts::{CHAIN_PRECISION, ORACLE_PRECISION},
     error::Error,

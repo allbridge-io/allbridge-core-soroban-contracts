@@ -1,7 +1,7 @@
 use proc_macros::{
     bump_info_instance, data_storage_type, symbol_key, SorobanData, SorobanSimpleData,
 };
-use shared::{error::Error, soroban_data::AnySimpleSorobanData};
+use shared::{error::Error, soroban_data::SimpleSorobanData};
 use soroban_sdk::{contracttype, symbol_short, token, Address, Env, Symbol};
 
 pub const NATIVE_TOKEN_SYMBOL: Symbol = symbol_short!("NatvTknAd");

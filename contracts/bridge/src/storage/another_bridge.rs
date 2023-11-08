@@ -1,7 +1,7 @@
 use crate::storage::data_key::DataKey;
 use proc_macros::{bump_info, data_storage_type, SorobanData};
 use shared::error::Error;
-use shared::{consts::DAY_IN_LEDGERS, soroban_data::AnySorobanData};
+use shared::{consts::DAY_IN_LEDGERS, soroban_data::SorobanData};
 use soroban_sdk::{contracttype, BytesN, Env, Map};
 
 const BUMP_AMOUNT: u32 = 30 * DAY_IN_LEDGERS;

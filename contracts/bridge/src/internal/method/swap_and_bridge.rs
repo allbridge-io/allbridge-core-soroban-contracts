@@ -1,7 +1,7 @@
 #![allow(clippy::too_many_arguments)]
 
 use send_and_swap_to_vusd::send_and_swap_to_v_usd;
-use shared::{error::Error, require, soroban_data::AnySimpleSorobanData, utils::is_bytesn32_empty};
+use shared::{error::Error, require, soroban_data::SimpleSorobanData, utils::is_bytesn32_empty};
 use soroban_sdk::{Address, BytesN, Env, U256};
 
 use crate::{

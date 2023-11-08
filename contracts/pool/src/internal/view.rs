@@ -1,6 +1,6 @@
 use crate::storage::pool::Pool;
 use crate::storage::user_deposit::UserDeposit;
-use shared::{error::Error, soroban_data::AnySimpleSorobanData};
+use shared::{error::Error, soroban_data::SimpleSorobanData};
 use soroban_sdk::{Address, Env};
 
 pub fn pending_reward(env: Env, user: Address) -> Result<u128, Error> {

@@ -1,6 +1,6 @@
 use bridge_storage::*;
 use shared::consts::{CHAIN_ID, CHAIN_PRECISION, ORACLE_PRECISION, ORACLE_SCALING_FACTOR};
-use shared::soroban_data::AnySimpleSorobanData;
+use shared::soroban_data::SimpleSorobanData;
 use shared::utils::bump_instance;
 use shared::{error::Error, require};
 use soroban_sdk::{contract, contractimpl, Address, Env};

@@ -1,4 +1,4 @@
-use shared::{error::Error, soroban_data::AnySimpleSorobanData};
+use shared::{error::Error, soroban_data::SimpleSorobanData};
 use soroban_sdk::{Address, BytesN, Env};
 
 use crate::storage::bridge::Bridge;

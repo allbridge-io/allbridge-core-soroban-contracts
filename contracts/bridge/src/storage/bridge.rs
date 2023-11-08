@@ -2,7 +2,7 @@ use bridge_storage::*;
 use proc_macros::{
     bump_info_instance, data_storage_type, symbol_key, SorobanData, SorobanSimpleData,
 };
-use shared::soroban_data::AnySimpleSorobanData;
+use shared::soroban_data::SimpleSorobanData;
 use shared::{error::Error, require};
 use soroban_sdk::{contracttype, Address, BytesN, Env, Map};
 

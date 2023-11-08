@@ -3,9 +3,6 @@ use soroban_sdk::{Env, IntoVal, Symbol, TryFromVal, Val};
 
 use crate::error::Error;
 
-pub trait SorobanData {}
-pub trait SorobanSimpleData {}
-
 // ----------------------------------------- //
 
 pub trait SymbolKey {
@@ -25,51 +22,40 @@ pub trait BumpInfo {
 
 // ----------------------------------------- //
 
-pub trait AnySimpleSorobanData: TryFromVal<Env, Val> + IntoVal<Env, Val> + Sized {
-    fn get(env: &Env) -> Result<Self, Error>;
-    fn save(&self, env: &Env);
-    fn bump(env: &Env);
+pub trait SimpleSorobanData:
+    TryFromVal<Env, Val> + IntoVal<Env, Val> + SymbolKey + SorobanData + Sized
+{
+    #[inline(always)]
+    fn get(env: &Env) -> Result<Self, Error> {
+        Self::get_by_key(env, &Self::STORAGE_KEY)
+    }
 
-    fn has(env: &Env) -> bool;
+    #[inline(always)]
+    fn has(env: &Env) -> bool {
+        Self::has_by_key(env, Self::STORAGE_KEY)
+    }
+
+    #[inline(always)]
+    fn save(&self, env: &Env) {
+        self.save_by_key(env, &Self::STORAGE_KEY);
+    }
+
+    #[inline(always)]
     fn update<F>(env: &Env, handler: F) -> Result<(), Error>
     where
-        F: FnOnce(&mut Self) -> Result<(), Error>;
-}
-
-pub trait AnySorobanData:
-    TryFromVal<Env, Val> + IntoVal<Env, Val> + DataStorageType + Sized
-{
-    fn get_by_key<K: IntoVal<Env, Val>>(env: &Env, key: &K) -> Result<Self, Error>;
-    fn save_by_key<K: IntoVal<Env, Val>>(&self, env: &Env, key: &K);
-    fn bump_by_key<K: IntoVal<Env, Val>>(env: &Env, key: &K);
-
-    #[inline]
-    fn has_by_key<K: IntoVal<Env, Val>>(env: &Env, key: K) -> bool {
-        Self::get_by_key(env, &key).is_ok()
-    }
-
-    fn update_by_key<F, K>(env: &Env, key: &K, handler: F) -> Result<(), Error>
-    where
-        K: IntoVal<Env, Val>,
         F: FnOnce(&mut Self) -> Result<(), Error>,
     {
-        {
-            let mut object = Self::get_by_key(env, key)?;
+        Self::update_by_key(env, &Self::STORAGE_KEY, handler)
+    }
 
-            handler(&mut object)?;
-
-            object.save_by_key(env, key);
-
-            Ok(())
-        }
+    #[inline(always)]
+    fn bump(env: &Env) {
+        Self::bump_by_key(env, &Self::STORAGE_KEY);
     }
 }
 
-// ----------------------------------------- //
-
-impl<T> AnySorobanData for T
-where
-    T: TryFromVal<Env, Val> + IntoVal<Env, Val> + DataStorageType + BumpInfo + SorobanData + Sized,
+pub trait SorobanData:
+    TryFromVal<Env, Val> + IntoVal<Env, Val> + DataStorageType + BumpInfo + Sized
 {
     fn get_by_key<K: IntoVal<Env, Val>>(env: &Env, key: &K) -> Result<Self, Error> {
         let result = (match Self::STORAGE_TYPE {
@@ -112,37 +98,25 @@ where
             }
         }
     }
-}
 
-impl<T> AnySimpleSorobanData for T
-where
-    T: SymbolKey + AnySorobanData + SorobanSimpleData,
-{
-    #[inline(always)]
-    fn get(env: &Env) -> Result<Self, Error> {
-        Self::get_by_key(env, &Self::STORAGE_KEY)
+    #[inline]
+    fn has_by_key<K: IntoVal<Env, Val>>(env: &Env, key: K) -> bool {
+        Self::get_by_key(env, &key).is_ok()
     }
 
-    #[inline(always)]
-    fn has(env: &Env) -> bool {
-        Self::has_by_key(env, Self::STORAGE_KEY)
-    }
-
-    #[inline(always)]
-    fn save(&self, env: &Env) {
-        self.save_by_key(env, &Self::STORAGE_KEY);
-    }
-
-    #[inline(always)]
-    fn update<F>(env: &Env, handler: F) -> Result<(), Error>
+    fn update_by_key<F, K>(env: &Env, key: &K, handler: F) -> Result<(), Error>
     where
+        K: IntoVal<Env, Val>,
         F: FnOnce(&mut Self) -> Result<(), Error>,
     {
-        Self::update_by_key(env, &Self::STORAGE_KEY, handler)
-    }
+        {
+            let mut object = Self::get_by_key(env, key)?;
 
-    #[inline(always)]
-    fn bump(env: &Env) {
-        Self::bump_by_key(env, &Self::STORAGE_KEY);
+            handler(&mut object)?;
+
+            object.save_by_key(env, key);
+
+            Ok(())
+        }
     }
 }

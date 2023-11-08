@@ -1,6 +1,6 @@
 use bridge_storage::*;
 use shared::error::Error;
-use shared::soroban_data::AnySimpleSorobanData;
+use shared::soroban_data::SimpleSorobanData;
 use soroban_sdk::{Address, BytesN, Env};
 
 use crate::storage::processed_message::ProcessedMessage;

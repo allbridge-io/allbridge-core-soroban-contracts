@@ -2,7 +2,7 @@
 
 use bridge_storage::*;
 use shared::event::Event;
-use shared::soroban_data::AnySimpleSorobanData;
+use shared::soroban_data::SimpleSorobanData;
 use shared::utils::{address_to_bytes, hash_message};
 use shared::{consts::CHAIN_ID, error::Error, require, utils::hash_with_sender};
 use soroban_sdk::{Address, BytesN, Env, U256};

@@ -1,6 +1,6 @@
 use bridge_storage::*;
 use shared::error::Error;
-use shared::soroban_data::AnySimpleSorobanData;
+use shared::soroban_data::SimpleSorobanData;
 use shared::utils::bump_instance;
 use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, Map};
 

@@ -1,5 +1,5 @@
 use bridge_storage::*;
-use shared::{error::Error, soroban_data::AnySimpleSorobanData};
+use shared::{error::Error, soroban_data::SimpleSorobanData};
 use soroban_sdk::{Address, Env};
 
 pub fn set_gas_oracle(env: Env, new_address: Address) -> Result<(), Error> {

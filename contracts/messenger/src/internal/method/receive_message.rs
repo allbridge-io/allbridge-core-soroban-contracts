@@ -1,4 +1,4 @@
-use shared::{error::Error, event::Event, soroban_data::AnySimpleSorobanData};
+use shared::{error::Error, event::Event, soroban_data::SimpleSorobanData};
 use soroban_sdk::{BytesN, Env};
 
 use crate::{

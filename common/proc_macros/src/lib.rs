@@ -31,7 +31,7 @@ pub fn derive_soroban_simple_data(input: TokenStream) -> TokenStream {
     let syn::DeriveInput { ident, .. } = syn::parse_macro_input! {input};
 
     quote! {
-        impl shared::soroban_data::SorobanSimpleData for #ident {}
+        impl shared::soroban_data::SimpleSorobanData for #ident {}
     }
     .into()
 }

@@ -1,7 +1,7 @@
 use crate::storage::bridge_address::Bridge;
 use bridge_storage::*;
 use shared::require;
-use shared::{error::Error, soroban_data::AnySimpleSorobanData};
+use shared::{error::Error, soroban_data::SimpleSorobanData};
 use soroban_sdk::{token, Address, Env};
 
 use crate::storage::pool::Pool;

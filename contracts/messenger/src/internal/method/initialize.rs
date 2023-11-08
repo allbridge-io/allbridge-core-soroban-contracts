@@ -1,5 +1,5 @@
 use bridge_storage::*;
-use shared::soroban_data::AnySimpleSorobanData;
+use shared::soroban_data::SimpleSorobanData;
 use shared::{error::Error, require};
 use soroban_sdk::{Address, BytesN, Env, Map};
 

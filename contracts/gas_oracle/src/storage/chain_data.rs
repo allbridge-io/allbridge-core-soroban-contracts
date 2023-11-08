@@ -1,5 +1,5 @@
 use proc_macros::{bump_info, data_storage_type, SorobanData};
-use shared::soroban_data::AnySorobanData;
+use shared::soroban_data::SorobanData;
 use soroban_sdk::{contracttype, Env};
 
 use crate::data_key::{DataKey, PRICE_BUMP_AMOUNT};
