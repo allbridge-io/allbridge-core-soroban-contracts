@@ -107,8 +107,8 @@ pub fn bump_info(args: TokenStream, input: TokenStream) -> TokenStream {
         .into();
     }
 
-    let bump_amount = TokenStream::from_iter([args[0].clone()].into_iter());
-    let lifetime_threshold = TokenStream::from_iter([args[2].clone()].into_iter());
+    let bump_amount = TokenStream::from_iter([args[0].clone()]);
+    let lifetime_threshold = TokenStream::from_iter([args[2].clone()]);
 
     let bump_amount_lit_int =
         syn::parse::<syn::LitInt>(bump_amount.clone()).map(ToTokens::into_token_stream);
