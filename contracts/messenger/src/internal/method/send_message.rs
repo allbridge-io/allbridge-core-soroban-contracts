@@ -14,8 +14,8 @@ pub fn send_message(env: Env, message: BytesN<32>, sender: Address) -> Result<u1
     sender.require_auth();
     let config = Config::get(&env)?;
 
-    let from_chain_id = message.get(0).ok_or(Error::WrongByteLength)?;
-    let to_chain_id = message.get(1).ok_or(Error::WrongByteLength)?;
+    let from_chain_id = message.get(0).ok_or(Error::WrongByteLength)? as u32;
+    let to_chain_id = message.get(1).ok_or(Error::WrongByteLength)? as u32;
 
     config.assert_chain_id(from_chain_id)?;
     config.assert_other_chain_id(to_chain_id)?;

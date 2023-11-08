@@ -52,7 +52,7 @@ pub fn send_tokens(
 
     let messenger = config.get_messenger_client(env);
 
-    let bridge_tx_cost = get_transaction_cost(env, destination_chain_id as u8)?;
+    let bridge_tx_cost = get_transaction_cost(env, destination_chain_id)?;
     let message_tx_cost = messenger.send_message(&message, &env.current_contract_address());
 
     require!(

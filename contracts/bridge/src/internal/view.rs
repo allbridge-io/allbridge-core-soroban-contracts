@@ -23,9 +23,9 @@ pub fn get_pool_address(env: Env, token_address: BytesN<32>) -> Result<Address, 
         .ok_or(Error::NotFound)
 }
 
-pub fn get_transaction_cost(env: &Env, chain_id: u8) -> Result<u128, Error> {
+pub fn get_transaction_cost(env: &Env, chain_id: u32) -> Result<u128, Error> {
     let gas_oracle = get_gas_oracle_client(env)?;
     let gas_usage = GasUsage::get_by_chain(env, chain_id)?;
 
-    Ok(gas_oracle.get_gas_cost_in_native_token(&(chain_id as u32), &gas_usage))
+    Ok(gas_oracle.get_gas_cost_in_native_token(&chain_id, &gas_usage))
 }

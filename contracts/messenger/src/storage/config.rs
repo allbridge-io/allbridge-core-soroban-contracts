@@ -17,16 +17,16 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn assert_chain_id(&self, chain_id: u8) -> Result<(), Error> {
-        require!(chain_id == self.chain_id as u8, Error::InvalidChainId);
+    pub fn assert_chain_id(&self, chain_id: u32) -> Result<(), Error> {
+        require!(chain_id == self.chain_id, Error::InvalidChainId);
 
         Ok(())
     }
 
-    pub fn assert_other_chain_id(&self, chain_id: u8) -> Result<(), Error> {
+    pub fn assert_other_chain_id(&self, chain_id: u32) -> Result<(), Error> {
         require!(chain_id < 32, Error::InvalidOtherChainId);
 
-        let is_supported = self.other_chain_ids.get(chain_id as u32).unwrap_or(0);
+        let is_supported = self.other_chain_ids.get(chain_id).unwrap_or(0);
 
         require!(is_supported == 1, Error::InvalidOtherChainId);
 

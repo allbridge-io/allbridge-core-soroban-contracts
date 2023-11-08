@@ -150,7 +150,7 @@ impl Messenger {
     pub fn get_transaction_cost(env: Env, chain_id: u32) -> Result<u128, Error> {
         bump_instance(&env);
 
-        get_transaction_cost(&env, chain_id as u8)
+        get_transaction_cost(&env, chain_id)
     }
 
     pub fn get_admin(env: Env) -> Result<Address, Error> {
