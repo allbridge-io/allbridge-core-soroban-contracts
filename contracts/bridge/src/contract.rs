@@ -1,8 +1,7 @@
 #![allow(clippy::too_many_arguments)]
 
-use bridge_storage::*;
+use bridge_storage::view::{get_admin, get_gas_oracle, get_gas_usage, get_stop_authority};
 use shared::error::Error;
-use shared::soroban_data::SimpleSorobanData;
 use shared::utils::bump_instance;
 use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, U256};
 
@@ -207,62 +206,42 @@ impl BridgeContract {
     // view
 
     pub fn has_processed_message(env: Env, message: BytesN<32>) -> Result<bool, Error> {
-        bump_instance(&env);
-
         has_processed_message(env, message)
     }
 
     pub fn has_received_message(env: Env, message: BytesN<32>) -> Result<bool, Error> {
-        bump_instance(&env);
-
         has_received_message(&env, &message)
     }
 
     pub fn get_pool_address(env: Env, token_address: BytesN<32>) -> Result<Address, Error> {
-        bump_instance(&env);
-
         get_pool_address(env, token_address)
     }
 
     pub fn get_config(env: Env) -> Result<Bridge, Error> {
-        bump_instance(&env);
-
-        Bridge::get(&env)
+        get_config(env)
     }
 
     pub fn get_stop_authority(env: Env) -> Result<Address, Error> {
-        bump_instance(&env);
-
-        Ok(StopAuthority::get(&env)?.as_address())
+        get_stop_authority(env)
     }
 
     pub fn get_transaction_cost(env: Env, chain_id: u32) -> Result<u128, Error> {
-        bump_instance(&env);
-
         get_transaction_cost(&env, chain_id)
     }
 
     pub fn get_gas_usage(env: Env, chain_id: u32) -> Result<u128, Error> {
-        bump_instance(&env);
-
-        GasUsage::get_gas_usage_with_default(env, chain_id)
+        get_gas_usage(env, chain_id)
     }
 
     pub fn get_admin(env: Env) -> Result<Address, Error> {
-        bump_instance(&env);
-
-        Ok(Admin::get(&env)?.as_address())
+        get_admin(env)
     }
 
     pub fn get_gas_oracle(env: Env) -> Result<Address, Error> {
-        bump_instance(&env);
-
-        Ok(GasOracleAddress::get(&env)?.as_address())
+        get_gas_oracle(env)
     }
 
     pub fn get_another_bridge(env: Env, chain_id: u32) -> Result<AnotherBridge, Error> {
-        bump_instance(&env);
-
-        AnotherBridge::get(&env, chain_id)
+        get_another_bridge(env, chain_id)
     }
 }

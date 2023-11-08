@@ -1,7 +1,9 @@
-use crate::storage::pool::Pool;
-use crate::storage::user_deposit::UserDeposit;
 use shared::{error::Error, soroban_data::SimpleSorobanData};
 use soroban_sdk::{Address, Env};
+
+use crate::storage::bridge_address::Bridge;
+use crate::storage::pool::Pool;
+use crate::storage::user_deposit::UserDeposit;
 
 pub fn pending_reward(env: Env, user: Address) -> Result<u128, Error> {
     let user_deposit = UserDeposit::get(&env, user);
@@ -14,4 +16,12 @@ pub fn pending_reward(env: Env, user: Address) -> Result<u128, Error> {
 
 pub fn get_pool(env: Env) -> Result<Pool, Error> {
     Pool::get(&env)
+}
+
+pub fn get_user_deposit(env: Env, user: Address) -> Result<UserDeposit, Error> {
+    Ok(UserDeposit::get(&env, user))
+}
+
+pub fn get_bridge(env: Env) -> Result<Address, Error> {
+    Ok(Bridge::get(&env)?.as_address())
 }

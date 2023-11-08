@@ -1,4 +1,4 @@
-use bridge_storage::*;
+use bridge_storage::view::{get_admin, get_gas_oracle, get_gas_usage};
 use shared::error::Error;
 use shared::soroban_data::SimpleSorobanData;
 use shared::utils::bump_instance;
@@ -118,47 +118,34 @@ impl Messenger {
     //view
 
     pub fn get_config(env: Env) -> Result<Config, Error> {
-        bump_instance(&env);
-
         Config::get(&env)
     }
 
     pub fn has_sent_message(env: Env, message: BytesN<32>) -> Result<bool, Error> {
-        bump_instance(&env);
-
         has_sent_message(env, message)
     }
 
     pub fn has_received_message(env: Env, message: BytesN<32>) -> Result<bool, Error> {
-        bump_instance(&env);
-
         has_received_message(env, message)
     }
 
     pub fn get_sent_message_sequence(env: Env, message: BytesN<32>) -> Result<u32, Error> {
-        bump_instance(&env);
-
         get_sent_message_sequence(env, message)
     }
 
     pub fn get_gas_usage(env: Env, chain_id: u32) -> Result<u128, Error> {
-        bump_instance(&env);
-
-        GasUsage::get_gas_usage_with_default(env, chain_id)
+        get_gas_usage(env, chain_id)
     }
 
     pub fn get_transaction_cost(env: Env, chain_id: u32) -> Result<u128, Error> {
-        bump_instance(&env);
-
         get_transaction_cost(&env, chain_id)
     }
 
     pub fn get_admin(env: Env) -> Result<Address, Error> {
-        bump_instance(&env);
-        Ok(Admin::get(&env)?.as_address())
+        get_admin(env)
     }
 
     pub fn get_gas_oracle(env: Env) -> Result<Address, Error> {
-        Ok(GasOracleAddress::get(&env)?.as_address())
+        get_gas_oracle(env)
     }
 }

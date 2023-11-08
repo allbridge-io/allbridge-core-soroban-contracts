@@ -5,6 +5,7 @@ mod gas_oracle_address;
 mod gas_usage;
 mod native_token;
 mod stop_authority;
+pub mod view;
 
 pub use admin::*;
 pub use gas_oracle_address::*;

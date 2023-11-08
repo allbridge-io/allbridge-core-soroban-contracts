@@ -1,8 +1,9 @@
-use crate::storage::get_gas_oracle_client;
-use crate::storage::message::Message;
-use bridge_storage::*;
+use bridge_storage::GasUsage;
 use shared::error::Error;
 use soroban_sdk::{BytesN, Env};
+
+use crate::storage::get_gas_oracle_client;
+use crate::storage::message::Message;
 
 pub fn has_sent_message(env: Env, message: BytesN<32>) -> Result<bool, Error> {
     Ok(Message::has_sent_message(&env, message))

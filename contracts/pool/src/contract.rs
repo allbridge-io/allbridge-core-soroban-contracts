@@ -1,18 +1,16 @@
-use bridge_storage::*;
+use bridge_storage::view::{get_admin, get_stop_authority};
 use shared::error::Error;
-use shared::soroban_data::SimpleSorobanData;
 use shared::utils::bump_instance;
 use soroban_sdk::{contract, contractimpl, Address, Env};
 
 use crate::internal::methods::initialize::initialize;
-use crate::internal::view::{get_pool, pending_reward};
+use crate::internal::view::{get_bridge, get_pool, get_user_deposit, pending_reward};
 use crate::internal::{
     admin::{
         adjust_total_lp_amount::*, claim_fee::*, config_addresses::*, config_pool::*, start_stop::*,
     },
     methods::{claim_rewards::*, deposit::*, swap_from_v_usd::*, swap_to_v_usd::*, withdraw::*},
 };
-use crate::storage::bridge_address::Bridge;
 use crate::storage::pool::Pool;
 use crate::storage::user_deposit::UserDeposit;
 
@@ -160,38 +158,26 @@ impl PoolContract {
 
     /// `view`
     pub fn pending_reward(env: Env, user: Address) -> Result<u128, Error> {
-        bump_instance(&env);
-
         pending_reward(env, user)
     }
 
     pub fn get_pool(env: Env) -> Result<Pool, Error> {
-        bump_instance(&env);
-
         get_pool(env)
     }
 
     pub fn get_admin(env: Env) -> Result<Address, Error> {
-        bump_instance(&env);
-
-        Ok(Admin::get(&env)?.as_address())
+        get_admin(env)
     }
 
     pub fn get_stop_authority(env: Env) -> Result<Address, Error> {
-        bump_instance(&env);
-
-        Ok(StopAuthority::get(&env)?.as_address())
+        get_stop_authority(env)
     }
 
     pub fn get_bridge(env: Env) -> Result<Address, Error> {
-        bump_instance(&env);
-
-        Ok(Bridge::get(&env)?.as_address())
+        get_bridge(env)
     }
 
     pub fn get_user_deposit(env: Env, user: Address) -> Result<UserDeposit, Error> {
-        bump_instance(&env);
-
-        Ok(UserDeposit::get(&env, user))
+        get_user_deposit(env, user)
     }
 }
