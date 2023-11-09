@@ -8,7 +8,7 @@ use crate::{
             add_secondary_validator, remove_secondary_validator, set_admin, set_gas_oracle,
             set_gas_usage, set_other_chain_ids, set_primary_validator, withdraw_gas_tokens,
         },
-        method::{initialize, receive_message, send_message},
+        public::{initialize, receive_message, send_message},
         view::{
             get_sent_message_sequence, get_transaction_cost, has_received_message, has_sent_message,
         },

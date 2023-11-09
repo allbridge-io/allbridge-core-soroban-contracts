@@ -53,7 +53,7 @@ pub fn send_tokens(
     let messenger = config.get_messenger_client(env);
 
     let bridge_tx_cost = get_transaction_cost(env, destination_chain_id)?;
-    let transaction_cost = messenger.get_transaction_cost(&destination_chain_id) as i128;
+    let message_tx_cost = messenger.get_transaction_cost(&destination_chain_id);
 
     env.authorize_as_current_contract(vec![
         &env,
@@ -64,7 +64,7 @@ pub fn send_tokens(
                 args: (
                     env.current_contract_address(),
                     config.messenger.clone(),
-                    transaction_cost,
+                    message_tx_cost as i128,
                 )
                     .into_val(env),
             },
@@ -72,7 +72,7 @@ pub fn send_tokens(
         }),
     ]);
 
-    let message_tx_cost = messenger.send_message(&message, &env.current_contract_address());
+    messenger.send_message(&message, &env.current_contract_address());
 
     require!(
         bridge_tx_cost + message_tx_cost <= gas_amount + fee_token_amount_in_native,

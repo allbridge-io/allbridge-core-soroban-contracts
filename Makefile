@@ -252,6 +252,15 @@ bridge-initialize:
         --gas_oracle $(GAS_ORACLE_ADDRESS) \
         --native_token $(NATIVE_ADDRESS) \
 
+bridge-set-messenger:
+	soroban contract invoke \
+		--id $(BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		set_messenger \
+		--messenger $(MESSENGER_ADDRESS)
+
 bridge-set-gas-usage:
 	soroban contract invoke \
 		--id $(BRIDGE_ADDRESS) \
@@ -315,9 +324,8 @@ bridge-swap-and-bridge:
         --destination_chain_id 1 \
         --receive_token 000000000000000000000000ddac3cb57dea3fbeff4997d78215535eb5787117 \
         --nonce 0000000000000000000000000000000000000000000000000000000000000002 \
-        --extra_gas_amount 0 \
-        --fee_token_amount 0 \
-        --fee_payer $(ADMIN)
+        --gas_amount 300000 \
+        --fee_token_amount 0
 
 bridge-get-config:
 	soroban contract invoke \

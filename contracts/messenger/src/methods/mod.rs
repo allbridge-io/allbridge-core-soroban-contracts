@@ -1,3 +1,3 @@
 pub mod admin;
-pub mod method;
+pub mod public;
 pub mod view;
