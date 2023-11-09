@@ -1,6 +1,7 @@
-use crate::storage::data_key::DataKey;
 use shared::consts::DAY_IN_LEDGERS;
 use soroban_sdk::{BytesN, Env};
+
+use crate::storage::data_key::DataKey;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SentMessage;

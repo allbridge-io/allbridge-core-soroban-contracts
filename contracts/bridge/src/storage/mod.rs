@@ -1,5 +1,5 @@
 use bridge_storage::*;
-use shared::{error::Error, soroban_data::SimpleSorobanData};
+use shared::{soroban_data::SimpleSorobanData, Error};
 use soroban_sdk::Env;
 
 use crate::other_contracts::gas_oracle;

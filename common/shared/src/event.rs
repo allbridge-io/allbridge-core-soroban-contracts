@@ -2,7 +2,7 @@ use soroban_sdk::{Env, IntoVal, Symbol, Val};
 
 /// # Example
 /// ```
-/// use shared::event::Event;
+/// use shared::Event;
 /// use soroban_sdk::{contracttype, BytesN};
 ///
 /// #[contracttype]

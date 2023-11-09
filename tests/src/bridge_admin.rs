@@ -1,5 +1,5 @@
 use shared::consts::{CHAIN_PRECISION, ORACLE_PRECISION};
-use shared::error::Error;
+use shared::Error;
 use soroban_sdk::testutils::{Address as _, BytesN as _};
 use soroban_sdk::{Address, BytesN, Env};
 

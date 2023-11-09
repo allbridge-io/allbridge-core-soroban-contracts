@@ -1,6 +1,6 @@
 use shared::{
     consts::{CHAIN_ID, CHAIN_PRECISION, ORACLE_PRECISION},
-    error::Error,
+    Error,
 };
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{Address, Env};

@@ -1,18 +1,20 @@
 use bridge_storage::view::{get_admin, get_gas_oracle, get_gas_usage};
-use shared::error::Error;
-use shared::soroban_data::SimpleSorobanData;
-use shared::utils::bump_instance;
+use shared::{soroban_data::SimpleSorobanData, utils::bump_instance, Error};
 use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, Map};
 
-use crate::internal::admin::{
-    add_secondary_validator, remove_secondary_validator, set_admin, set_gas_oracle, set_gas_usage,
-    set_other_chain_ids, set_primary_validator, withdraw_gas_tokens,
+use crate::{
+    methods::{
+        admin::{
+            add_secondary_validator, remove_secondary_validator, set_admin, set_gas_oracle,
+            set_gas_usage, set_other_chain_ids, set_primary_validator, withdraw_gas_tokens,
+        },
+        method::{initialize, receive_message, send_message},
+        view::{
+            get_sent_message_sequence, get_transaction_cost, has_received_message, has_sent_message,
+        },
+    },
+    storage::config::Config,
 };
-use crate::internal::method::{initialize, receive_message, send_message};
-use crate::internal::view::{
-    get_sent_message_sequence, get_transaction_cost, has_received_message, has_sent_message,
-};
-use crate::storage::config::Config;
 
 #[contract]
 pub struct Messenger;

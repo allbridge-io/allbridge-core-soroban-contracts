@@ -11,7 +11,7 @@ pub fn assert_rel_eq(a: u128, b: u128, d: u128) {
 }
 
 use crate::{
-    internal::view::get_pool,
+    methods::view::get_pool,
     storage::{pool::Pool, user_deposit::UserDeposit},
 };
 

@@ -1,20 +1,20 @@
 #![allow(clippy::too_many_arguments)]
 
 use bridge_storage::view::{get_admin, get_gas_oracle, get_gas_usage, get_stop_authority};
-use shared::error::Error;
 use shared::utils::bump_instance;
+use shared::Error;
 use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, U256};
 
 use crate::storage::another_bridge::AnotherBridge;
 use crate::{
-    internal::{
+    methods::{
         admin::set_gas_usage,
         admin::{
             add_bridge_token, add_pool, register_bridge, remove_bridge_token, set_gas_oracle,
             set_rebalancer, set_stop_authority, start_swap, stop_swap,
             withdraw_bridging_fee_in_tokens, withdraw_gas_tokens,
         },
-        method::{initialize, receive_tokens, swap, swap_and_bridge},
+        public::{initialize, receive_tokens, swap, swap_and_bridge},
         view::*,
     },
     storage::bridge::Bridge,

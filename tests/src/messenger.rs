@@ -1,7 +1,7 @@
 use shared::{
     consts::{CHAIN_ID, CHAIN_PRECISION, ORACLE_PRECISION},
-    error::Error,
     utils::{hash_message, hash_with_sender, hash_with_sender_address},
+    Error,
 };
 use soroban_sdk::{
     map,

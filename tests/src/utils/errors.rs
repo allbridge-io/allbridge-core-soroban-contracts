@@ -27,7 +27,7 @@ pub fn expect_sc_error<T>(env: &Env, call_result: CallResult<T>, sc_error: ScErr
 pub fn expect_contract_error<T>(
     env: &Env,
     call_result: CallResult<T>,
-    contract_error: shared::error::Error,
+    contract_error: shared::Error,
 ) {
     expect_sc_error(env, call_result, ScError::Contract(contract_error as u32));
 }

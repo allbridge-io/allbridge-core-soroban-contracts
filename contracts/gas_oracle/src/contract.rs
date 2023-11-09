@@ -1,14 +1,17 @@
 use bridge_storage::view::get_admin;
-use shared::error::Error;
-use shared::utils::bump_instance;
+use shared::{utils::bump_instance, Error};
 use soroban_sdk::{contract, contractimpl, Address, Env};
 
-use crate::internal::method::{initialize, set_admin, set_price};
-use crate::internal::view::{
-    crossrate, get_gas_cost_in_native_token, get_gas_price, get_price,
-    get_transaction_gas_cost_in_usd,
+use crate::{
+    methods::{
+        public::{initialize, set_admin, set_price},
+        view::{
+            crossrate, get_gas_cost_in_native_token, get_gas_price, get_price,
+            get_transaction_gas_cost_in_usd,
+        },
+    },
+    storage::chain_data::ChainData,
 };
-use crate::storage::chain_data::ChainData;
 
 #[contract]
 pub struct GasOracleContract;

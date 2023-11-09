@@ -9,7 +9,7 @@ pub fn derive_soroban_event(input: TokenStream) -> TokenStream {
     let ident_name = ident_name.as_str();
 
     quote! {
-        impl shared::event::Event for #ident {
+        impl shared::Event for #ident {
             const EVENT_NAME: &'static str = #ident_name;
         }
     }

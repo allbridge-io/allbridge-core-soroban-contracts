@@ -2,7 +2,7 @@
 
 mod contract;
 mod data_key;
-mod internal;
+mod methods;
 mod storage;
 
 pub use crate::contract::GasOracleContract;

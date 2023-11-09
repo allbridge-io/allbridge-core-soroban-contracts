@@ -1,7 +1,7 @@
 use soroban_env_common::StorageType;
 use soroban_sdk::{Env, IntoVal, Symbol, TryFromVal, Val};
 
-use crate::error::Error;
+use crate::Error;
 
 // ----------------------------------------- //
 

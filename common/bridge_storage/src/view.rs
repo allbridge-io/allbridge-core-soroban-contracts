@@ -1,4 +1,4 @@
-use shared::{error::Error, soroban_data::SimpleSorobanData};
+use shared::{soroban_data::SimpleSorobanData, Error};
 use soroban_sdk::{Address, Env};
 
 use crate::{Admin, GasOracleAddress, GasUsage, StopAuthority};

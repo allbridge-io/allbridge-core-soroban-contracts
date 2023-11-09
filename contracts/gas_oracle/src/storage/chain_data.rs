@@ -1,10 +1,8 @@
 use proc_macros::{bump_info, data_storage_type, SorobanData};
-use shared::soroban_data::SorobanData;
+use shared::{soroban_data::SorobanData, Error};
 use soroban_sdk::{contracttype, Env};
 
 use crate::data_key::{DataKey, PRICE_BUMP_AMOUNT};
-
-use shared::error::Error;
 
 #[contracttype]
 #[derive(Clone, Default, SorobanData)]

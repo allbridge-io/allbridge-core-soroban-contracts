@@ -1,7 +1,7 @@
 #![no_std]
 mod contract;
 mod events;
-mod internal;
+mod methods;
 mod storage;
 
 mod gas_oracle {

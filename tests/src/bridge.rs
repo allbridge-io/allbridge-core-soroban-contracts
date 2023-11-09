@@ -1,4 +1,4 @@
-use shared::{consts::CHAIN_ID, error::Error};
+use shared::{consts::CHAIN_ID, Error};
 
 use soroban_sdk::{
     testutils::{Address as _, BytesN as _},

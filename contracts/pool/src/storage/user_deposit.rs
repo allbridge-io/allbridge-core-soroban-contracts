@@ -1,7 +1,8 @@
-use crate::storage::data_key::DataKey;
 use proc_macros::{bump_info_instance, data_storage_type, SorobanData};
 use shared::soroban_data::SorobanData;
 use soroban_sdk::{contracttype, Address, Env};
+
+use crate::storage::data_key::DataKey;
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq, Default, SorobanData)]

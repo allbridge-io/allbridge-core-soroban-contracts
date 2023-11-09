@@ -15,7 +15,7 @@ fn stop_deposit() {
     assert!(!yaro_pool.can_deposit());
     let call_result = yaro_pool.deposit(&alice, 1000.0);
 
-    expect_contract_error(&env, call_result, shared::error::Error::Forbidden);
+    expect_contract_error(&env, call_result, shared::Error::Forbidden);
 }
 
 #[test]
@@ -66,7 +66,7 @@ fn stop_withdraw() {
 
     let call_result = yaro_pool.withdraw(&alice, 1000.0);
 
-    expect_contract_error(&env, call_result, shared::error::Error::Forbidden);
+    expect_contract_error(&env, call_result, shared::Error::Forbidden);
 }
 
 #[test]

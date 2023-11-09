@@ -1,7 +1,7 @@
 use proc_macros::{
     bump_info_instance, data_storage_type, symbol_key, SorobanData, SorobanSimpleData,
 };
-use shared::{error::Error, require};
+use shared::{require, Error};
 use soroban_sdk::{contracttype, BytesN, Map};
 
 #[contracttype]

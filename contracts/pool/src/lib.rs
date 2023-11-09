@@ -2,7 +2,7 @@
 
 mod contract;
 mod events;
-mod internal;
+mod methods;
 #[cfg(test)]
 mod reword_manager_test;
 mod storage;

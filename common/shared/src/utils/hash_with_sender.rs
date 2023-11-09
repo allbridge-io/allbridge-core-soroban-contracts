@@ -1,4 +1,4 @@
-use crate::error::Error;
+use crate::Error;
 use soroban_sdk::{xdr::ToXdr, Address, Bytes, BytesN, Env};
 
 use crate::utils::{bytes_to_slice, merge_slices_by_half};

@@ -1,18 +1,18 @@
 use bridge_storage::view::{get_admin, get_stop_authority};
-use shared::error::Error;
-use shared::utils::bump_instance;
+use shared::{utils::bump_instance, Error};
 use soroban_sdk::{contract, contractimpl, Address, Env};
 
-use crate::internal::methods::initialize::initialize;
-use crate::internal::view::{get_bridge, get_pool, get_user_deposit, pending_reward};
-use crate::internal::{
-    admin::{
-        adjust_total_lp_amount::*, claim_fee::*, config_addresses::*, config_pool::*, start_stop::*,
+use crate::{
+    methods::{
+        admin::{
+            adjust_total_lp_amount::*, claim_fee::*, config_addresses::*, config_pool::*,
+            start_stop::*,
+        },
+        public::{claim_rewards, deposit, initialize, swap_from_v_usd, swap_to_v_usd, withdraw},
+        view::{get_bridge, get_pool, get_user_deposit, pending_reward},
     },
-    methods::{claim_rewards::*, deposit::*, swap_from_v_usd::*, swap_to_v_usd::*, withdraw::*},
+    storage::{pool::Pool, user_deposit::UserDeposit},
 };
-use crate::storage::pool::Pool;
-use crate::storage::user_deposit::UserDeposit;
 
 #[contract]
 pub struct PoolContract;
