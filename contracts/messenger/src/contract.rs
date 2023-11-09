@@ -6,7 +6,7 @@ use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, Map};
 
 use crate::internal::admin::{
     add_secondary_validator, remove_secondary_validator, set_admin, set_gas_oracle, set_gas_usage,
-    set_other_chain_ids, set_primary_validator,
+    set_other_chain_ids, set_primary_validator, withdraw_gas_tokens,
 };
 use crate::internal::method::{initialize, receive_message, send_message};
 use crate::internal::view::{
@@ -113,6 +113,12 @@ impl Messenger {
         bump_instance(&env);
 
         set_other_chain_ids(env, other_chain_ids)
+    }
+
+    pub fn withdraw_gas_tokens(env: Env, sender: Address, amount: u128) -> Result<(), Error> {
+        bump_instance(&env);
+
+        withdraw_gas_tokens(env, sender, amount)
     }
 
     //view

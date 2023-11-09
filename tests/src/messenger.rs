@@ -244,3 +244,39 @@ fn confirm_message_with_broken_secondary_validator() {
 
     expect_contract_error(&env, try_result, Error::InvalidSecondarySignature);
 }
+
+#[test]
+fn withdraw_gas_tokens() {
+    let env = Env::default();
+    let bridge_env = BridgeEnv::default(&env);
+    let BridgeEnv {
+        ref alice,
+        ref yaro_token,
+        ref messenger,
+        ref admin,
+        ref native_token,
+        ..
+    } = bridge_env;
+
+    bridge_env
+        .messenger
+        .hash_and_send_message(
+            &env,
+            &alice,
+            100_000,
+            &alice.as_address(),
+            &yaro_token,
+            &gen_nonce(&env),
+        )
+        .unwrap();
+
+    let messenger_balance = native_token.balance_of(&messenger.id);
+
+    messenger
+        .client
+        .withdraw_gas_tokens(&admin, &messenger_balance);
+
+    let messenger_balance = native_token.balance_of(&messenger.id);
+
+    assert_eq!(messenger_balance, 0);
+}
