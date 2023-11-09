@@ -14,6 +14,11 @@ fn swap_and_bridge() {
     let env = Env::default();
     let bridge_env = BridgeEnv::default(&env);
 
+    println!(
+        "{:?}",
+        hex::encode(bridge_env.bridge.id.contract_id().to_array())
+    );
+
     bridge_env
         .do_swap_and_bridge(
             &env,

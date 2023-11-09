@@ -4,7 +4,10 @@ use bridge_storage::*;
 use shared::{
     consts::CHAIN_ID, require, soroban_data::SimpleSorobanData, utils::hash_message, Error, Event,
 };
-use soroban_sdk::{Address, BytesN, Env, U256};
+use soroban_sdk::{
+    auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation},
+    vec, Address, BytesN, Env, IntoVal, Symbol, U256,
+};
 
 use crate::{
     events::{ReceiveFee, TokensSent},
@@ -23,8 +26,6 @@ pub fn send_tokens(
     fee_token_amount_in_native: u128,
     sender: &Address,
 ) -> Result<(), Error> {
-    env.current_contract_address().require_auth();
-
     let config = Bridge::get(env)?;
 
     require!(destination_chain_id != CHAIN_ID, Error::InvalidOtherChainId);
@@ -52,6 +53,25 @@ pub fn send_tokens(
     let messenger = config.get_messenger_client(env);
 
     let bridge_tx_cost = get_transaction_cost(env, destination_chain_id)?;
+    let transaction_cost = messenger.get_transaction_cost(&destination_chain_id) as i128;
+
+    env.authorize_as_current_contract(vec![
+        &env,
+        InvokerContractAuthEntry::Contract(SubContractInvocation {
+            context: ContractContext {
+                contract: NativeToken::get(env)?.as_address(),
+                fn_name: Symbol::new(&env, "transfer"),
+                args: (
+                    env.current_contract_address(),
+                    config.messenger.clone(),
+                    transaction_cost,
+                )
+                    .into_val(env),
+            },
+            sub_invocations: vec![&env],
+        }),
+    ]);
+
     let message_tx_cost = messenger.send_message(&message, &env.current_contract_address());
 
     require!(

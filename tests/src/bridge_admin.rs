@@ -1,7 +1,7 @@
 use shared::consts::{CHAIN_PRECISION, ORACLE_PRECISION};
 use shared::Error;
-use soroban_sdk::testutils::{Address as _, BytesN as _};
-use soroban_sdk::{Address, BytesN, Env};
+use soroban_sdk::testutils::{Address as _, BytesN as _, MockAuth, MockAuthInvoke};
+use soroban_sdk::{Address, BytesN, Env, IntoVal};
 
 use crate::utils::consts::GOERLI_CHAIN_ID;
 use crate::utils::{desoroban_result, expect_auth_error, expect_contract_error, BridgeEnv, Pool};
@@ -113,9 +113,23 @@ fn set_rebalancer() {
 #[test]
 fn set_messenger() {
     let env = Env::default();
-    let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
+    let BridgeEnv {
+        bridge, ref admin, ..
+    } = BridgeEnv::default(&env);
+    env.mock_auths(&[]);
 
     let messenger = Address::random(&env);
+
+    env.mock_auths(&[MockAuth {
+        address: &admin,
+        invoke: &MockAuthInvoke {
+            contract: &bridge.id,
+            fn_name: "set_messenger",
+            args: (&messenger,).into_val(&env),
+            sub_invokes: &[],
+        },
+    }]);
+
     bridge.client.set_messenger(&messenger);
 
     assert_eq!(bridge.client.get_config().messenger, messenger);
