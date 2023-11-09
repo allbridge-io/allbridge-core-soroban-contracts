@@ -111,6 +111,30 @@ fn set_rebalancer() {
 }
 
 #[test]
+fn set_messenger() {
+    let env = Env::default();
+    let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
+
+    let messenger = Address::random(&env);
+    bridge.client.set_messenger(&messenger);
+
+    assert_eq!(bridge.client.get_config().messenger, messenger);
+}
+
+#[test]
+fn set_messenger_no_auth() {
+    let env = Env::default();
+    let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
+
+    env.mock_auths(&[]);
+
+    expect_auth_error(
+        &env,
+        desoroban_result(bridge.client.try_set_messenger(&Address::random(&env))),
+    );
+}
+
+#[test]
 fn set_stop_authority() {
     let env = Env::default();
     let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);

@@ -5,6 +5,7 @@ use shared::utils::bump_instance;
 use shared::Error;
 use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, U256};
 
+use crate::methods::admin::set_messenger;
 use crate::storage::another_bridge::AnotherBridge;
 use crate::{
     methods::{
@@ -143,6 +144,12 @@ impl BridgeContract {
         bump_instance(&env);
 
         set_rebalancer(env, rebalancer)
+    }
+
+    pub fn set_messenger(env: Env, messenger: Address) -> Result<(), Error> {
+        bump_instance(&env);
+
+        set_messenger(env, messenger)
     }
 
     pub fn set_gas_usage(env: Env, chain_id: u32, gas_usage: u128) -> Result<(), Error> {
