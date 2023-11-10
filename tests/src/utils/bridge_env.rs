@@ -533,7 +533,6 @@ impl BridgeEnv {
             &self.goerli_token,
             &nonce,
         );
-        println!("{:#?}", env.auths());
 
         if call_result.is_err() {
             return call_result;
