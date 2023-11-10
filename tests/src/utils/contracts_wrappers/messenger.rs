@@ -85,7 +85,7 @@ impl Messenger {
     }
 
     pub fn send_message(&self, sender: &User, message_hash: &BytesN<32>) -> CallResult<BytesN<32>> {
-        desoroban_result::<u128, soroban_sdk::Error>(
+        desoroban_result::<(), soroban_sdk::ConversionError>(
             self.client
                 .try_send_message(&message_hash, &sender.as_address()),
         )

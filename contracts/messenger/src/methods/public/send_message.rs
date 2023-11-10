@@ -10,7 +10,7 @@ use crate::{
     storage::{config::Config, message::Message},
 };
 
-pub fn send_message(env: Env, message: BytesN<32>, sender: Address) -> Result<u128, Error> {
+pub fn send_message(env: Env, message: BytesN<32>, sender: Address) -> Result<(), Error> {
     sender.require_auth();
     let config = Config::get(&env)?;
 
@@ -42,5 +42,5 @@ pub fn send_message(env: Env, message: BytesN<32>, sender: Address) -> Result<u1
     }
     .publish(&env);
 
-    Ok(transaction_cost)
+    Ok(())
 }

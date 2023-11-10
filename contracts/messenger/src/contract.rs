@@ -44,7 +44,7 @@ impl Messenger {
         )
     }
 
-    pub fn send_message(env: Env, message: BytesN<32>, sender: Address) -> Result<u128, Error> {
+    pub fn send_message(env: Env, message: BytesN<32>, sender: Address) -> Result<(), Error> {
         bump_instance(&env);
 
         send_message(env, message, sender)
