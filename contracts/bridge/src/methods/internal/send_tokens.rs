@@ -56,11 +56,11 @@ pub fn send_tokens(
     let message_tx_cost = messenger.get_transaction_cost(&destination_chain_id);
 
     env.authorize_as_current_contract(vec![
-        &env,
+        env,
         InvokerContractAuthEntry::Contract(SubContractInvocation {
             context: ContractContext {
                 contract: NativeToken::get(env)?.as_address(),
-                fn_name: Symbol::new(&env, "transfer"),
+                fn_name: Symbol::new(env, "transfer"),
                 args: (
                     env.current_contract_address(),
                     config.messenger.clone(),
@@ -68,7 +68,7 @@ pub fn send_tokens(
                 )
                     .into_val(env),
             },
-            sub_invocations: vec![&env],
+            sub_invocations: vec![env],
         }),
     ]);
 
