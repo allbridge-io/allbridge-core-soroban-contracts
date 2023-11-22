@@ -79,6 +79,17 @@ gas-oracle-set-price:
         --price 1000000000000000000 \
         --gas_price 50
 
+gas-oracle-set-price-1:
+	soroban contract invoke \
+		--id $(GAS_ORACLE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		set_price \
+		--chain_id 1 \
+        --price 1000000000000000000 \
+        --gas_price 50
+
 gas-oracle-get-price-data:
 	soroban contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
@@ -231,6 +242,22 @@ send-message:
 		  --message 0701efefefefefefefefefefefefefefefefefefefefefefefefefefefefefef \
 		  --sender $(ALICE)
 
+messenger-get-gas-usage:
+	soroban contract invoke \
+		--id $(MESSENGER_ADDRESS) \
+		--network $(NETWORK) 	\
+		-- \
+		get_gas_usage \
+		--chain_id 1
+
+messenger-get_transaction_cost:
+	soroban contract invoke \
+		--id $(MESSENGER_ADDRESS) \
+		--network $(NETWORK) 	\
+		-- \
+		get_transaction_cost \
+		--chain_id 1
+
 
 #---------------BRIDGE---------------------------
 bridge-deploy:
@@ -323,9 +350,17 @@ bridge-swap-and-bridge:
         --recipient 000000000000000000000000be959eed208225aab424505569d41bf3212142c0 \
         --destination_chain_id 1 \
         --receive_token 000000000000000000000000ddac3cb57dea3fbeff4997d78215535eb5787117 \
-        --nonce 0000000000000000000000000000000000000000000000000000000000000002 \
-        --gas_amount 300000 \
+        --nonce 0000000000000000000000000000000000000000000000000000000000000008 \
+        --gas_amount 10 \
         --fee_token_amount 0
+
+bridge-get_transaction_cost:
+	soroban contract invoke \
+		--id $(BRIDGE_ADDRESS) \
+		--network $(NETWORK) 	\
+		-- \
+		get_transaction_cost \
+		--chain_id 1
 
 bridge-get-config:
 	soroban contract invoke \
@@ -342,15 +377,13 @@ bridge-get-gas-usage:
 		get_gas_usage \
 		--chain_id 1
 
-
 bridge-has-received-message:
 	soroban contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--network $(NETWORK) 	\
 		-- \
 		has_received_message \
-		--message 0107007b940a7518925c1ec6a1fc95d2b0516c2a0af0dd4baf3635f86aca3d22
-
+		--message 0107155a5bc1db9cb9d8fc56150518f01011f56ca2e3f0bdeb8dee115344d75b
 
 
 #----------TOKEN--------------------------

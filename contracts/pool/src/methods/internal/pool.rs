@@ -5,11 +5,11 @@ use shared::{require, utils::num::*, Error};
 use crate::storage::{pool::Pool, user_deposit::UserDeposit};
 
 impl Pool {
-    // TODO: adjust MAX_TOKEN_BALANCE
+
     const MAX_TOKEN_BALANCE: u128 = 2u128.pow(40);
     const BP: u128 = 10000;
-    // TODO: adjust P
-    pub const P: u128 = 52;
+
+    pub const P: u128 = 48;
     const SYSTEM_PRECISION: u32 = 3;
 
     pub fn deposit(&mut self, amount: u128, user: &mut UserDeposit) -> Result<(u128, u128), Error> {

@@ -15,12 +15,6 @@ pub struct MessageReceived {
 
 #[derive(Event)]
 #[contracttype]
-pub struct Received {
-    pub message: BytesN<32>,
-}
-
-#[derive(Event)]
-#[contracttype]
 pub struct SecondaryValidatorsSet {
     pub old_validators: Vec<Address>,
     pub new_validators: Vec<Address>,
