@@ -4,4 +4,5 @@ use soroban_sdk::{contracttype, Address};
 #[contracttype]
 pub enum DataKey {
     UserDeposit(Address),
+    ClaimableBalance(Address),
 }

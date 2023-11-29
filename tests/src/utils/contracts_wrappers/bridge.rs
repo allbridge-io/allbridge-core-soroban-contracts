@@ -74,6 +74,7 @@ impl Bridge {
         receive_token: &Token,
         nonce: &U256,
         receive_amount_min: f64,
+        claimable: bool,
         extra_gas: &Option<u128>,
     ) -> CallResult {
         let amount_sp = float_to_int_sp(amount);
@@ -87,6 +88,7 @@ impl Bridge {
             &receive_token.id.contract_id(),
             &nonce,
             &receive_amount_min,
+            &claimable,
             &extra_gas,
         ))
     }

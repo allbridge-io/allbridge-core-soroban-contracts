@@ -14,6 +14,8 @@ use soroban_sdk::{
 
 use super::consts::SP;
 
+pub const SYSTEM_PRECISION: u32 = 3;
+
 pub type CallResult<T = ()> = Result<T, SorobanError>;
 pub type SorobanCallResult<T, E = soroban_sdk::ConversionError> =
     Result<Result<T, E>, Result<SorobanError, Infallible>>;

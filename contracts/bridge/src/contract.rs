@@ -73,6 +73,7 @@ impl BridgeContract {
         receive_token: BytesN<32>,
         nonce: U256,
         receive_amount_min: u128,
+        claimable: bool,
         extra_gas: Option<u128>,
     ) -> Result<(), Error> {
         bump_instance(&env);
@@ -86,6 +87,7 @@ impl BridgeContract {
             receive_token,
             nonce,
             receive_amount_min,
+            claimable,
             extra_gas,
         )
     }
@@ -98,6 +100,7 @@ impl BridgeContract {
         receive_token: BytesN<32>,
         recipient: Address,
         receive_amount_min: u128,
+        claimable: bool
     ) -> Result<(), Error> {
         bump_instance(&env);
 
@@ -109,6 +112,7 @@ impl BridgeContract {
             receive_token,
             recipient,
             receive_amount_min,
+            claimable
         )
     }
 

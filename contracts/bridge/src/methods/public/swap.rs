@@ -1,3 +1,5 @@
+#![allow(clippy::too_many_arguments)]
+
 use shared::{soroban_data::SimpleSorobanData, Error, Event};
 use soroban_sdk::{Address, BytesN, Env};
 
@@ -15,6 +17,7 @@ pub fn swap(
     receive_token: BytesN<32>,
     recipient: Address,
     receive_amount_min: u128,
+    claimable: bool
 ) -> Result<(), Error> {
     Bridge::get(&env)?.assert_can_swap()?;
     sender.require_auth();
@@ -26,6 +29,7 @@ pub fn swap(
         &recipient,
         v_usd_amount,
         receive_amount_min,
+        claimable
     )?;
 
     Swapped {

@@ -5,6 +5,7 @@ use crate::{
     events::SwappedFromVUsd,
     storage::{bridge_address::Bridge, pool::Pool},
 };
+use crate::storage::claimable_balance::ClaimableBalance;
 
 pub fn swap_from_v_usd(
     env: Env,
@@ -12,14 +13,22 @@ pub fn swap_from_v_usd(
     vusd_amount: u128,
     receive_amount_min: u128,
     zero_fee: bool,
+    claimable: bool
 ) -> Result<u128, Error> {
     let mut pool = Pool::get(&env)?;
 
     Bridge::require_exist_auth(&env)?;
 
-    let token_client = token::Client::new(&env, &pool.token);
     let (amount, fee) = pool.swap_from_v_usd(vusd_amount, receive_amount_min, zero_fee)?;
-    token_client.transfer(&env.current_contract_address(), &user, &(amount as i128));
+    if claimable {
+        ClaimableBalance::update(&env, user.clone(), |claimable_balance| {
+            claimable_balance.amount += amount;
+            Ok(())
+        })?;
+    } else {
+        let token_client = token::Client::new(&env, &pool.token);
+        token_client.transfer(&env.current_contract_address(), &user, &(amount as i128));
+    }
 
     pool.save(&env);
     SwappedFromVUsd {

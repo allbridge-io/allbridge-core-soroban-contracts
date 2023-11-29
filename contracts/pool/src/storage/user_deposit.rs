@@ -1,13 +1,17 @@
-use proc_macros::{bump_info_instance, data_storage_type, SorobanData};
+use proc_macros::{data_storage_type, SorobanData, bump_info};
 use shared::soroban_data::SorobanData;
 use soroban_sdk::{contracttype, Address, Env};
+use shared::consts::DAY_IN_LEDGERS;
 
 use crate::storage::data_key::DataKey;
 
+const BUMP_AMOUNT: u32 = 30 * DAY_IN_LEDGERS;
+const LIFETIME_THRESHOLD: u32 = BUMP_AMOUNT - DAY_IN_LEDGERS;
+
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq, Default, SorobanData)]
-#[data_storage_type(Instance)]
-#[bump_info_instance]
+#[data_storage_type(Persistent)]
+#[bump_info(BUMP_AMOUNT, LIFETIME_THRESHOLD)]
 pub struct UserDeposit {
     pub lp_amount: u128,
     pub reward_debt: u128,

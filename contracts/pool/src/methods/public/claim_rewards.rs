@@ -13,20 +13,20 @@ pub fn claim_rewards(env: Env, sender: Address) -> Result<(), Error> {
     let mut user_deposit = UserDeposit::get(&env, sender.clone());
     let amount = pool.claim_rewards(&mut user_deposit)?;
     if amount > 0 {
+        user_deposit.save(&env, sender.clone());
         let token_client = token::Client::new(&env, &pool.token);
+
         token_client.transfer(
             &env.current_contract_address(),
-            &sender.clone(),
+            &sender,
             &(amount as i128),
         );
 
         RewardsClaimed {
-            user: sender.clone(),
+            user: sender,
             amount,
         }
         .publish(&env);
-
-        user_deposit.save(&env, sender);
     }
 
     Ok(())

@@ -9,6 +9,7 @@ pub fn receive_and_swap_from_v_usd(
     recipient: &Address,
     v_usd_amount: u128,
     receive_amount_min: u128,
+    claimable: bool
 ) -> Result<u128, Error> {
     let config = Bridge::get(env)?;
     let pool = config.get_pool_client_by_token(env, token.clone())?;
@@ -18,5 +19,6 @@ pub fn receive_and_swap_from_v_usd(
         &v_usd_amount,
         &receive_amount_min,
         &config.rebalancer.eq(recipient),
+        &claimable
     ))
 }

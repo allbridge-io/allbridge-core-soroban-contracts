@@ -8,11 +8,12 @@ use crate::{
             adjust_total_lp_amount::*, claim_fee::*, config_addresses::*, config_pool::*,
             start_stop::*,
         },
-        public::{claim_rewards, deposit, initialize, swap_from_v_usd, swap_to_v_usd, withdraw},
+        public::{claim_rewards, deposit, initialize, swap_from_v_usd, swap_to_v_usd, withdraw, claim_balance},
         view::{get_bridge, get_pool, get_user_deposit, pending_reward},
     },
     storage::{pool::Pool, user_deposit::UserDeposit},
 };
+use crate::methods::view::get_claimable_balance;
 
 #[contract]
 pub struct PoolContract;
@@ -71,16 +72,23 @@ impl PoolContract {
         vusd_amount: u128,
         receive_amount_min: u128,
         zero_fee: bool,
+        claimable: bool
     ) -> Result<u128, Error> {
         bump_instance(&env);
 
-        swap_from_v_usd(env, user, vusd_amount, receive_amount_min, zero_fee)
+        swap_from_v_usd(env, user, vusd_amount, receive_amount_min, zero_fee, claimable)
     }
 
     pub fn claim_rewards(env: Env, sender: Address) -> Result<(), Error> {
         bump_instance(&env);
 
         claim_rewards(env, sender)
+    }
+
+    pub fn claim_balance(env: Env, user: Address) -> Result<(), Error> {
+        bump_instance(&env);
+
+        claim_balance(env, user)
     }
 
     /// `admin`
@@ -179,5 +187,9 @@ impl PoolContract {
 
     pub fn get_user_deposit(env: Env, user: Address) -> Result<UserDeposit, Error> {
         get_user_deposit(env, user)
+    }
+
+    pub fn get_claimable_balance(env: Env, user: Address) -> Result<u128, Error> {
+        get_claimable_balance(env, user)
     }
 }
