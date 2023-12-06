@@ -344,8 +344,7 @@ impl BridgeEnv {
                 &send_token.id.contract_id(),
                 &receive_token.id.contract_id(),
                 &recipient.as_address(),
-                &receive_amount_min,
-                &false
+                &receive_amount_min
             )
             .map(Result::unwrap)
             .map_err(Result::unwrap);
