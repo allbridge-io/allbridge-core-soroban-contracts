@@ -1,4 +1,4 @@
-use soroban_sdk::xdr::{ScError, ScVal};
+use soroban_sdk::xdr::{ScError, ScErrorCode, ScVal};
 use soroban_sdk::{Env, FromVal};
 
 use super::CallResult;
@@ -8,8 +8,12 @@ pub fn expect_auth_error<T>(env: &Env, call_result: CallResult<T>) {
     let val = ScVal::from_val(env, error.as_val());
 
     match ScError::try_from(val).expect("Expect ScError") {
-        ScError::Auth(_) => (),
-        _ => panic!("NoAuth"),
+        ScError::Context(x) => {
+            if x != ScErrorCode::InvalidAction {
+                panic!("Expect ScErrorCode::InvalidAction");
+            }
+        }
+        _ => panic!("Expect ScErrorCode::InvalidAction"),
     };
 }
 

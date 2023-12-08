@@ -4,7 +4,9 @@ use soroban_sdk::testutils::{Address as _, BytesN as _, MockAuth, MockAuthInvoke
 use soroban_sdk::{Address, BytesN, Env, IntoVal};
 
 use crate::utils::consts::GOERLI_CHAIN_ID;
-use crate::utils::{desoroban_result, expect_auth_error, expect_contract_error, BridgeEnv, Pool, contract_id};
+use crate::utils::{
+    contract_id, desoroban_result, expect_auth_error, expect_contract_error, BridgeEnv, Pool,
+};
 
 #[test]
 fn add_pool() {
@@ -20,9 +22,7 @@ fn add_pool() {
 
     let pool = Pool::create(&env, &admin, &bridge.id, 20, &native_token.id, 30, 0, 1);
 
-    bridge
-        .client
-        .add_pool(&pool.id, &native_token.id);
+    bridge.client.add_pool(&pool.id, &native_token.id);
 
     let bridge_config = bridge.client.get_config();
 
