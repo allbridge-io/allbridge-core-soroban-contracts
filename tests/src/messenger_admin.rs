@@ -37,7 +37,7 @@ fn set_gas_oracle() {
     let env = Env::default();
     let BridgeEnv { ref messenger, .. } = BridgeEnv::default(&env);
 
-    let gas_oracle = Address::random(&env);
+    let gas_oracle = Address::generate(&env);
     messenger.client.set_gas_oracle(&gas_oracle);
 
     assert_eq!(gas_oracle, messenger.gas_oracle());
@@ -49,7 +49,7 @@ fn set_gas_oracle_no_auth() {
     let BridgeEnv { ref messenger, .. } = BridgeEnv::default(&env);
 
     env.mock_auths(&[]);
-    let call_result = desoroban_result(messenger.client.try_set_gas_oracle(&Address::random(&env)));
+    let call_result = desoroban_result(messenger.client.try_set_gas_oracle(&Address::generate(&env)));
 
     expect_auth_error(&env, call_result);
 }
@@ -59,7 +59,7 @@ fn set_gas_admin() {
     let env = Env::default();
     let BridgeEnv { ref messenger, .. } = BridgeEnv::default(&env);
 
-    let admin = Address::random(&env);
+    let admin = Address::generate(&env);
     messenger.client.set_admin(&admin);
 
     assert_eq!(admin, messenger.admin());
@@ -71,7 +71,7 @@ fn set_gas_admin_no_auth() {
     let BridgeEnv { ref messenger, .. } = BridgeEnv::default(&env);
 
     env.mock_auths(&[]);
-    let call_result = desoroban_result(messenger.client.try_set_admin(&Address::random(&env)));
+    let call_result = desoroban_result(messenger.client.try_set_admin(&Address::generate(&env)));
 
     expect_auth_error(&env, call_result);
 }

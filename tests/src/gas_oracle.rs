@@ -25,7 +25,7 @@ fn setup_env(env: &Env) -> GasOracleEnv {
     let gas_oracle_id = env.register_contract_wasm(None, gas_oracle::WASM);
     let gas_oracle_client = gas_oracle::Client::new(&env, &gas_oracle_id);
 
-    let admin = Address::random(&env);
+    let admin = Address::generate(&env);
 
     gas_oracle_client.initialize(&admin);
 
@@ -105,7 +105,7 @@ fn test_set_price() {
 fn test_set_new_admin() {
     let env = Env::default();
     let gas_oracle_env = setup_env(&env);
-    let new_admin = Address::random(&env);
+    let new_admin = Address::generate(&env);
 
     gas_oracle_env.gas_oracle_client.set_admin(&new_admin);
     assert_eq!(new_admin, gas_oracle_env.gas_oracle_client.get_admin());

@@ -6,7 +6,7 @@ use soroban_sdk::{
     Address, BytesN, Env,
 };
 
-use crate::utils::{consts::GOERLI_CHAIN_ID, expect_sc_error};
+use crate::utils::{consts::GOERLI_CHAIN_ID, expect_sc_error, contract_id};
 use crate::utils::{expect_contract_error, float_to_int_sp, gen_nonce, BridgeEnv, BridgeEnvConfig};
 
 #[test]
@@ -326,7 +326,7 @@ pub fn receive_tokens_extra_gas_not_enough_native_token_on_bridge() {
 
     bridge_env.native_token.client.transfer(
         &bridge_env.bridge.id,
-        &Address::random(&env),
+        &Address::generate(&env),
         &(bridge_env.native_token.balance_of(&bridge_env.bridge.id) as i128),
     );
 
@@ -480,7 +480,7 @@ pub fn receive_tokens_message_processed() {
         &amount_sp,
         &bridge_env.alice.as_address(),
         &GOERLI_CHAIN_ID,
-        &bridge_env.yaro_token.id.contract_id(),
+        &contract_id(&bridge_env.yaro_token.id),
         &nonce,
         &0,
         &false,

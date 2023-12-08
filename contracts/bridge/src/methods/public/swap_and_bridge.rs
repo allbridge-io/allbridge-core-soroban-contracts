@@ -2,6 +2,7 @@
 
 use shared::{require, soroban_data::SimpleSorobanData, utils::is_bytesn32_empty, Error};
 use soroban_sdk::{Address, BytesN, Env, U256};
+use shared::utils::address_to_bytes;
 
 use crate::{
     methods::internal::{
@@ -13,7 +14,7 @@ use crate::{
 pub fn swap_and_bridge(
     env: Env,
     sender: Address,
-    token: BytesN<32>,
+    token: Address,
     amount: u128,
     recipient: BytesN<32>,
     destination_chain_id: u32,
@@ -31,11 +32,13 @@ pub fn swap_and_bridge(
         Error::BridgeToTheZeroAddress
     );
 
+    let token_bytes = address_to_bytes(&env, &token)?;
+
     let fee_token_amount_in_native =
         convert_bridging_fee_in_tokens_to_native_token(&env, &sender, &token, fee_token_amount)?;
 
     let amount_after_fee = amount - fee_token_amount;
-    let v_usd_amount = send_and_swap_to_v_usd(&env, &token, &sender, amount_after_fee)?;
+    let v_usd_amount = send_and_swap_to_v_usd(&env, &token_bytes, &sender, amount_after_fee)?;
 
     send_tokens(
         &env,

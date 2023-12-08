@@ -78,15 +78,15 @@ pub fn data_storage_type(args: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
-pub fn bump_info_instance(_args: TokenStream, input: TokenStream) -> TokenStream {
+pub fn extend_ttl_info_instance(_args: TokenStream, input: TokenStream) -> TokenStream {
     let input: syn::ItemStruct = syn::parse(input).unwrap();
     let ident = &input.ident;
 
     quote!(
         #input
 
-        impl shared::soroban_data::BumpInfo for #ident {
-            const BUMP_AMOUNT: u32 = shared::consts::INSTANCE_BUMP_AMOUNT;
+        impl shared::soroban_data::ExtendTtlInfo for #ident {
+            const EXTEND_TTL_AMOUNT: u32 = shared::consts::INSTANCE_EXTEND_TTL_AMOUNT;
             const LIFETIME_THRESHOLD: u32 = shared::consts::INSTANCE_LIFETIME_THRESHOLD;
         }
     )
@@ -94,7 +94,7 @@ pub fn bump_info_instance(_args: TokenStream, input: TokenStream) -> TokenStream
 }
 
 #[proc_macro_attribute]
-pub fn bump_info(args: TokenStream, input: TokenStream) -> TokenStream {
+pub fn extend_ttl_info(args: TokenStream, input: TokenStream) -> TokenStream {
     let input: syn::ItemStruct = syn::parse(input).unwrap();
     let ident = &input.ident;
 
@@ -107,14 +107,14 @@ pub fn bump_info(args: TokenStream, input: TokenStream) -> TokenStream {
         .into();
     }
 
-    let bump_amount = TokenStream::from_iter([args[0].clone()]);
+    let extend_ttl_amount = TokenStream::from_iter([args[0].clone()]);
     let lifetime_threshold = TokenStream::from_iter([args[2].clone()]);
 
-    let bump_amount_lit_int =
-        syn::parse::<syn::LitInt>(bump_amount.clone()).map(ToTokens::into_token_stream);
-    let bump_amount_ident =
-        syn::parse::<syn::Ident>(bump_amount.clone()).map(ToTokens::into_token_stream);
-    let bump_amount = bump_amount_ident.or(bump_amount_lit_int).unwrap();
+    let extend_ttl_amount_lit_int =
+        syn::parse::<syn::LitInt>(extend_ttl_amount.clone()).map(ToTokens::into_token_stream);
+    let extend_ttl_amount_ident =
+        syn::parse::<syn::Ident>(extend_ttl_amount.clone()).map(ToTokens::into_token_stream);
+    let extend_ttl_amount = extend_ttl_amount_ident.or(extend_ttl_amount_lit_int).unwrap();
 
     let lifetime_threshold_lit_int =
         syn::parse::<syn::LitInt>(lifetime_threshold.clone()).map(ToTokens::into_token_stream);
@@ -127,8 +127,8 @@ pub fn bump_info(args: TokenStream, input: TokenStream) -> TokenStream {
     quote!(
         #input
 
-        impl shared::soroban_data::BumpInfo for #ident {
-            const BUMP_AMOUNT: u32 = #bump_amount;
+        impl shared::soroban_data::ExtendTtlInfo for #ident {
+            const EXTEND_TTL_AMOUNT: u32 = #extend_ttl_amount;
             const LIFETIME_THRESHOLD: u32 = #lifetime_threshold;
         }
     )

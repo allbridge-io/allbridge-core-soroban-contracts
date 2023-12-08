@@ -3,8 +3,8 @@ resolver = "2"
 members = ["contracts/*", "common/*", "tests"]
 
 [workspace.dependencies]
-soroban-sdk = "20.0.0-rc2"
-soroban-env-common = "20.0.0-rc2"
+soroban-sdk = "20.0.0"
+soroban-env-common = "20.0.0"
 shared = { path = "./common/shared" }
 proc_macros = { path = "./common/proc_macros" }
 bridge_storage = { path = "./common/bridge_storage" }

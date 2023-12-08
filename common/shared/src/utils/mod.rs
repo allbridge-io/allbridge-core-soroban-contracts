@@ -1,12 +1,12 @@
-use soroban_sdk::{Address, Bytes, BytesN, Env};
+use soroban_sdk::{Bytes, BytesN};
 
-mod bump;
+mod extend_ttl;
 mod hash_message;
 mod hash_with_sender;
 pub mod num;
 pub mod require;
 
-pub use bump::*;
+pub use extend_ttl::*;
 pub use hash_message::*;
 pub use hash_with_sender::*;
 
@@ -35,13 +35,4 @@ pub fn merge_slices_by_half<const N: usize, const R: usize>(a: &[u8; N], b: &[u8
     slice[N..].copy_from_slice(b);
 
     slice
-}
-
-pub fn get_token_client_by_token_bytesn<'a>(
-    env: &'a Env,
-    token: &BytesN<32>,
-) -> soroban_sdk::token::Client<'a> {
-    let token_address = Address::from_contract_id(token);
-
-    soroban_sdk::token::Client::new(env, &token_address)
 }

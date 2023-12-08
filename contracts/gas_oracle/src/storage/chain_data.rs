@@ -1,4 +1,4 @@
-use proc_macros::{bump_info, data_storage_type, SorobanData};
+use proc_macros::{extend_ttl_info, data_storage_type, SorobanData};
 use shared::{soroban_data::SorobanData, Error};
 use soroban_sdk::{contracttype, Env};
 
@@ -7,7 +7,7 @@ use crate::data_key::{DataKey, PRICE_BUMP_AMOUNT};
 #[contracttype]
 #[derive(Clone, Default, SorobanData)]
 #[data_storage_type(Temporary)]
-#[bump_info(PRICE_BUMP_AMOUNT, PRICE_BUMP_AMOUNT)]
+#[extend_ttl_info(PRICE_BUMP_AMOUNT, PRICE_BUMP_AMOUNT)]
 pub struct ChainData {
     pub price: u128,
     pub gas_price: u128,
@@ -34,6 +34,6 @@ impl ChainData {
         };
 
         env.storage().temporary().set(&key, &chain_data);
-        Self::bump_by_key(env, &key)
+        Self::extend_ttl_by_key(env, &key)
     }
 }

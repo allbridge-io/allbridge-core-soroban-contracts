@@ -9,7 +9,7 @@ use soroban_sdk::{
 use crate::{
     contracts::messenger,
     utils::{
-        consts::GOERLI_CHAIN_ID, desoroban_result, get_recover_id, signature_to_bytes, CallResult,
+        consts::GOERLI_CHAIN_ID, desoroban_result, get_recover_id, signature_to_bytes, CallResult, contract_id
     },
 };
 
@@ -42,10 +42,10 @@ impl Into<messenger::Config> for MessengerConfig {
 impl MessengerConfig {
     pub fn default_config(env: &Env) -> Self {
         MessengerConfig {
-            admin: Address::random(env),
+            admin: Address::generate(env),
             chain_id: CHAIN_ID,
-            native_token: Address::random(env),
-            gas_oracle: Address::random(env),
+            native_token: Address::generate(env),
+            gas_oracle: Address::generate(env),
             other_chain_ids: BytesN::from_array(
                 env,
                 &[
@@ -104,10 +104,10 @@ impl Messenger {
         let message_hash = hash_message(
             &env,
             amount_sp,
-            &recipient.contract_id(),
+            &contract_id(recipient),
             CHAIN_ID,
             GOERLI_CHAIN_ID,
-            &receive_token.id.contract_id(),
+            &contract_id(&receive_token.id),
             nonce,
         );
 

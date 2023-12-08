@@ -1,5 +1,5 @@
 use proc_macros::{
-    bump_info_instance, data_storage_type, symbol_key, SorobanData, SorobanSimpleData,
+    extend_ttl_info_instance, data_storage_type, symbol_key, SorobanData, SorobanSimpleData,
 };
 use shared::{require, Error};
 use soroban_sdk::{contracttype, BytesN, Map};
@@ -8,7 +8,7 @@ use soroban_sdk::{contracttype, BytesN, Map};
 #[derive(Clone, Debug, Eq, PartialEq, SorobanData, SorobanSimpleData)]
 #[symbol_key("Config")]
 #[data_storage_type(Instance)]
-#[bump_info_instance]
+#[extend_ttl_info_instance]
 pub struct Config {
     pub chain_id: u32,
     pub other_chain_ids: BytesN<32>,

@@ -17,7 +17,7 @@ use crate::{
     },
     utils::{
         assert_rel_eq, consts::BP, float_to_int_sp, get_event_by_name, sign_message,
-        MessengerConfig,
+        MessengerConfig, contract_id
     },
 };
 
@@ -77,7 +77,7 @@ impl BridgeEnv {
         env.mock_all_auths();
         env.budget().reset_limits(u64::MAX, u64::MAX);
 
-        let admin = Address::random(&env);
+        let admin = Address::generate(&env);
 
         let native_token = Token::create(env, "native", &admin);
 
@@ -254,7 +254,7 @@ impl BridgeEnv {
     ) -> (Token, Pool, Address) {
         let token = Token::create(env, token_tag, &admin);
         let fee_share_bp = ((fee_share_bp as f64) * 10_000.0) as u128;
-        let stop_authority = Address::random(&env);
+        let stop_authority = Address::generate(&env);
         let pool = Pool::create(
             env,
             &admin,
@@ -273,7 +273,7 @@ impl BridgeEnv {
             pool.deposit_by_id(&admin, admin_deposit).unwrap();
         }
 
-        bridge.client.add_pool(&pool.id, &token.id.contract_id());
+        bridge.client.add_pool(&pool.id, &token.id);
 
         (token, pool, stop_authority)
     }
@@ -289,10 +289,10 @@ impl BridgeEnv {
         let message_hash = hash_message(
             &env,
             amount_sp,
-            &recipient.contract_id(),
+            &contract_id(&recipient),
             GOERLI_CHAIN_ID,
             CHAIN_ID,
-            &receive_token.id.contract_id(),
+            &contract_id(&receive_token.id),
             nonce,
         );
         let message_hash_with_sender = hash_with_sender(&env, &message_hash, &self.goerli_bridge);
@@ -341,8 +341,8 @@ impl BridgeEnv {
             .try_swap(
                 &sender.as_address(),
                 &amount_int,
-                &send_token.id.contract_id(),
-                &receive_token.id.contract_id(),
+                &contract_id(&send_token.id),
+                &contract_id(&receive_token.id),
                 &recipient.as_address(),
                 &receive_amount_min
             )
@@ -504,8 +504,8 @@ impl BridgeEnv {
         assert_eq!(swapped_event.sender, sender.as_address());
         assert_eq!(swapped_event.recipient, recipient.as_address());
 
-        assert_eq!(swapped_event.receive_token, receive_token.id.contract_id());
-        assert_eq!(swapped_event.send_token, send_token.id.contract_id());
+        assert_eq!(swapped_event.receive_token, contract_id(&receive_token.id));
+        assert_eq!(swapped_event.send_token, contract_id(&send_token.id));
     }
 
     pub fn do_swap_and_bridge(

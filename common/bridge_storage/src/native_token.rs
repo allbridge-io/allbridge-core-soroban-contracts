@@ -1,5 +1,5 @@
 use proc_macros::{
-    bump_info_instance, data_storage_type, symbol_key, SorobanData, SorobanSimpleData,
+    extend_ttl_info_instance, data_storage_type, symbol_key, SorobanData, SorobanSimpleData,
 };
 use shared::{soroban_data::SimpleSorobanData, Error};
 use soroban_sdk::{contracttype, symbol_short, token, Address, Env, Symbol};
@@ -10,7 +10,7 @@ pub const NATIVE_TOKEN_SYMBOL: Symbol = symbol_short!("NatvTknAd");
 #[derive(SorobanData, SorobanSimpleData)]
 #[symbol_key("NatvTknAd")]
 #[data_storage_type(Instance)]
-#[bump_info_instance]
+#[extend_ttl_info_instance]
 pub struct NativeToken(pub Address);
 
 impl NativeToken {

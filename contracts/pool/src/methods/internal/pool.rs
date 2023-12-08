@@ -265,7 +265,7 @@ mod tests {
     #[test]
     fn check_d() {
         let env = Env::default();
-        let pool = Pool::from_init_params(20, Address::random(&env), 100, 1, 2000, 7);
+        let pool = Pool::from_init_params(20, Address::generate(&env), 100, 1, 2000, 7);
 
         assert_eq!(pool.get_d(0, 0), 0);
         assert_eq!(pool.get_d(100_000, 100_000), 200_000);

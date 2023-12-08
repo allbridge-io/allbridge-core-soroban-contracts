@@ -1,4 +1,4 @@
-use proc_macros::{bump_info, data_storage_type, SorobanData};
+use proc_macros::{extend_ttl_info, data_storage_type, SorobanData};
 use shared::{consts::DAY_IN_LEDGERS, soroban_data::SorobanData, Error};
 use soroban_sdk::{contracttype, BytesN, Env, Map};
 
@@ -10,7 +10,7 @@ const LIFETIME_THRESHOLD: u32 = BUMP_AMOUNT - DAY_IN_LEDGERS;
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq, SorobanData)]
 #[data_storage_type(Persistent)]
-#[bump_info(BUMP_AMOUNT, LIFETIME_THRESHOLD)]
+#[extend_ttl_info(BUMP_AMOUNT, LIFETIME_THRESHOLD)]
 pub struct AnotherBridge {
     pub address: BytesN<32>,
     pub tokens: Map<BytesN<32>, bool>,

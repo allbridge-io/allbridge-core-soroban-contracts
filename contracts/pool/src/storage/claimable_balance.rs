@@ -1,4 +1,4 @@
-use proc_macros::{data_storage_type, SorobanData, bump_info};
+use proc_macros::{data_storage_type, SorobanData, extend_ttl_info};
 use shared::soroban_data::SorobanData;
 use soroban_sdk::{contracttype, Address, Env};
 use shared::consts::DAY_IN_LEDGERS;
@@ -12,7 +12,7 @@ const LIFETIME_THRESHOLD: u32 = BUMP_AMOUNT - DAY_IN_LEDGERS;
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq, Default, SorobanData)]
 #[data_storage_type(Persistent)]
-#[bump_info(BUMP_AMOUNT, LIFETIME_THRESHOLD)]
+#[extend_ttl_info(BUMP_AMOUNT, LIFETIME_THRESHOLD)]
 pub struct ClaimableBalance {
     pub amount: u128,
 }

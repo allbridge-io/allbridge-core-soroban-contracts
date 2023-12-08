@@ -13,10 +13,10 @@ pub trait DataStorageType {
     const STORAGE_TYPE: StorageType;
 }
 
-pub trait BumpInfo {
+pub trait ExtendTtlInfo {
     /// @see https://github.com/stellar/soroban-examples/blob/main/token/src/storage_types.rs#L8
     /// @see https://github.com/stellar/soroban-examples/blob/7a7cc6268ada55113ce0b82a3ae4405f7ec8b8f0/token/src/balance.rs#L2
-    const BUMP_AMOUNT: u32;
+    const EXTEND_TTL_AMOUNT: u32;
     const LIFETIME_THRESHOLD: u32;
 }
 
@@ -49,13 +49,13 @@ pub trait SimpleSorobanData:
     }
 
     #[inline(always)]
-    fn bump(env: &Env) {
-        Self::bump_by_key(env, &Self::STORAGE_KEY);
+    fn extend_ttl(env: &Env) {
+        Self::extend_ttl_by_key(env, &Self::STORAGE_KEY);
     }
 }
 
 pub trait SorobanData:
-    TryFromVal<Env, Val> + IntoVal<Env, Val> + DataStorageType + BumpInfo + Sized
+    TryFromVal<Env, Val> + IntoVal<Env, Val> + DataStorageType + ExtendTtlInfo + Sized
 {
     fn get_by_key<K: IntoVal<Env, Val>>(env: &Env, key: &K) -> Result<Self, Error> {
         let result = (match Self::STORAGE_TYPE {
@@ -65,7 +65,7 @@ pub trait SorobanData:
         })
         .ok_or(Error::Uninitialized)?;
 
-        Self::bump_by_key(env, key);
+        Self::extend_ttl_by_key(env, key);
 
         Ok(result)
     }
@@ -77,24 +77,24 @@ pub trait SorobanData:
             StorageType::Persistent => env.storage().persistent().set(key, self),
         };
 
-        Self::bump_by_key(env, key);
+        Self::extend_ttl_by_key(env, key);
     }
 
-    fn bump_by_key<K: IntoVal<Env, Val>>(env: &Env, key: &K) {
+    fn extend_ttl_by_key<K: IntoVal<Env, Val>>(env: &Env, key: &K) {
         match Self::STORAGE_TYPE {
             StorageType::Instance => env
                 .storage()
                 .instance()
-                .bump(Self::LIFETIME_THRESHOLD, Self::BUMP_AMOUNT),
+                .extend_ttl(Self::LIFETIME_THRESHOLD, Self::EXTEND_TTL_AMOUNT),
             StorageType::Temporary => {
                 env.storage()
                     .temporary()
-                    .bump(key, Self::LIFETIME_THRESHOLD, Self::BUMP_AMOUNT)
+                    .extend_ttl(key, Self::LIFETIME_THRESHOLD, Self::EXTEND_TTL_AMOUNT)
             }
             StorageType::Persistent => {
                 env.storage()
                     .persistent()
-                    .bump(key, Self::LIFETIME_THRESHOLD, Self::BUMP_AMOUNT)
+                    .extend_ttl(key, Self::LIFETIME_THRESHOLD, Self::EXTEND_TTL_AMOUNT)
             }
         }
     }

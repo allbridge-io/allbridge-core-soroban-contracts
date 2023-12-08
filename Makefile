@@ -35,13 +35,13 @@ ADMIN = $$(soroban config identity address $(ADMIN_ALIAS))
 YARO_ADDRESS=CDFVZVTV4K5S66GQXER7YVK6RB23BMPMD3HQUA3TGEZUGDL3NM3R5GDW
 USDY_ADDRESS=CD7KQQY27G5WXQT2IUYJVHNQH6N2I6GEM5ND2BLZ2GHDAPB2V3KWCW7M
 
-TOKEN_ADDRESS=$(YARO_ADDRESS)
-POOL_ADDRESS_PATH=$(POOL_YARO_ADDRESS_PATH)
-POOL_ADDRESS=$(POOL_YARO_ADDRESS)
+#TOKEN_ADDRESS=$(YARO_ADDRESS)
+#POOL_ADDRESS_PATH=$(POOL_YARO_ADDRESS_PATH)
+#POOL_ADDRESS=$(POOL_YARO_ADDRESS)
 
-#TOKEN_ADDRESS=$(USDY_ADDRESS)
-#POOL_ADDRESS_PATH=$(POOL_USDY_ADDRESS_PATH)
-#POOL_ADDRESS=$(POOL_USDY_ADDRESS)
+TOKEN_ADDRESS=$(USDY_ADDRESS)
+POOL_ADDRESS_PATH=$(POOL_USDY_ADDRESS_PATH)
+POOL_ADDRESS=$(POOL_USDY_ADDRESS)
 
 NETWORK=futurenet
 
@@ -228,7 +228,16 @@ pool-get_claimable_balance:
 		--network $(NETWORK) 	\
 		-- \
 		get_claimable_balance \
-		--user $(ADMIN)
+		--user GB664P4XTBKNBK3YGPAFFCYPSW2SIO2FR6B6HC6SKFS7KGRTCDQYVUJ7
+
+pool-claim_balance:
+	soroban contract invoke \
+		--id $(POOL_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		claim_balance \
+		--user GB664P4XTBKNBK3YGPAFFCYPSW2SIO2FR6B6HC6SKFS7KGRTCDQYVUJ7
 
 #---------------MESSENGER---------------------------
 messenger-deploy:
@@ -339,14 +348,14 @@ bridge-register-bridge:
 		--network $(NETWORK) 	\
 		-- \
 		register_bridge \
-		--chain_id 10 \
-		--bridge_address 000000000000000000000000760d5d74bead2ccef05ccbfde32a08ebe7e4cfce
+		--chain_id 4 \
+		--bridge_address 270a35d028b2940decaca3c3634f0bf4030c49a7a9a1c70c35bfa5dde5dd6208
+		-#-chain_id 10 \
+#		--bridge_address 000000000000000000000000760d5d74bead2ccef05ccbfde32a08ebe7e4cfce
 #		--chain_id 6 \
 #		--bridge_address 000000000000000000000000c63c0261c2f1d21b3efe7828032e646c797ee21e
 #		--chain_id 5 \
 #		--bridge_address 000000000000000000000000763e75ca7bc589396f0e5c1b8049ac5ed7c8387f
-#		--chain_id 4 \
-#		--bridge_address cc83f73394ab766cdd4dd496fff89cde92668318332a81e755014021613d8582
 #		--chain_id 3 \
 #		--bridge_address 0000000000000000000000000e1de5c7267dc1c1bc498cc9bc3dbcaab305e8da
 #		--chain_id 2 \

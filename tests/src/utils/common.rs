@@ -1,7 +1,6 @@
 use rand::prelude::*;
 use std::{
     cmp::Ordering,
-    convert::Infallible,
     fmt::{Debug, Display},
 };
 
@@ -9,16 +8,18 @@ use color_print::cformat;
 use ethers_core::types::Signature;
 use ethers_signers::LocalWallet;
 use soroban_sdk::{
-    testutils::Events, BytesN, Env, Error as SorobanError, FromVal, Symbol, TryFromVal, Val, U256,
+    testutils::Events, BytesN, Env, Error as SorobanError, FromVal, Symbol, TryFromVal, Val, U256, ConversionError, InvokeError, Address
 };
+
+use soroban_sdk::xdr::ScAddress;
 
 use super::consts::SP;
 
 pub const SYSTEM_PRECISION: u32 = 3;
 
 pub type CallResult<T = ()> = Result<T, SorobanError>;
-pub type SorobanCallResult<T, E = soroban_sdk::ConversionError> =
-    Result<Result<T, E>, Result<SorobanError, Infallible>>;
+pub type SorobanCallResult<T, E = ConversionError> =
+    Result<Result<T, E>, Result<SorobanError, InvokeError>>;
 
 pub fn desoroban_result<T, E: Debug>(soroban_result: SorobanCallResult<T, E>) -> CallResult<T> {
     soroban_result.map(Result::unwrap).map_err(Result::unwrap)
@@ -128,4 +129,13 @@ pub fn assert_rel_eq(a: u128, b: u128, d: u128) {
         d,
         a.abs_diff(b)
     );
+}
+
+pub fn contract_id(address: &Address) -> BytesN<32> {
+    let sc_address: ScAddress = address.try_into().unwrap();
+    if let ScAddress::Contract(c) = sc_address {
+        BytesN::from_array(address.env(), &c.0)
+    } else {
+        panic!("address is not a contract {:?}", address);
+    }
 }

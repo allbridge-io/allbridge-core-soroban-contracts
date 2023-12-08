@@ -1,5 +1,5 @@
 use proc_macros::{
-    bump_info_instance, data_storage_type, symbol_key, SorobanData, SorobanSimpleData,
+    extend_ttl_info_instance, data_storage_type, symbol_key, SorobanData, SorobanSimpleData,
 };
 use shared::{soroban_data::SimpleSorobanData, Error};
 use soroban_sdk::{contracttype, Address, Env};
@@ -8,7 +8,7 @@ use soroban_sdk::{contracttype, Address, Env};
 #[derive(SorobanData, SorobanSimpleData)]
 #[symbol_key("StopAuth")]
 #[data_storage_type(Instance)]
-#[bump_info_instance]
+#[extend_ttl_info_instance]
 pub struct StopAuthority(pub Address);
 
 impl StopAuthority {

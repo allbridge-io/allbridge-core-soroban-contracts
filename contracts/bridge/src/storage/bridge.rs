@@ -1,6 +1,6 @@
 use bridge_storage::*;
 use proc_macros::{
-    bump_info_instance, data_storage_type, symbol_key, SorobanData, SorobanSimpleData,
+    extend_ttl_info_instance, data_storage_type, symbol_key, SorobanData, SorobanSimpleData,
 };
 use shared::{require, soroban_data::SimpleSorobanData, Error};
 use soroban_sdk::{contracttype, Address, BytesN, Env, Map};
@@ -11,7 +11,7 @@ use crate::other_contracts::{messenger, pool};
 #[derive(Clone, Debug, Eq, PartialEq, SorobanData, SorobanSimpleData)]
 #[symbol_key("Config")]
 #[data_storage_type(Instance)]
-#[bump_info_instance]
+#[extend_ttl_info_instance]
 pub struct Bridge {
     pub messenger: Address,
     pub rebalancer: Address,

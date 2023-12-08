@@ -1,5 +1,5 @@
 use bridge_storage::view::{get_admin, get_gas_oracle, get_gas_usage};
-use shared::{soroban_data::SimpleSorobanData, utils::bump_instance, Error};
+use shared::{soroban_data::SimpleSorobanData, utils::extend_ttl_instance, Error};
 use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, Map};
 
 use crate::{
@@ -45,7 +45,7 @@ impl Messenger {
     }
 
     pub fn send_message(env: Env, message: BytesN<32>, sender: Address) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         send_message(env, message, sender)
     }
@@ -58,7 +58,7 @@ impl Messenger {
         secondary_signature: BytesN<64>,
         secondary_recovery_id: u32,
     ) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         receive_message(
             env,
@@ -73,13 +73,13 @@ impl Messenger {
     // admin
 
     pub fn set_gas_usage(env: Env, chain_id: u32, gas_usage: u128) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         set_gas_usage(env, chain_id, gas_usage)
     }
 
     pub fn add_secondary_validator(env: Env, validator_address: BytesN<65>) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         add_secondary_validator(env, validator_address)
     }
@@ -88,37 +88,37 @@ impl Messenger {
         env: Env,
         validator_address: BytesN<65>,
     ) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         remove_secondary_validator(env, validator_address)
     }
 
     pub fn set_primary_validator(env: Env, validator_address: BytesN<65>) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         set_primary_validator(env, validator_address)
     }
 
     pub fn set_admin(env: Env, new_admin: Address) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         set_admin(env, new_admin)
     }
 
     pub fn set_gas_oracle(env: Env, new_address: Address) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         set_gas_oracle(env, new_address)
     }
 
     pub fn set_other_chain_ids(env: Env, other_chain_ids: BytesN<32>) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         set_other_chain_ids(env, other_chain_ids)
     }
 
     pub fn withdraw_gas_tokens(env: Env, sender: Address, amount: u128) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         withdraw_gas_tokens(env, sender, amount)
     }

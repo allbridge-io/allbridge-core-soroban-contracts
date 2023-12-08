@@ -5,7 +5,7 @@ use soroban_sdk::{
 
 use crate::{
     contracts::bridge,
-    utils::{desoroban_result, float_to_int_sp, CallResult},
+    utils::{desoroban_result, float_to_int_sp, CallResult, contract_id},
 };
 
 use super::{Token, User};
@@ -52,14 +52,14 @@ impl Bridge {
     }
 
     pub fn generate_and_set_rebalancer(&self, env: &Env) -> Address {
-        let rebalancer = Address::random(&env);
+        let rebalancer = Address::generate(&env);
         self.client.set_rebalancer(&rebalancer);
 
         rebalancer
     }
 
     pub fn generate_and_set_stop_authority(&self, env: &Env) -> Address {
-        let stop_authority = Address::random(&env);
+        let stop_authority = Address::generate(&env);
         self.client.set_stop_authority(&stop_authority);
 
         stop_authority
@@ -85,7 +85,7 @@ impl Bridge {
             &amount_sp,
             &recipient.as_address(),
             &source_chain_id,
-            &receive_token.id.contract_id(),
+            &contract_id(&receive_token.id),
             &nonce,
             &receive_amount_min,
             &claimable,
@@ -111,7 +111,7 @@ impl Bridge {
 
         desoroban_result(self.client.try_swap_and_bridge(
             &sender.as_address(),
-            &token.id.contract_id(),
+            &token.id,
             &amount,
             &recipient,
             &destination_chain_id,

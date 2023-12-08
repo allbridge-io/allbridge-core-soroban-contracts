@@ -107,7 +107,7 @@ fn set_admin() {
     let env = Env::default();
     let BridgeEnv { yaro_pool, .. } = BridgeEnv::default(&env);
 
-    let admin = Address::random(&env);
+    let admin = Address::generate(&env);
     yaro_pool.client.set_admin(&admin);
 
     assert_eq!(yaro_pool.admin(), admin);
@@ -121,7 +121,7 @@ fn set_admin_no_auth() {
     env.mock_auths(&[]);
     expect_auth_error(
         &env,
-        desoroban_result(yaro_pool.client.try_set_admin(&Address::random(&env))),
+        desoroban_result(yaro_pool.client.try_set_admin(&Address::generate(&env))),
     );
 }
 
@@ -130,7 +130,7 @@ fn set_stop_authority() {
     let env = Env::default();
     let BridgeEnv { yaro_pool, .. } = BridgeEnv::default(&env);
 
-    let stop_authority = Address::random(&env);
+    let stop_authority = Address::generate(&env);
     yaro_pool.client.set_stop_authority(&stop_authority);
 
     assert_eq!(yaro_pool.stop_authority(), stop_authority);
@@ -147,7 +147,7 @@ fn set_stop_authority_no_auth() {
         desoroban_result(
             yaro_pool
                 .client
-                .try_set_stop_authority(&Address::random(&env)),
+                .try_set_stop_authority(&Address::generate(&env)),
         ),
     );
 }
@@ -157,7 +157,7 @@ fn set_bridge() {
     let env = Env::default();
     let BridgeEnv { yaro_pool, .. } = BridgeEnv::default(&env);
 
-    let bridge = Address::random(&env);
+    let bridge = Address::generate(&env);
     yaro_pool.client.set_bridge(&bridge);
 
     assert_eq!(yaro_pool.bridge(), bridge);
@@ -171,7 +171,7 @@ fn set_bridge_no_auth() {
     env.mock_auths(&[]);
     expect_auth_error(
         &env,
-        desoroban_result(yaro_pool.client.try_set_bridge(&Address::random(&env))),
+        desoroban_result(yaro_pool.client.try_set_bridge(&Address::generate(&env))),
     );
 }
 

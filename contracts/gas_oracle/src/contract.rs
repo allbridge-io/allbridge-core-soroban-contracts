@@ -1,5 +1,5 @@
 use bridge_storage::view::get_admin;
-use shared::{utils::bump_instance, Error};
+use shared::{utils::extend_ttl_instance, Error};
 use soroban_sdk::{contract, contractimpl, Address, Env};
 
 use crate::{
@@ -28,13 +28,13 @@ impl GasOracleContract {
         price: Option<u128>,
         gas_price: Option<u128>,
     ) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         set_price(env, chain_id, price, gas_price)
     }
 
     pub fn set_admin(env: Env, new_admin: Address) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         set_admin(env, new_admin)
     }

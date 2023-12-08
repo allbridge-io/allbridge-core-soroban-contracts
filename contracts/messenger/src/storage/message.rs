@@ -13,7 +13,7 @@ impl Message {
         let key = DataKey::SentMessage(message);
         let result = env.storage().persistent().get::<_, u32>(&key).is_some();
         if result {
-            Self::bump(env, &key);
+            Self::extend_ttl(env, &key);
         }
         result
     }
@@ -22,14 +22,14 @@ impl Message {
         let key = DataKey::SentMessage(message);
         let sequence = env.ledger().sequence();
         env.storage().persistent().set(&key, &sequence);
-        Self::bump(env, &key);
+        Self::extend_ttl(env, &key);
     }
 
     pub fn get_sent_message_sequence(env: &Env, message: BytesN<32>) -> u32 {
         let key = DataKey::SentMessage(message);
         let result = env.storage().persistent().get::<_, u32>(&key);
         if result.is_some() {
-            Self::bump(env, &key);
+            Self::extend_ttl(env, &key);
         }
         result.unwrap_or(0)
     }
@@ -39,7 +39,7 @@ impl Message {
         let key = DataKey::ReceivedMessage(message);
         let result = env.storage().persistent().get::<_, bool>(&key).is_some();
         if result {
-            Self::bump(env, &key);
+            Self::extend_ttl(env, &key);
         }
         result
     }
@@ -47,12 +47,12 @@ impl Message {
     pub fn set_received_message(env: &Env, message: BytesN<32>) {
         let key = DataKey::ReceivedMessage(message);
         env.storage().persistent().set(&key, &true);
-        Self::bump(env, &key);
+        Self::extend_ttl(env, &key);
     }
 
-    fn bump(env: &Env, key: &DataKey) {
+    fn extend_ttl(env: &Env, key: &DataKey) {
         env.storage()
             .persistent()
-            .bump(key, LIFETIME_THRESHOLD, BUMP_AMOUNT);
+            .extend_ttl(key, LIFETIME_THRESHOLD, BUMP_AMOUNT);
     }
 }

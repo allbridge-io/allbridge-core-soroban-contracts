@@ -1,5 +1,5 @@
 use proc_macros::{
-    bump_info_instance, data_storage_type, symbol_key, SorobanData, SorobanSimpleData,
+    extend_ttl_info_instance, data_storage_type, symbol_key, SorobanData, SorobanSimpleData,
 };
 use soroban_sdk::{contracttype, Address};
 
@@ -7,7 +7,7 @@ use soroban_sdk::{contracttype, Address};
 #[derive(Clone, Debug, Eq, PartialEq, SorobanData, SorobanSimpleData)]
 #[symbol_key("Pool")]
 #[data_storage_type(Instance)]
-#[bump_info_instance]
+#[extend_ttl_info_instance]
 pub struct Pool {
     pub a: u128,
     pub token: Address,

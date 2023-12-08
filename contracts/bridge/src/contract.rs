@@ -1,7 +1,7 @@
 #![allow(clippy::too_many_arguments)]
 
 use bridge_storage::view::{get_admin, get_gas_oracle, get_gas_usage, get_stop_authority};
-use shared::utils::bump_instance;
+use shared::utils::extend_ttl_instance;
 use shared::Error;
 use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, U256};
 
@@ -39,7 +39,7 @@ impl BridgeContract {
     pub fn swap_and_bridge(
         env: Env,
         sender: Address,
-        token: BytesN<32>,
+        token: Address,
         amount: u128,
         recipient: BytesN<32>,
         destination_chain_id: u32,
@@ -48,7 +48,7 @@ impl BridgeContract {
         gas_amount: u128,
         fee_token_amount: u128,
     ) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         swap_and_bridge(
             env,
@@ -76,7 +76,7 @@ impl BridgeContract {
         claimable: bool,
         extra_gas: Option<u128>,
     ) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         receive_tokens(
             env,
@@ -101,7 +101,7 @@ impl BridgeContract {
         recipient: Address,
         receive_amount_min: u128,
     ) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         swap(
             env,
@@ -117,13 +117,13 @@ impl BridgeContract {
     // stop authority
 
     pub fn stop_swap(env: Env) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         stop_swap(env)
     }
 
     pub fn start_swap(env: Env) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         start_swap(env)
     }
@@ -131,31 +131,31 @@ impl BridgeContract {
     // admin
 
     pub fn set_gas_oracle(env: Env, new_address: Address) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         set_gas_oracle(env, new_address)
     }
 
     pub fn set_stop_authority(env: Env, stop_authority: Address) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         set_stop_authority(env, stop_authority)
     }
 
     pub fn set_rebalancer(env: Env, rebalancer: Address) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         set_rebalancer(env, rebalancer)
     }
 
     pub fn set_messenger(env: Env, messenger: Address) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         set_messenger(env, messenger)
     }
 
     pub fn set_gas_usage(env: Env, chain_id: u32, gas_usage: u128) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         set_gas_usage(env, chain_id, gas_usage)
     }
@@ -165,7 +165,7 @@ impl BridgeContract {
         chain_id: u32,
         bridge_address: BytesN<32>,
     ) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         register_bridge(env, chain_id, bridge_address)
     }
@@ -175,7 +175,7 @@ impl BridgeContract {
         chain_id: u32,
         token_address: BytesN<32>,
     ) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         add_bridge_token(env, chain_id, &token_address)
     }
@@ -185,19 +185,19 @@ impl BridgeContract {
         chain_id: u32,
         token_address: BytesN<32>,
     ) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         remove_bridge_token(env, chain_id, &token_address)
     }
 
-    pub fn add_pool(env: Env, pool: Address, token: BytesN<32>) -> Result<(), Error> {
-        bump_instance(&env);
+    pub fn add_pool(env: Env, pool: Address, token: Address) -> Result<(), Error> {
+        extend_ttl_instance(&env);
 
         add_pool(env, &pool, &token)
     }
 
     pub fn withdraw_gas_tokens(env: Env, sender: Address, amount: u128) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         withdraw_gas_tokens(env, sender, amount)
     }
@@ -207,7 +207,7 @@ impl BridgeContract {
         sender: Address,
         token_address: Address,
     ) -> Result<(), Error> {
-        bump_instance(&env);
+        extend_ttl_instance(&env);
 
         withdraw_bridging_fee_in_tokens(env, sender, token_address)
     }

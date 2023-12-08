@@ -30,7 +30,7 @@ pub struct TestPoolForRewards;
 #[contractimpl]
 impl TestPoolForRewards {
     pub fn init(env: Env) {
-        let token = Address::random(&env);
+        let token = Address::generate(&env);
         let pool = Pool::from_init_params(20, token, 100, 1, 2000, TOKEN_DECIMALS);
         pool.save(&env);
     }
@@ -99,8 +99,8 @@ fn common_flow() {
     let env = Env::default();
     env.mock_all_auths();
 
-    let alice = Address::random(&env);
-    let bob = Address::random(&env);
+    let alice = Address::generate(&env);
+    let bob = Address::generate(&env);
 
     let test_pool_id = env.register_contract(None, TestPoolForRewards);
     let reward_manager = TestPoolForRewardsClient::new(&env, &test_pool_id);

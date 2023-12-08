@@ -4,7 +4,7 @@ use soroban_sdk::testutils::{Address as _, BytesN as _, MockAuth, MockAuthInvoke
 use soroban_sdk::{Address, BytesN, Env, IntoVal};
 
 use crate::utils::consts::GOERLI_CHAIN_ID;
-use crate::utils::{desoroban_result, expect_auth_error, expect_contract_error, BridgeEnv, Pool};
+use crate::utils::{desoroban_result, expect_auth_error, expect_contract_error, BridgeEnv, Pool, contract_id};
 
 #[test]
 fn add_pool() {
@@ -22,7 +22,7 @@ fn add_pool() {
 
     bridge
         .client
-        .add_pool(&pool.id, &native_token.id.contract_id());
+        .add_pool(&pool.id, &native_token.id);
 
     let bridge_config = bridge.client.get_config();
 
@@ -38,7 +38,7 @@ fn add_pool() {
 
     let pool_id_on_contract = bridge_config
         .pools
-        .get(native_token.id.contract_id())
+        .get(contract_id(&native_token.id))
         .unwrap();
 
     let from_gas_oracle_factor_on_contract = bridge_config
@@ -64,7 +64,7 @@ fn set_gas_oracle_no_auth() {
     let env = Env::default();
     let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
 
-    let new_gas_oracle = Address::random(&env);
+    let new_gas_oracle = Address::generate(&env);
     env.mock_auths(&[]);
 
     expect_auth_error(
@@ -78,7 +78,7 @@ fn set_gas_oracle() {
     let env = Env::default();
     let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
 
-    let new_gas_oracle = Address::random(&env);
+    let new_gas_oracle = Address::generate(&env);
     bridge.client.set_gas_oracle(&new_gas_oracle);
 
     let get_gas_oracle = bridge.client.get_gas_oracle();
@@ -90,7 +90,7 @@ fn set_rebalancer_no_auth() {
     let env = Env::default();
     let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
 
-    let rebalancer = Address::random(&env);
+    let rebalancer = Address::generate(&env);
     env.mock_auths(&[]);
 
     expect_auth_error(
@@ -104,7 +104,7 @@ fn set_rebalancer() {
     let env = Env::default();
     let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
 
-    let rebalancer = Address::random(&env);
+    let rebalancer = Address::generate(&env);
     bridge.client.set_rebalancer(&rebalancer);
 
     assert_eq!(bridge.client.get_config().rebalancer, rebalancer);
@@ -118,7 +118,7 @@ fn set_messenger() {
     } = BridgeEnv::default(&env);
     env.mock_auths(&[]);
 
-    let messenger = Address::random(&env);
+    let messenger = Address::generate(&env);
 
     env.mock_auths(&[MockAuth {
         address: &admin,
@@ -144,7 +144,7 @@ fn set_messenger_no_auth() {
 
     expect_auth_error(
         &env,
-        desoroban_result(bridge.client.try_set_messenger(&Address::random(&env))),
+        desoroban_result(bridge.client.try_set_messenger(&Address::generate(&env))),
     );
 }
 
@@ -153,7 +153,7 @@ fn set_stop_authority() {
     let env = Env::default();
     let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
 
-    let stop_authority = Address::random(&env);
+    let stop_authority = Address::generate(&env);
     bridge.client.set_stop_authority(&stop_authority);
 
     assert_eq!(bridge.client.get_stop_authority(), stop_authority);
@@ -164,7 +164,7 @@ fn set_stop_authorityno_auth() {
     let env = Env::default();
     let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
 
-    let stop_authority = Address::random(&env);
+    let stop_authority = Address::generate(&env);
 
     env.mock_auths(&[]);
 
@@ -180,7 +180,7 @@ fn sucessful_stop_swap() {
     let bridge_env = BridgeEnv::default(&env);
     let BridgeEnv { ref bridge, .. } = bridge_env;
 
-    let stop_authority = Address::random(&env);
+    let stop_authority = Address::generate(&env);
     bridge.client.set_stop_authority(&stop_authority);
 
     bridge.client.stop_swap();
@@ -225,7 +225,7 @@ fn stop_swap_no_auth() {
     let env = Env::default();
     let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
 
-    let stop_authority = Address::random(&env);
+    let stop_authority = Address::generate(&env);
     bridge.client.set_stop_authority(&stop_authority);
 
     env.mock_auths(&[]);
@@ -238,7 +238,7 @@ fn sucessful_swap_restart() {
     let bridge_env = BridgeEnv::default(&env);
     let BridgeEnv { ref bridge, .. } = bridge_env;
 
-    let stop_authority = Address::random(&env);
+    let stop_authority = Address::generate(&env);
     bridge.client.set_stop_authority(&stop_authority);
 
     bridge.client.stop_swap();
@@ -291,7 +291,7 @@ fn swap_restart_no_auth() {
     let env = Env::default();
     let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
 
-    let stop_authority = Address::random(&env);
+    let stop_authority = Address::generate(&env);
     bridge.client.set_stop_authority(&stop_authority);
 
     bridge.client.stop_swap();
@@ -432,7 +432,7 @@ fn withdraw_gas_tokens() {
         ..
     } = BridgeEnv::default(&env);
 
-    let user = Address::random(&env);
+    let user = Address::generate(&env);
     let gas_amount = 10000000u128;
     let half_gas_amount = gas_amount / 2;
 
