@@ -2,15 +2,20 @@
 
 all: build-bridge
 
-NATIVE_ADDRESS = CB64D3G7SM2RTH6JSGG34DDTFTQ5CFDKVDZJZSODMCX4NJ2HV2KN7OHT
+optimize-all: optimize-gas-oracle optimize-messenger optimize-pool optimize-bridge
+
+#NATIVE_ADDRESS = CB64D3G7SM2RTH6JSGG34DDTFTQ5CFDKVDZJZSODMCX4NJ2HV2KN7OHT #Futurenet
+NATIVE_ADDRESS = CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC #Testnet
 MESSENGER_ADDRESS_PATH = soroban-deploy/messenger
 MESSENGER_ADDRESS = $$(cat $(MESSENGER_ADDRESS_PATH))
 
 GAS_ORACLE_ADDRESS_PATH = soroban-deploy/gas_orace
 GAS_ORACLE_WASM_PATH = target/wasm32-unknown-unknown/release/gas_oracle.wasm
+GAS_ORACLE_WASM_PATH_OP = target/wasm32-unknown-unknown/release/gas_oracle.optimized.wasm
 GAS_ORACLE_ADDRESS = $$(cat $(GAS_ORACLE_ADDRESS_PATH))
 
 POOL_WASM_PATH = target/wasm32-unknown-unknown/release/pool.wasm
+POOL_WASM_PATH_OP = target/wasm32-unknown-unknown/release/pool.optimized.wasm
 POOL_YARO_ADDRESS_PATH = soroban-deploy/pool_yaro
 POOL_YARO_ADDRESS = $$(cat $(POOL_YARO_ADDRESS_PATH))
 
@@ -18,10 +23,12 @@ POOL_USDY_ADDRESS_PATH = soroban-deploy/pool_usdy
 POOL_USDY_ADDRESS = $$(cat $(POOL_USDY_ADDRESS_PATH))
 
 MESSENGER_WASM_PATH = target/wasm32-unknown-unknown/release/messenger.wasm
+MESSENGER_WASM_PATH_OP = target/wasm32-unknown-unknown/release/messenger.optimized.wasm
 MESSENGER_ADDRESS_PATH = soroban-deploy/messenger
 MESSENGER_ADDRESS = $$(cat $(MESSENGER_ADDRESS_PATH))
 
 BRIDGE_WASM_PATH = target/wasm32-unknown-unknown/release/bridge.wasm
+BRIDGE_WASM_PATH_OP = target/wasm32-unknown-unknown/release/bridge.optimized.wasm
 BRIDGE_ADDRESS_PATH = soroban-deploy/bridge
 BRIDGE_ADDRESS = $$(cat $(BRIDGE_ADDRESS_PATH))
 
@@ -32,8 +39,11 @@ ALICE = $$(soroban config identity address alice)
 ADMIN_ALIAS = alice
 ADMIN = $$(soroban config identity address $(ADMIN_ALIAS))
 
-YARO_ADDRESS=CDFVZVTV4K5S66GQXER7YVK6RB23BMPMD3HQUA3TGEZUGDL3NM3R5GDW
-USDY_ADDRESS=CD7KQQY27G5WXQT2IUYJVHNQH6N2I6GEM5ND2BLZ2GHDAPB2V3KWCW7M
+#YARO_ADDRESS=CDFVZVTV4K5S66GQXER7YVK6RB23BMPMD3HQUA3TGEZUGDL3NM3R5GDW #Futurenet
+#USDY_ADDRESS=CD7KQQY27G5WXQT2IUYJVHNQH6N2I6GEM5ND2BLZ2GHDAPB2V3KWCW7M #Futurenet
+
+YARO_ADDRESS=CACOK7HB7D7SRPMH3LYYOW77T6D4D2F7TR7UEVKY2TVSUDSRDM6DZVLK #Testnet
+USDY_ADDRESS=CAOPX7DVI3PFLHE7637YSFU6TLG6Z27Z5O3M547ANAYXQOAYCYYV6NO6 #Testnet
 
 #TOKEN_ADDRESS=$(YARO_ADDRESS)
 #POOL_ADDRESS_PATH=$(POOL_YARO_ADDRESS_PATH)
@@ -43,7 +53,7 @@ TOKEN_ADDRESS=$(USDY_ADDRESS)
 POOL_ADDRESS_PATH=$(POOL_USDY_ADDRESS_PATH)
 POOL_ADDRESS=$(POOL_USDY_ADDRESS)
 
-NETWORK=futurenet
+NETWORK=testnet
 
 test: all
 	cargo test
@@ -60,7 +70,17 @@ build-pool:
 build-bridge: build-messenger build-pool
 	cargo build --target wasm32-unknown-unknown --release --package bridge
 
+optimize-gas-oracle:
+	soroban contract optimize --wasm $(GAS_ORACLE_WASM_PATH)
 
+optimize-messenger:
+	soroban contract optimize --wasm $(MESSENGER_WASM_PATH)
+
+optimize-pool:
+	soroban contract optimize --wasm $(POOL_WASM_PATH)
+
+optimize-bridge:
+	soroban contract optimize --wasm $(BRIDGE_WASM_PATH)
 
 deploy-gas-oracle:
 	soroban contract deploy \
@@ -153,7 +173,7 @@ gas-oracle-crossrate:
 
 pool-deploy:
 	soroban contract deploy \
-          --wasm $(POOL_WASM_PATH) \
+          --wasm $(POOL_WASM_PATH_OP) \
           --source $(ADMIN_ALIAS) \
           --network $(NETWORK) 	\
           > $(POOL_ADDRESS_PATH) && echo $(POOL_ADDRESS)
@@ -242,7 +262,7 @@ pool-claim_balance:
 #---------------MESSENGER---------------------------
 messenger-deploy:
 	soroban contract deploy \
-		--wasm $(MESSENGER_WASM_PATH) \
+		--wasm $(MESSENGER_WASM_PATH_OP) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
 		> $(MESSENGER_ADDRESS_PATH) && echo $(MESSENGER_ADDRESS)
@@ -257,7 +277,7 @@ messenger-initialize:
 		--admin $(ADMIN)\
         --chain_id 7 \
         --native_token_address $(NATIVE_ADDRESS)\
-        --other_chain_ids 0001010101010100000000000000000000000000000000000000000000000000 \
+        --other_chain_ids 0001010101010100010101010101010101000000000000000000000000000000 \
         --gas_oracle_address $(GAS_ORACLE_ADDRESS)\
         --primary_validator_key 04734fc43dde79306ddf1bd5b4840d2cc9195bb48dbef92d081e71805694f5828d9cce76008f1f1a2a8a6ccd564b84937f83630d3d3af9541a5a3f3c1c1ea62c98 \
         --secondary_validator_keys '{ "04734fc43dde79306ddf1bd5b4840d2cc9195bb48dbef92d081e71805694f5828d9cce76008f1f1a2a8a6ccd564b84937f83630d3d3af9541a5a3f3c1c1ea62c98": true }'
@@ -279,7 +299,7 @@ send-message:
 	soroban contract invoke \
 		  --id $(MESSENGER_ADDRESS) \
 		  --source alice \
-		  --network futurenet \
+		  --network $(NETWORK) \
 		  -- \
 		  send_message \
 		  --message 0701efefefefefefefefefefefefefefefefefefefefefefefefefefefefefef \
@@ -305,7 +325,7 @@ messenger-get_transaction_cost:
 #---------------BRIDGE---------------------------
 bridge-deploy:
 	soroban contract deploy \
-		--wasm $(BRIDGE_WASM_PATH) \
+		--wasm $(BRIDGE_WASM_PATH_OP) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
 		> $(BRIDGE_ADDRESS_PATH) && echo $(BRIDGE_ADDRESS)
@@ -348,14 +368,14 @@ bridge-register-bridge:
 		--network $(NETWORK) 	\
 		-- \
 		register_bridge \
-		--chain_id 4 \
-		--bridge_address 270a35d028b2940decaca3c3634f0bf4030c49a7a9a1c70c35bfa5dde5dd6208
-		-#-chain_id 10 \
+#		--chain_id 10 \
 #		--bridge_address 000000000000000000000000760d5d74bead2ccef05ccbfde32a08ebe7e4cfce
 #		--chain_id 6 \
 #		--bridge_address 000000000000000000000000c63c0261c2f1d21b3efe7828032e646c797ee21e
 #		--chain_id 5 \
 #		--bridge_address 000000000000000000000000763e75ca7bc589396f0e5c1b8049ac5ed7c8387f
+#		--chain_id 4 \
+#		--bridge_address 270a35d028b2940decaca3c3634f0bf4030c49a7a9a1c70c35bfa5dde5dd6208
 #		--chain_id 3 \
 #		--bridge_address 0000000000000000000000000e1de5c7267dc1c1bc498cc9bc3dbcaab305e8da
 #		--chain_id 2 \
@@ -370,8 +390,8 @@ bridge-add-bridge-token:
     		--network $(NETWORK) 	\
     		-- \
     		add_bridge_token \
-    		--chain_id 10 \
-    		--token_address 000000000000000000000000ac7d9d0cc7da68f704a229a7258dc2ba654ffcbc
+#    		--chain_id 10 \
+#    		--token_address 000000000000000000000000ac7d9d0cc7da68f704a229a7258dc2ba654ffcbc
 #    		--chain_id 10 \
 #    		--token_address 00000000000000000000000097034742df00c506bd8b9f90e51330bf91ea59b4
 #    		--chain_id 6 \
@@ -409,8 +429,7 @@ bridge-add-pool:
 		-- \
 		add_pool \
 		--pool $(POOL_ADDRESS) \
-		--token fea8431af9bb6bc27a45309a9db03f9ba478c4675a3d0579d18e303c3aaed561 #USDY
-		-#-token cb5cd675e2bb2f78d0b923fc555e8875b0b1ec1ecf0a03733133430d7b6b371e #YARO
+		--token $(TOKEN_ADDRESS)
 
 bridge-set-rebalancer:
 	soroban contract invoke \
@@ -532,3 +551,19 @@ token-get-name:
 		-- \
 		name
 
+wrap-token:
+	soroban lab token wrap \
+		--network $(NETWORK) 	\
+		--asset USDY:GAYODJWF27E5OQO2C6LA6Z6QXQ2EYUONMXFNL2MNMGRJP6RED2CPQKTW
+
+native-token-address:
+	soroban lab token id \
+ 		--network $(NETWORK) \
+ 		--asset native
+
+generate-types:
+	soroban contract bindings typescript \
+	--network $(NETWORK) \
+	--output-dir ./types/messenger \
+	--wasm $(MESSENGER_WASM_PATH_OP) \
+	--contract-id $(MESSENGER_ADDRESS)
