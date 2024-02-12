@@ -195,16 +195,20 @@ fn sucessful_stop_swap() {
         10.0,
         30_00.0,
         0.0,
+        3.0,
+        3.0,
+        0.0,
     );
     expect_contract_error(&env, swap_and_bridge_call_result, Error::SwapProhibited);
 
     let receive_tokens_call_result = bridge_env.do_receive_tokens(
         &env,
+        &bridge_env.alice,
+        &bridge_env.yaro_token,
         10.0,
         0,
         1.5,
-        &bridge_env.alice,
-        &bridge_env.yaro_token,
+        f64::NAN,
     );
     expect_contract_error(&env, receive_tokens_call_result, Error::SwapProhibited);
 
@@ -216,6 +220,8 @@ fn sucessful_stop_swap() {
         &bridge_env.yusd_token,
         10.0,
         1.0,
+        f64::NAN,
+        f64::NAN,
     );
     expect_contract_error(&env, swap_call_result, Error::SwapProhibited);
 }
@@ -259,17 +265,21 @@ fn sucessful_swap_restart() {
             10.0,
             30_00.0,
             0.0,
+            3.0,
+            3.0,
+            f64::NAN,
         )
         .unwrap();
 
     bridge_env
         .do_receive_tokens(
             &env,
+            &bridge_env.alice,
+            &bridge_env.yaro_token,
             10.0,
             0,
             1.5,
-            &bridge_env.alice,
-            &bridge_env.yaro_token,
+            f64::NAN,
         )
         .unwrap();
 
@@ -282,6 +292,8 @@ fn sucessful_swap_restart() {
             &bridge_env.yusd_token,
             10.0,
             1.0,
+            f64::NAN,
+            f64::NAN,
         )
         .unwrap();
 }

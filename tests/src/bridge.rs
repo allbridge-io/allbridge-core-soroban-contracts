@@ -6,8 +6,10 @@ use soroban_sdk::{
     Address, BytesN, Env,
 };
 
-use crate::utils::{consts::GOERLI_CHAIN_ID, expect_sc_error, contract_id};
-use crate::utils::{expect_contract_error, float_to_int_sp, gen_nonce, BridgeEnv, BridgeEnvConfig};
+use crate::utils::{consts::GOERLI_CHAIN_ID, contract_id, expect_sc_error};
+use crate::utils::{
+    expect_contract_error, float_to_uint_sp, gen_nonce, BridgeEnv, BridgeEnvConfig,
+};
 
 #[test]
 fn swap_and_bridge() {
@@ -22,6 +24,9 @@ fn swap_and_bridge() {
             1000.0,
             30_00.0,
             0.0,
+            3.0,
+            3.0,
+            49000.487,
         )
         .unwrap();
 }
@@ -45,10 +50,14 @@ fn swap_and_bridge_fee_share_gt_zero() {
             1000.0,
             30_00.0,
             0.0,
+            3.0,
+            3.0,
+            49050.44,
         )
         .unwrap();
 }
 
+// TODO
 #[test]
 fn swap_and_bridge_near_zero() {
     let env = Env::default();
@@ -62,6 +71,9 @@ fn swap_and_bridge_near_zero() {
             0.0001,
             30_00.0,
             0.0,
+            3.0,
+            3.0,
+            50000.0,
         )
         .unwrap();
 }
@@ -74,11 +86,12 @@ fn swap_and_bridge_near_zero_unbalanced_pool() {
     bridge_env
         .do_receive_tokens(
             &env,
+            &bridge_env.alice,
+            &bridge_env.yaro_token,
             200_000.0,
             0,
             200_000.0,
-            &bridge_env.alice,
-            &bridge_env.yaro_token,
+            82.599,
         )
         .unwrap();
 
@@ -90,6 +103,9 @@ fn swap_and_bridge_near_zero_unbalanced_pool() {
             0.001,
             30_00.0,
             0.0,
+            3.0,
+            3.0,
+            249999.451,
         )
         .unwrap();
 }
@@ -107,6 +123,9 @@ fn swap_and_bridge_fee_fully_in_token() {
             1000.0,
             0.0,
             5.0,
+            3.0,
+            3.0,
+            49005.482,
         )
         .unwrap();
 }
@@ -124,6 +143,9 @@ fn swap_and_bridge_fee_partially_in_token() {
             100.0,
             5.0,
             0.1,
+            3.0,
+            3.0,
+            49900.104,
         )
         .unwrap();
 }
@@ -258,11 +280,12 @@ pub fn receive_tokens() {
     bridge_env
         .do_receive_tokens(
             &env,
+            &bridge_env.alice,
+            &bridge_env.yaro_token,
             100.0,
             0,
             1.5,
-            &bridge_env.alice,
-            &bridge_env.yaro_token,
+            49900.004,
         )
         .unwrap();
 }
@@ -281,11 +304,12 @@ pub fn receive_tokens_fee_share_gt_zero() {
     bridge_env
         .do_receive_tokens(
             &env,
+            &bridge_env.alice,
+            &bridge_env.yaro_token,
             100.0,
             0,
             100.0,
-            &bridge_env.alice,
-            &bridge_env.yaro_token,
+            49900.004,
         )
         .unwrap();
 }
@@ -296,7 +320,15 @@ pub fn receive_tokens_zero_amount() {
     let bridge_env = BridgeEnv::default(&env);
 
     bridge_env
-        .do_receive_tokens(&env, 0.0, 0, 0.0, &bridge_env.alice, &bridge_env.yaro_token)
+        .do_receive_tokens(
+            &env,
+            &bridge_env.alice,
+            &bridge_env.yaro_token,
+            0.0,
+            0,
+            0.0,
+            50000.0,
+        )
         .unwrap();
 }
 
@@ -308,11 +340,12 @@ pub fn receive_tokens_extra_gas() {
     bridge_env
         .do_receive_tokens(
             &env,
+            &bridge_env.alice,
+            &bridge_env.yusd_token,
             100.0,
             1000,
             1.5,
-            &bridge_env.alice,
-            &bridge_env.yusd_token,
+            49900.004,
         )
         .unwrap();
 }
@@ -333,7 +366,7 @@ pub fn receive_tokens_extra_gas_not_enough_native_token_on_bridge() {
     bridge_env
         .hash_and_receive_message(
             &env,
-            float_to_int_sp(1_000.0),
+            float_to_uint_sp(1_000.0),
             &bridge_env.alice.as_address(),
             &bridge_env.yaro_token,
             &nonce,
@@ -434,7 +467,7 @@ pub fn receive_tokens_insufficient_received_amount() {
     bridge_env
         .hash_and_receive_message(
             &env,
-            float_to_int_sp(amount),
+            float_to_uint_sp(amount),
             &bridge_env.alice.as_address(),
             &bridge_env.yaro_token,
             &nonce,
@@ -463,12 +496,12 @@ pub fn receive_tokens_message_processed() {
 
     let nonce = gen_nonce(&env);
     let amount = 1_000.0;
-    let amount_sp = float_to_int_sp(amount);
+    let amount_sp = float_to_uint_sp(amount);
 
     bridge_env
         .hash_and_receive_message(
             &env,
-            float_to_int_sp(amount),
+            float_to_uint_sp(amount),
             &bridge_env.alice.as_address(),
             &bridge_env.yaro_token,
             &nonce,
@@ -516,6 +549,8 @@ pub fn swap() {
             &bridge_env.yusd_token,
             10.0,
             1.0,
+            49990.0,
+            49990.0,
         )
         .unwrap();
 }

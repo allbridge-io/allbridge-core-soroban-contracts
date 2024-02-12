@@ -16,8 +16,8 @@ use crate::{
         pool::Pool as PoolInfo,
     },
     utils::{
-        assert_rel_eq, consts::BP, float_to_int_sp, get_event_by_name, sign_message,
-        MessengerConfig, contract_id
+        assert_rel_eq, consts::BP, contract_id, float_to_uint_sp, get_latest_event, sign_message,
+        MessengerConfig,
     },
 };
 
@@ -327,13 +327,15 @@ impl BridgeEnv {
         receive_token: &Token,
         amount: f64,
         receive_amount_threshold: f64,
+        expected_send_v_usd: f64,
+        expected_receive_new_token_balance: f64,
     ) -> CallResult {
-        let amount_int = send_token.float_to_int(amount);
+        let amount_int = send_token.float_to_uint(amount);
         let receive_amount_min = 0.0f64.max(amount - receive_amount_threshold);
 
-        let receive_amount_min = receive_token.float_to_int(receive_amount_min);
+        let receive_amount_min = receive_token.float_to_uint(receive_amount_min);
 
-        let before_swap = BalancesSnapshot::take(&self);
+        let snapshot_before_swap = BalancesSnapshot::take(&self);
 
         let call_result = self
             .bridge
@@ -344,7 +346,7 @@ impl BridgeEnv {
                 &contract_id(&send_token.id),
                 &contract_id(&receive_token.id),
                 &recipient.as_address(),
-                &receive_amount_min
+                &receive_amount_min,
             )
             .map(Result::unwrap)
             .map_err(Result::unwrap);
@@ -353,93 +355,9 @@ impl BridgeEnv {
             return call_result;
         }
 
-        let after_swap: BalancesSnapshot = BalancesSnapshot::take(&self);
-        before_swap.print_change_with(&after_swap, Some("Swap diff"));
+        let snapshot_after_swap: BalancesSnapshot = BalancesSnapshot::take(&self);
+        snapshot_before_swap.print_change_with(&snapshot_after_swap, Some("Swap diff"));
 
-        self.assert_swap_results(
-            env,
-            before_swap,
-            after_swap,
-            amount,
-            amount_int,
-            receive_amount_min,
-            receive_amount_threshold,
-            sender,
-            recipient,
-            send_token,
-            receive_token,
-        );
-
-        call_result
-    }
-
-    fn assert_swap_to_v_usd(&self, amount_sp: u128, pool_before: &PoolInfo, pool_after: &PoolInfo) {
-        let expected_v_usd = pool_before.get_y(pool_after.token_balance);
-
-        assert_eq!(
-            pool_before.token_balance + amount_sp,
-            pool_after.token_balance
-        );
-        assert_eq!(pool_before.reserves + amount_sp, pool_after.reserves);
-        assert_eq!(pool_after.v_usd_balance, expected_v_usd);
-    }
-
-    fn assert_from_v_usd(
-        &self,
-        pool_before: &PoolInfo,
-        pool_after: &PoolInfo,
-        amount_sp: u128,
-        result_amount_sp: u128,
-        receive_amount_min: u128,
-        receive_amount_threshold_sp: u128,
-    ) {
-        assert_eq!(pool_before.d, pool_after.d);
-        assert_eq!(
-            pool_before.v_usd_balance + amount_sp,
-            pool_after.v_usd_balance,
-        );
-
-        let new_amount = pool_before.get_y(pool_after.v_usd_balance);
-        let calc_result_sp = pool_before.token_balance - new_amount;
-
-        assert_eq!(pool_before.reserves - calc_result_sp, pool_after.reserves);
-        assert_eq!(pool_after.token_balance, new_amount);
-        assert!(
-            result_amount_sp <= amount_sp,
-            "result_amount_sp: {}, amount_sp: {}",
-            result_amount_sp,
-            amount_sp
-        );
-        assert!(
-            result_amount_sp >= receive_amount_min,
-            "result_amount_sp: {}, receive_amount_min: {}",
-            result_amount_sp,
-            receive_amount_min
-        );
-        assert_rel_eq(
-            result_amount_sp,
-            receive_amount_min,
-            receive_amount_threshold_sp,
-        );
-    }
-
-    fn assert_swap_results(
-        &self,
-        env: &Env,
-        snapshot_before_swap: BalancesSnapshot,
-        snapshot_after_swap: BalancesSnapshot,
-
-        amount: f64,
-        amount_int: u128,
-        receive_amount_min: u128,
-        receive_amount_threshold: f64,
-
-        sender: &User,
-        recipient: &User,
-
-        send_token: &Token,
-        receive_token: &Token,
-    ) {
         let sender_tag = sender.tag;
         let recipient_tag = recipient.tag;
         let send_token_tag = send_token.tag;
@@ -451,7 +369,7 @@ impl BridgeEnv {
             format!("{recipient_tag}_{receive_token_tag}_balance");
         let pool_receive_token_balance_key = format!("pool_{receive_token_tag}_balance");
 
-        let swapped_event = get_event_by_name::<Swapped>(env, "Swapped").unwrap();
+        let swapped_event = get_latest_event::<Swapped>(env).unwrap();
 
         let send_pool_before = snapshot_before_swap.get_pool_info_by_tag(send_token_tag);
         let send_pool_after = snapshot_after_swap.get_pool_info_by_tag(send_token_tag);
@@ -466,19 +384,33 @@ impl BridgeEnv {
 
         let amount_sp = send_token.amount_to_system_precision(amount_int - fee);
 
-        self.assert_swap_to_v_usd(amount_sp, &send_pool_before, &send_pool_after);
+        if !expected_send_v_usd.is_nan() {
+            let expected_v_usd = float_to_uint_sp(expected_send_v_usd);
 
-        let receive_amount_min_sp = float_to_int_sp(amount - receive_amount_threshold);
-        let receive_amount_threshold = float_to_int_sp(receive_amount_threshold);
+            self.assert_swap_to_v_usd(
+                &send_pool_before,
+                &send_pool_after,
+                expected_v_usd,
+                amount_sp,
+            );
+        }
 
-        self.assert_from_v_usd(
-            &receive_pool_before,
-            &receive_pool_after,
-            amount_sp,
-            receive_token.amount_to_system_precision(swapped_event.receive_amount),
-            receive_amount_min_sp,
-            receive_amount_threshold,
-        );
+        let receive_amount_min_sp = float_to_uint_sp(amount - receive_amount_threshold);
+        let receive_amount_threshold = float_to_uint_sp(receive_amount_threshold);
+
+        if !expected_receive_new_token_balance.is_nan() {
+            let expected_new_token_balance = float_to_uint_sp(expected_receive_new_token_balance);
+
+            self.assert_swap_from_v_usd(
+                &receive_pool_before,
+                &receive_pool_after,
+                amount_sp,
+                receive_token.amount_to_system_precision(swapped_event.receive_amount),
+                receive_amount_min_sp,
+                receive_amount_threshold,
+                expected_new_token_balance,
+            );
+        }
 
         assert_eq!(
             snapshot_before_swap[sender_send_token_balance_key.as_str()] - amount_int,
@@ -506,6 +438,61 @@ impl BridgeEnv {
 
         assert_eq!(swapped_event.receive_token, contract_id(&receive_token.id));
         assert_eq!(swapped_event.send_token, contract_id(&send_token.id));
+        call_result
+    }
+
+    fn assert_swap_to_v_usd(
+        &self,
+        pool_before: &PoolInfo,
+        pool_after: &PoolInfo,
+        expected_v_usd: u128,
+        amount_sp: u128,
+    ) {
+        assert_eq!(
+            pool_before.token_balance + amount_sp,
+            pool_after.token_balance
+        );
+        assert_eq!(pool_before.reserves + amount_sp, pool_after.reserves);
+        assert_eq!(pool_after.v_usd_balance, expected_v_usd);
+    }
+
+    fn assert_swap_from_v_usd(
+        &self,
+        pool_before: &PoolInfo,
+        pool_after: &PoolInfo,
+        amount_sp: u128,
+        result_amount_sp: u128,
+        receive_amount_min: u128,
+        receive_amount_threshold_sp: u128,
+        expected_new_token_balance: u128,
+    ) {
+        assert_eq!(pool_before.d, pool_after.d);
+        assert_eq!(
+            pool_before.v_usd_balance + amount_sp,
+            pool_after.v_usd_balance,
+        );
+
+        let calc_result_sp = pool_before.token_balance - expected_new_token_balance;
+
+        assert_eq!(pool_before.reserves - calc_result_sp, pool_after.reserves);
+        assert_eq!(pool_after.token_balance, expected_new_token_balance);
+        assert!(
+            result_amount_sp <= amount_sp,
+            "result_amount_sp: {}, amount_sp: {}",
+            result_amount_sp,
+            amount_sp
+        );
+        assert!(
+            result_amount_sp >= receive_amount_min,
+            "result_amount_sp: {}, receive_amount_min: {}",
+            result_amount_sp,
+            receive_amount_min
+        );
+        assert_rel_eq(
+            result_amount_sp,
+            receive_amount_min,
+            receive_amount_threshold_sp,
+        );
     }
 
     pub fn do_swap_and_bridge(
@@ -516,6 +503,9 @@ impl BridgeEnv {
         amount: f64,
         gas_amount: f64,
         fee_token_amount: f64,
+        bridge_tx_cost: f64,
+        messenger_tx_cost: f64,
+        expected_v_usd: f64,
     ) -> CallResult {
         let nonce = gen_nonce(&env);
         let recipient = BytesN::random(&env);
@@ -541,64 +531,37 @@ impl BridgeEnv {
         let snapshot_after_swap = BalancesSnapshot::take(&self);
         snapshot_before_swap.print_change_with(&snapshot_after_swap, Some("SwapAndBridge diff"));
 
-        let amount_int = token.float_to_int(amount);
-        let gas_amount_int = self.native_token.float_to_int(gas_amount);
-        let fee_token_amount_int = token.float_to_int(fee_token_amount);
+        let pool_before = snapshot_before_swap.get_pool_info_by_tag(token.tag);
+        let pool_after = snapshot_after_swap.get_pool_info_by_tag(token.tag);
 
-        self.assert_swap_and_bridge_results(
-            env,
-            snapshot_before_swap,
-            snapshot_after_swap,
-            amount_int,
-            gas_amount_int,
-            fee_token_amount_int,
-            &nonce,
-            &recipient,
-            &sender,
-            &token,
-        );
+        let amount = token.float_to_uint(amount);
+        let gas_amount = self.native_token.float_to_uint(gas_amount);
+        let fee_token_amount = token.float_to_uint(fee_token_amount);
+        let bridge_tx_cost = self.native_token.float_to_uint(bridge_tx_cost);
+        let messenger_tx_cost = self.native_token.float_to_uint(messenger_tx_cost);
 
-        call_result
-    }
+        // let expected_v_usd_ = pool_before.get_y(pool_after.token_balance);
 
-    fn assert_swap_and_bridge_results(
-        &self,
-        env: &Env,
-        snapshot_before_swap: BalancesSnapshot,
-        snapshot_after_swap: BalancesSnapshot,
+        let fee_share = pool_before.fee_share_bp;
+        let amount_after_token_fee = amount - fee_token_amount;
+        let fee = (amount_after_token_fee * fee_share) / BP as u128;
+        let amount_sp = token.amount_to_system_precision(amount_after_token_fee - fee);
 
-        amount: u128,
-        gas_amount: u128,
-        fee_token_amount: u128,
-
-        nonce: &U256,
-        recipient: &BytesN<32>,
-
-        user: &User,
-        token: &Token,
-    ) {
         let token_tag = token.tag;
-        let user_tag = user.tag;
+        let user_tag = sender.tag;
 
         let pool_balance_key = format!("pool_{token_tag}_balance");
         let user_token_balance_key = format!("{user_tag}_{token_tag}_balance");
         let user_native_balance_key = format!("{user_tag}_native_balance");
         let bridge_token_balance_key = format!("bridge_{token_tag}_balance");
 
-        let receive_fee = get_event_by_name::<ReceiveFee>(&env, "ReceiveFee").unwrap();
-        let tokens_sent_event = get_event_by_name::<TokensSent>(&env, "TokensSent").unwrap();
+        let receive_fee = get_latest_event::<ReceiveFee>(&env).unwrap();
+        let tokens_sent_event = get_latest_event::<TokensSent>(&env).unwrap();
 
-        let bridge_tx_cost = self.bridge.client.get_transaction_cost(&GOERLI_CHAIN_ID);
-        let messenger_tx_cost = self.messenger.client.get_transaction_cost(&GOERLI_CHAIN_ID);
-
-        let pool_before = snapshot_before_swap.get_pool_info_by_tag(token_tag);
-        let pool_after = snapshot_after_swap.get_pool_info_by_tag(token_tag);
-
-        let amount_after_token_fee = amount - fee_token_amount;
-        let fee = (amount_after_token_fee * pool_before.fee_share_bp) / BP as u128;
-        let amount_sp = token.amount_to_system_precision(amount_after_token_fee - fee);
-
-        self.assert_swap_to_v_usd(amount_sp, &pool_before, &pool_after);
+        if !expected_v_usd.is_nan() {
+            let expected_v_usd = float_to_uint_sp(expected_v_usd);
+            self.assert_swap_to_v_usd(&pool_before, &pool_after, expected_v_usd, amount_sp);
+        }
 
         assert_eq!(bridge_tx_cost, receive_fee.bridge_transaction_cost);
         assert_eq!(messenger_tx_cost, receive_fee.message_transaction_cost);
@@ -634,28 +597,21 @@ impl BridgeEnv {
             snapshot_after_swap[bridge_token_balance_key.as_str()]
         );
 
-        let expected_max_token_sent_amount_sp =
-            token.amount_to_system_precision(amount - fee_token_amount);
-
-        println!(
-            "expected_max_token_sent_amount_sp {:?}",
-            expected_max_token_sent_amount_sp
-        );
-        println!("tokens_sent_event.amount {:?}", tokens_sent_event.amount);
+        call_result
     }
 
     pub fn do_receive_tokens(
         &self,
         env: &Env,
+        user: &User,
+        token: &Token,
         amount: f64,
         extra_gas: u128,
         receive_amount_threshold: f64,
-
-        user: &User,
-        token: &Token,
+        expected_new_token_balance: f64,
     ) -> CallResult {
         let nonce = gen_nonce(env);
-        let amount_sp = float_to_int_sp(amount);
+        let amount_sp = float_to_uint_sp(amount);
         let receive_amount_min = 0.0f64.max(amount - receive_amount_threshold);
         let snapshot_before_swap = BalancesSnapshot::take(&self);
 
@@ -682,68 +638,37 @@ impl BridgeEnv {
         let snapshot_after_swap = BalancesSnapshot::take(&self);
         snapshot_before_swap.print_change_with(&snapshot_after_swap, Some("ReceiveTokens diff"));
 
-        let receive_amount_min_sp = float_to_int_sp(amount - receive_amount_threshold);
-        self.assert_receive_tokens_result(
-            &env,
-            snapshot_before_swap,
-            snapshot_after_swap,
-            amount_sp,
-            extra_gas,
-            receive_amount_min_sp,
-            receive_amount_threshold,
-            message_hash_with_sender,
-            nonce,
-            user,
-            token,
-        );
-
-        call_result
-    }
-
-    fn assert_receive_tokens_result(
-        &self,
-        env: &Env,
-        snapshot_before_swap: BalancesSnapshot,
-        snapshot_after_swap: BalancesSnapshot,
-
-        amount_sp: u128,
-        extra_gas: u128,
-        receive_amount_min: u128,
-        receive_amount_threshold: f64,
-        message_hash_with_sender: BytesN<32>,
-        nonce: U256,
-
-        user: &User,
-        token: &Token,
-    ) {
         let user_tag = user.tag;
         let token_tag = token.tag;
+
+        let pool_before = snapshot_before_swap.get_pool_info_by_tag(token_tag);
+        let pool_after = snapshot_after_swap.get_pool_info_by_tag(token_tag);
 
         let pool_balance_key = format!("pool_{token_tag}_balance");
         let user_token_balance_key = format!("{user_tag}_{token_tag}_balance");
         let user_native_balance_key = format!("{user_tag}_native_balance");
 
-        let receive_amount_threshold_sp = float_to_int_sp(receive_amount_threshold);
-
-        let tokens_received_event =
-            get_event_by_name::<TokensReceived>(&env, "TokensReceived").unwrap();
+        let receive_amount_min_sp = float_to_uint_sp(amount - receive_amount_threshold);
+        let receive_amount_threshold_sp = float_to_uint_sp(receive_amount_threshold);
+        let tokens_received_event = get_latest_event::<TokensReceived>(&env).unwrap();
 
         let result_amount_sp = self
             .get_token_by_tag(token_tag)
             .amount_to_system_precision(tokens_received_event.amount);
 
-        let pool_before = snapshot_before_swap.get_pool_info_by_tag(token_tag);
-        let pool_after = snapshot_after_swap.get_pool_info_by_tag(token_tag);
+        if !expected_new_token_balance.is_nan() {
+            let expected_new_token_balance_sp = float_to_uint_sp(expected_new_token_balance);
 
-        self.assert_from_v_usd(
-            &pool_before,
-            &pool_after,
-            amount_sp,
-            result_amount_sp,
-            receive_amount_min,
-            receive_amount_threshold_sp,
-        );
-
+            self.assert_swap_from_v_usd(
+                &pool_before,
+                &pool_after,
+                amount_sp,
+                result_amount_sp,
+                receive_amount_min_sp,
+                receive_amount_threshold_sp,
+                expected_new_token_balance_sp,
+            );
+        }
         assert_eq!(
             snapshot_before_swap[user_native_balance_key.as_str()] + extra_gas,
             snapshot_after_swap[user_native_balance_key.as_str()]
@@ -767,5 +692,7 @@ impl BridgeEnv {
         assert_eq!(tokens_received_event.message, message_hash_with_sender);
         assert_eq!(tokens_received_event.recipient, user.contract_id());
         assert_eq!(tokens_received_event.nonce, nonce);
+
+        call_result
     }
 }

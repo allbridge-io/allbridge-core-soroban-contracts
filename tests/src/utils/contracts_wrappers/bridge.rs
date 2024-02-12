@@ -5,7 +5,7 @@ use soroban_sdk::{
 
 use crate::{
     contracts::bridge,
-    utils::{desoroban_result, float_to_int_sp, CallResult, contract_id},
+    utils::{contract_id, desoroban_result, float_to_uint_sp, CallResult},
 };
 
 use super::{Token, User};
@@ -77,8 +77,8 @@ impl Bridge {
         claimable: bool,
         extra_gas: &Option<u128>,
     ) -> CallResult {
-        let amount_sp = float_to_int_sp(amount);
-        let receive_amount_min = receive_token.float_to_int(receive_amount_min);
+        let amount_sp = float_to_uint_sp(amount);
+        let receive_amount_min = receive_token.float_to_uint(receive_amount_min);
 
         desoroban_result(self.client.try_receive_tokens(
             &sender,
@@ -105,9 +105,9 @@ impl Bridge {
         receive_token: &BytesN<32>,
         nonce: &U256,
     ) -> CallResult {
-        let amount = token.float_to_int(amount);
-        let gas_amount = self.native_token.float_to_int(gas_amount);
-        let fee_token_amount = token.float_to_int(fee_token_amount);
+        let amount = token.float_to_uint(amount);
+        let gas_amount = self.native_token.float_to_uint(gas_amount);
+        let fee_token_amount = token.float_to_uint(fee_token_amount);
 
         desoroban_result(self.client.try_swap_and_bridge(
             &sender.as_address(),

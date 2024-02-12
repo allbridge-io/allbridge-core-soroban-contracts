@@ -3,7 +3,7 @@ use soroban_sdk::Env;
 use crate::{
     contracts::pool::{Deposit, Withdraw},
     utils::{
-        assert_rel_eq, float_to_int_sp, format_diff, get_event_by_name, BridgeEnv, BridgeEnvConfig,
+        assert_rel_eq, float_to_uint_sp, format_diff, get_latest_event, BridgeEnv, BridgeEnvConfig,
     },
 };
 
@@ -25,21 +25,21 @@ fn deposit() {
 
     assert_eq!(
         yaro_pool.user_deposit(&alice).lp_amount,
-        float_to_int_sp(deposit_amount)
+        float_to_uint_sp(deposit_amount)
     );
     assert_eq!(
         balance_before - balance_after,
-        yaro_token.float_to_int(deposit_amount)
+        yaro_token.float_to_uint(deposit_amount)
     );
 
-    let deposit_event = get_event_by_name::<Deposit>(&env, "Deposit");
+    let deposit_event = get_latest_event::<Deposit>(&env);
 
     assert!(deposit_event.is_some());
     assert_eq!(
         deposit_event.unwrap(),
         Deposit {
             user: alice.as_address(),
-            amount: float_to_int_sp(deposit_amount)
+            amount: float_to_uint_sp(deposit_amount)
         }
     );
 }
@@ -64,17 +64,17 @@ fn withdraw() {
     assert_eq!(yaro_pool.user_deposit(&alice).lp_amount, 0);
     assert_eq!(
         balance_after - balance_before,
-        yaro_token.float_to_int(withdraw_amount)
+        yaro_token.float_to_uint(withdraw_amount)
     );
 
-    let withdraw_event = get_event_by_name::<Withdraw>(&env, "Withdraw");
+    let withdraw_event = get_latest_event::<Withdraw>(&env);
 
     assert!(withdraw_event.is_some());
     assert_eq!(
         withdraw_event.unwrap(),
         Withdraw {
             user: alice.as_address(),
-            amount: float_to_int_sp(withdraw_amount)
+            amount: float_to_uint_sp(withdraw_amount)
         }
     );
 }
@@ -148,7 +148,6 @@ fn success() {
     );
 }
 
-
 #[test]
 fn claim_balance() {
     let env = Env::default();
@@ -174,8 +173,7 @@ fn claim_balance() {
     assert_eq!(claimable_balance_before_swap, 0);
 
     let vusd_amount = 50.0;
-    let amount = yaro_pool
-        .swap_from_v_usd(&bob, vusd_amount, true);
+    let amount = yaro_pool.swap_from_v_usd(&bob, vusd_amount, true);
     let claimable_balance_after_swap = yaro_pool.get_claimable_balance(&bob);
 
     assert_eq!(claimable_balance_after_swap, amount);
@@ -192,4 +190,3 @@ fn claim_balance() {
 
     assert_eq!(bob_balance_before_swap + amount, bob_balance_after_claim);
 }
-

@@ -1,5 +1,6 @@
 use rand::prelude::*;
 use std::{
+    any::type_name,
     cmp::Ordering,
     fmt::{Debug, Display},
 };
@@ -8,7 +9,8 @@ use color_print::cformat;
 use ethers_core::types::Signature;
 use ethers_signers::LocalWallet;
 use soroban_sdk::{
-    testutils::Events, BytesN, Env, Error as SorobanError, FromVal, Symbol, TryFromVal, Val, U256, ConversionError, InvokeError, Address
+    testutils::Events, Address, BytesN, ConversionError, Env, Error as SorobanError, FromVal,
+    InvokeError, Symbol, TryFromVal, Val, U256,
 };
 
 use soroban_sdk::xdr::ScAddress;
@@ -38,7 +40,7 @@ pub fn int_to_float(amount: u128, decimals: u32) -> f64 {
     ((amount as f64) / 10.0f64.powi(decimals as i32)) as f64
 }
 
-pub fn float_to_int_sp(amount: f64) -> u128 {
+pub fn float_to_uint_sp(amount: f64) -> u128 {
     float_to_int(amount, SP)
 }
 
@@ -102,7 +104,15 @@ pub fn format_diff<T: PartialOrd + Display>(start: T, to: T) -> String {
     }
 }
 
-pub fn get_event_by_name<T: FromVal<Env, Val>>(env: &Env, event: &str) -> Option<T> {
+fn type_name_of_event<T: FromVal<Env, Val> + ?Sized>() -> String {
+    static SPLITTERS: &[char] = &['(', ')', '[', ']', '<', '>', '{', '}', ' ', ',', '='];
+    type_name::<T>()
+        .split_inclusive(SPLITTERS)
+        .flat_map(|component| component.rsplit("::").next())
+        .collect()
+}
+
+pub fn get_latest_event<T: FromVal<Env, Val>>(env: &Env) -> Option<T> {
     env.events()
         .all()
         .iter()
@@ -112,8 +122,8 @@ pub fn get_event_by_name<T: FromVal<Env, Val>>(env: &Env, event: &str) -> Option
                 .map(|symbol| {
                     symbol
                         .to_string()
-                        .eq(event)
-                        .then(|| T::from_val(&env, &event_data))
+                        .eq(&type_name_of_event::<T>())
+                        .then(|| T::from_val(env, &event_data))
                 })
                 .ok()
                 .flatten()

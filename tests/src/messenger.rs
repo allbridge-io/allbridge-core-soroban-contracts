@@ -1,5 +1,5 @@
 use shared::{
-    consts::{CHAIN_ID, CHAIN_PRECISION, ORACLE_PRECISION},
+    consts::CHAIN_ID,
     utils::{hash_message, hash_with_sender, hash_with_sender_address},
     Error,
 };
@@ -10,12 +10,9 @@ use soroban_sdk::{
 };
 
 use crate::utils::{
-    consts::{GOERLI_CHAIN_ID, GOERLI_GAS_PRICE, GOERLI_PRICE, THIS_PRICE},
-    expect_contract_error, gen_nonce, message_hash_vec_to_byte, sign_message, vec_to_bytes,
-    BridgeEnv, Messenger, MessengerConfig, GAS_AMOUNT, contract_id
+    consts::GOERLI_CHAIN_ID, contract_id, expect_contract_error, gen_nonce,
+    message_hash_vec_to_byte, sign_message, vec_to_bytes, BridgeEnv, Messenger, MessengerConfig,
 };
-
-const FROM_ORACLE_TO_CHAIN_SCALING_FACTOR: u128 = 10u128.pow(ORACLE_PRECISION - CHAIN_PRECISION);
 
 #[test]
 fn messenger_init() {
@@ -55,9 +52,7 @@ fn messenger_send_message() {
         .send_message(&bridge_env.alice, &message)
         .unwrap();
 
-    let expected_fee = (GOERLI_GAS_PRICE * GAS_AMOUNT * GOERLI_PRICE
-        / THIS_PRICE
-        / FROM_ORACLE_TO_CHAIN_SCALING_FACTOR) as i128;
+    let expected_fee = 300_000_00;
 
     assert!(bridge_env
         .messenger

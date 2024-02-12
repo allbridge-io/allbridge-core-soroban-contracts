@@ -41,7 +41,7 @@ impl Token {
 
     pub fn airdrop(&self, id: &Address) {
         self.asset_client
-            .mint(id, &(self.float_to_int(1_000_000_000.0) as i128));
+            .mint(id, &(self.float_to_uint(1_000_000_000.0) as i128));
     }
 
     pub fn airdrop_user(&self, user: &User) {
@@ -72,7 +72,7 @@ impl Token {
         self.client.balance(&id) as u128
     }
 
-    pub fn float_to_int(&self, amount: f64) -> u128 {
+    pub fn float_to_uint(&self, amount: f64) -> u128 {
         float_to_int(amount, self.client.decimals())
     }
 

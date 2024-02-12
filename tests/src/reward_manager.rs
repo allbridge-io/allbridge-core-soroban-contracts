@@ -11,17 +11,21 @@ pub fn swap_a_to_b(env: &Env, bridge_env: &BridgeEnv, swap_amount: f64) {
             swap_amount,
             3000.0,
             0.0,
+            3.0,
+            3.0,
+            f64::NAN,
         )
         .unwrap();
 
     bridge_env
         .do_receive_tokens(
             &env,
+            &bridge_env.bob,
+            &bridge_env.yusd_token,
             swap_amount,
             0,
             15.0,
-            &bridge_env.bob,
-            &bridge_env.yusd_token,
+            f64::NAN,
         )
         .unwrap();
 }
@@ -35,17 +39,21 @@ pub fn swap_b_to_a(env: &Env, bridge_env: &BridgeEnv, swap_amount: f64) {
             swap_amount,
             3000.0,
             0.0,
+            3.0,
+            3.0,
+            f64::NAN,
         )
         .unwrap();
 
     bridge_env
         .do_receive_tokens(
             &env,
+            &bridge_env.alice,
+            &bridge_env.yaro_token,
             swap_amount,
             0,
             1.5,
-            &bridge_env.alice,
-            &bridge_env.yaro_token,
+            f64::NAN,
         )
         .unwrap();
 }

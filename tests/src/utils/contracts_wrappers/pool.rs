@@ -1,10 +1,10 @@
 use soroban_sdk::{Address, Env};
 
+use crate::utils::SYSTEM_PRECISION;
 use crate::{
     contracts::pool::{self, UserDeposit},
-    utils::{float_to_int, float_to_int_sp, int_to_float, CallResult},
+    utils::{float_to_int, float_to_uint_sp, int_to_float, CallResult},
 };
-use crate::utils::SYSTEM_PRECISION;
 
 use super::User;
 
@@ -97,7 +97,7 @@ impl Pool {
 
     pub fn withdraw(&self, user: &User, withdraw_amount: f64) -> CallResult {
         self.client
-            .try_withdraw(&user.as_address(), &float_to_int_sp(withdraw_amount))
+            .try_withdraw(&user.as_address(), &float_to_uint_sp(withdraw_amount))
             .map(Result::unwrap)
             .map_err(Result::unwrap)
     }
@@ -134,12 +134,16 @@ impl Pool {
     }
 
     pub fn swap_from_v_usd(&self, user: &User, amount: f64, claimable: bool) -> u128 {
-        self.client
-            .swap_from_v_usd(&user.as_address(), &float_to_int(amount, SYSTEM_PRECISION), &0, &false, &claimable)
+        self.client.swap_from_v_usd(
+            &user.as_address(),
+            &float_to_int(amount, SYSTEM_PRECISION),
+            &0,
+            &false,
+            &claimable,
+        )
     }
 
     pub fn get_claimable_balance(&self, user: &User) -> u128 {
-        self.client
-            .get_claimable_balance(&user.as_address())
+        self.client.get_claimable_balance(&user.as_address())
     }
 }
