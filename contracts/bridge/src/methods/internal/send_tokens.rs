@@ -2,7 +2,11 @@
 
 use bridge_storage::*;
 use shared::{
-    consts::CHAIN_ID, require, soroban_data::SimpleSorobanData, utils::hash_message, Error, Event,
+    consts::CHAIN_ID,
+    require,
+    soroban_data::SimpleSorobanData,
+    utils::{hash_message, safe_cast},
+    Error, Event,
 };
 use soroban_sdk::{
     auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation},
@@ -64,7 +68,7 @@ pub fn send_tokens(
                 args: (
                     env.current_contract_address(),
                     config.messenger.clone(),
-                    message_tx_cost as i128,
+                    safe_cast::<u128, i128>(message_tx_cost),
                 )
                     .into_val(env),
             },
@@ -84,7 +88,7 @@ pub fn send_tokens(
         native_token.transfer(
             sender,
             &env.current_contract_address(),
-            &(gas_amount as i128),
+            &safe_cast(gas_amount)?,
         );
     }
 

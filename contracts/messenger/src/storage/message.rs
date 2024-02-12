@@ -34,10 +34,9 @@ impl Message {
         result.unwrap_or(0)
     }
 
-    #[allow(dead_code)]
     pub fn has_received_message(env: &Env, message: BytesN<32>) -> bool {
         let key = DataKey::ReceivedMessage(message);
-        let result = env.storage().persistent().get::<_, bool>(&key).is_some();
+        let result = env.storage().persistent().get::<_, ()>(&key).is_some();
         if result {
             Self::extend_ttl(env, &key);
         }
@@ -46,7 +45,7 @@ impl Message {
 
     pub fn set_received_message(env: &Env, message: BytesN<32>) {
         let key = DataKey::ReceivedMessage(message);
-        env.storage().persistent().set(&key, &true);
+        env.storage().persistent().set(&key, &());
         Self::extend_ttl(env, &key);
     }
 

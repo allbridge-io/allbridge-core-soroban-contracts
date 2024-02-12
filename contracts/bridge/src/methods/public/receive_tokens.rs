@@ -5,7 +5,7 @@ use shared::{
     consts::CHAIN_ID,
     require,
     soroban_data::SimpleSorobanData,
-    utils::{address_to_bytes, hash_message, hash_with_sender},
+    utils::{address_to_bytes, hash_message, hash_with_sender, safe_cast},
     Error, Event,
 };
 use soroban_sdk::{Address, BytesN, Env, U256};
@@ -67,12 +67,16 @@ pub fn receive_tokens(
         &recipient_address,
         amount,
         receive_amount_min,
-        claimable
+        claimable,
     )?;
 
     // pass extra gas from the sender to the recipient
     if let Some(extra_gas) = extra_gas {
-        NativeToken::get_client(&env)?.transfer(&sender, &recipient_address, &(extra_gas as i128));
+        NativeToken::get_client(&env)?.transfer(
+            &sender,
+            &recipient_address,
+            &safe_cast(extra_gas)?,
+        );
     }
 
     TokensReceived {
@@ -80,7 +84,7 @@ pub fn receive_tokens(
         recipient: recipient_bytes,
         nonce,
         message: message_with_sender,
-        claimable
+        claimable,
     }
     .publish(&env);
 

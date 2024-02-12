@@ -1,6 +1,9 @@
 use bridge_storage::*;
 use shared::{
-    require, soroban_data::SimpleSorobanData, utils::hash_with_sender_address, Error, Event,
+    require,
+    soroban_data::SimpleSorobanData,
+    utils::{hash_with_sender_address, safe_cast},
+    Error, Event,
 };
 use soroban_sdk::{Address, BytesN, Env};
 
@@ -34,7 +37,7 @@ pub fn send_message(env: Env, message: BytesN<32>, sender: Address) -> Result<()
     native_token.transfer(
         &sender,
         &env.current_contract_address(),
-        &(transaction_cost as i128),
+        &safe_cast(transaction_cost)?,
     );
 
     MessageSent {

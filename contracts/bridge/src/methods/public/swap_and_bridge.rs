@@ -1,8 +1,6 @@
-#![allow(clippy::too_many_arguments)]
-
+use shared::utils::address_to_bytes;
 use shared::{require, soroban_data::SimpleSorobanData, utils::is_bytesn32_empty, Error};
 use soroban_sdk::{Address, BytesN, Env, U256};
-use shared::utils::address_to_bytes;
 
 use crate::{
     methods::internal::{
@@ -11,6 +9,7 @@ use crate::{
     storage::bridge::Bridge,
 };
 
+#[allow(clippy::too_many_arguments)]
 pub fn swap_and_bridge(
     env: Env,
     sender: Address,
@@ -33,6 +32,9 @@ pub fn swap_and_bridge(
     );
 
     let token_bytes = address_to_bytes(&env, &token)?;
+
+    let config = Bridge::get(&env)?;
+    config.pools.get(token_bytes.clone()).ok_or(Error::NoPool)?;
 
     let fee_token_amount_in_native =
         convert_bridging_fee_in_tokens_to_native_token(&env, &sender, &token, fee_token_amount)?;

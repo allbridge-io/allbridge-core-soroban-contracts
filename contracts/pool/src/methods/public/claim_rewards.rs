@@ -1,4 +1,4 @@
-use shared::{soroban_data::SimpleSorobanData, Error, Event};
+use shared::{soroban_data::SimpleSorobanData, utils::safe_cast, Error, Event};
 use soroban_sdk::{token, Address, Env};
 
 use crate::{
@@ -19,7 +19,7 @@ pub fn claim_rewards(env: Env, sender: Address) -> Result<(), Error> {
         token_client.transfer(
             &env.current_contract_address(),
             &sender,
-            &(amount as i128),
+            &safe_cast(amount)?,
         );
 
         RewardsClaimed {

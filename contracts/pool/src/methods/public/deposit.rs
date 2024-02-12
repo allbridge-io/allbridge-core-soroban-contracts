@@ -1,4 +1,4 @@
-use shared::{require, soroban_data::SimpleSorobanData, Error, Event};
+use shared::{require, soroban_data::SimpleSorobanData, utils::safe_cast, Error, Event};
 use soroban_sdk::{token, Address, Env};
 
 use crate::{
@@ -14,7 +14,12 @@ pub fn deposit(env: Env, sender: Address, amount: u128) -> Result<(), Error> {
 
     let mut user_deposit = UserDeposit::get(&env, sender.clone());
     let token_client = token::Client::new(&env, &pool.token);
-    token_client.transfer(&sender, &env.current_contract_address(), &(amount as i128));
+
+    token_client.transfer(
+        &sender,
+        &env.current_contract_address(),
+        &safe_cast(amount)?,
+    );
 
     let (rewards, lp_amount) = pool.deposit(amount, &mut user_deposit)?;
 
@@ -33,7 +38,11 @@ pub fn deposit(env: Env, sender: Address, amount: u128) -> Result<(), Error> {
     }
     .publish(&env);
 
-    token_client.transfer(&env.current_contract_address(), &sender, &(rewards as i128));
+    token_client.transfer(
+        &env.current_contract_address(),
+        &sender,
+        &safe_cast(rewards)?,
+    );
 
     Ok(())
 }

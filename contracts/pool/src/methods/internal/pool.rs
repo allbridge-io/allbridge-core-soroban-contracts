@@ -1,13 +1,16 @@
 use core::cmp::Ordering;
 use ethnum::U256;
-use shared::{require, utils::num::*, Error};
+use shared::{
+    require,
+    utils::{num::*, safe_cast},
+    Error,
+};
 
 use crate::storage::{pool::Pool, user_deposit::UserDeposit};
 
 impl Pool {
-
     const MAX_TOKEN_BALANCE: u128 = 2u128.pow(40);
-    const BP: u128 = 10000;
+    pub const BP: u128 = 10000;
 
     pub const P: u128 = 48;
     const SYSTEM_PRECISION: u32 = 3;
@@ -112,7 +115,7 @@ impl Pool {
         self.token_balance += amount_in;
         self.reserves += amount_in;
 
-        let v_usd_new_amount = self.get_y(self.token_balance);
+        let v_usd_new_amount = self.get_y(self.token_balance)?;
 
         if self.v_usd_balance > v_usd_new_amount {
             result = self.v_usd_balance - v_usd_new_amount;
@@ -138,7 +141,7 @@ impl Pool {
             return Ok((0, 0));
         }
         self.v_usd_balance += vusd_amount;
-        let new_amount = self.get_y(self.v_usd_balance);
+        let new_amount = self.get_y(self.v_usd_balance)?;
         if self.token_balance > new_amount {
             result_sp = self.token_balance - new_amount;
             result = self.amount_from_system_precision(result_sp);
@@ -190,16 +193,22 @@ impl Pool {
     }
 
     // y = (sqrt(x(4AD³ + x (4A(D - x) - D )²)) + x (4A(D - x) - D ))/8Ax
-    pub fn get_y(&self, native_x: u128) -> u128 {
+    pub fn get_y(&self, native_x: u128) -> Result<u128, Error> {
         let a4 = self.a << 2;
+
+        let int_a4: i128 = safe_cast(a4)?;
+        let int_d: i128 = safe_cast(self.d)?;
+        let int_native_x: i128 = safe_cast(native_x)?;
+
         let ddd = U256::new(self.d * self.d) * self.d;
         // 4A(D - x) - D
-        let part1 = a4 as i128 * (self.d as i128 - native_x as i128) - self.d as i128;
+        let part1 = int_a4 * (int_d - int_native_x) - int_d;
         // x * (4AD³ + x(part1²))
         let part2 = (ddd * a4 + (U256::new((part1 * part1) as u128) * native_x)) * native_x;
+        // (sqrt(part2) + x(part1))
+        let sqrt_sum = safe_cast::<u128, i128>(sqrt(&part2).as_u128())? + (int_native_x * part1);
         // (sqrt(part2) + x(part1)) / 8Ax)
-        (sqrt(&part2).as_u128() as i128 + (native_x as i128 * part1)) as u128
-            / ((self.a << 3) * native_x)
+        Ok(sqrt_sum as u128 / ((self.a << 3) * native_x))
     }
 
     fn update_d(&mut self) {

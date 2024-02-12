@@ -1,5 +1,5 @@
 use bridge_storage::*;
-use shared::{soroban_data::SimpleSorobanData, Error};
+use shared::{soroban_data::SimpleSorobanData, utils::safe_cast, Error};
 use soroban_sdk::{token, Env};
 
 use crate::storage::{pool::Pool, user_deposit::UserDeposit};
@@ -23,7 +23,7 @@ pub fn adjust_total_lp_amount(env: Env) -> Result<(), Error> {
         token_client.transfer(
             &env.current_contract_address(),
             admin.as_ref(),
-            &(reward_amount as i128),
+            &safe_cast(reward_amount)?,
         );
     };
 

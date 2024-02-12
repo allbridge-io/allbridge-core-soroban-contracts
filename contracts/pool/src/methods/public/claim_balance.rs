@@ -1,11 +1,9 @@
-use shared::{soroban_data::SimpleSorobanData, Error, Event};
+use shared::{soroban_data::SimpleSorobanData, utils::safe_cast, Error, Event};
 use soroban_sdk::{token, Address, Env};
 
-use crate::{
-    storage::{pool::Pool},
-};
 use crate::events::BalanceClaimed;
 use crate::storage::claimable_balance::ClaimableBalance;
+use crate::storage::pool::Pool;
 
 pub fn claim_balance(env: Env, user: Address) -> Result<(), Error> {
     let pool = Pool::get(&env)?;
@@ -18,19 +16,9 @@ pub fn claim_balance(env: Env, user: Address) -> Result<(), Error> {
         claimable_balance.amount = 0;
         claimable_balance.save(&env, user.clone());
 
-        token_client.transfer(
-            &env.current_contract_address(),
-            &user,
-            &(amount as i128),
-        );
+        token_client.transfer(&env.current_contract_address(), &user, &safe_cast(amount)?);
 
-
-        BalanceClaimed {
-            user,
-            amount,
-        }
-            .publish(&env);
-
+        BalanceClaimed { user, amount }.publish(&env);
     }
 
     Ok(())

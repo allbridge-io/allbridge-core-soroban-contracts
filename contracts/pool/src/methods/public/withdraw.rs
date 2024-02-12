@@ -1,4 +1,4 @@
-use shared::{require, soroban_data::SimpleSorobanData, Error, Event};
+use shared::{require, soroban_data::SimpleSorobanData, utils::safe_cast, Error, Event};
 use soroban_sdk::{token, Address, Env};
 
 use crate::{
@@ -25,7 +25,11 @@ pub fn withdraw(env: Env, sender: Address, amount_lp: u128) -> Result<(), Error>
     }
     .publish(&env);
 
-    token_client.transfer(&env.current_contract_address(), &sender, &(amount as i128));
+    token_client.transfer(
+        &env.current_contract_address(),
+        &sender,
+        &safe_cast(amount)?,
+    );
 
     Ok(())
 }

@@ -1,4 +1,4 @@
-use shared::{consts::CHAIN_ID, soroban_data::SimpleSorobanData, Error, Event};
+use shared::{consts::CHAIN_ID, soroban_data::SimpleSorobanData, utils::safe_cast, Error, Event};
 use soroban_sdk::{token, Address, Env};
 
 use crate::{
@@ -23,7 +23,7 @@ pub fn convert_bridging_fee_in_tokens_to_native_token(
     let token = token::Client::new(env, token_address);
     let gas_oracle = get_gas_oracle_client(env)?;
 
-    token.transfer(user, &contract, &(fee_token_amount as i128));
+    token.transfer(user, &contract, &safe_cast(fee_token_amount)?);
 
     let bridging_fee_conversion_scaling_factor = config
         .bridging_fee_conversion_factor

@@ -40,7 +40,6 @@ impl GasOracleContract {
     }
 
     // view
-
     pub fn get_gas_price(env: Env, chain_id: u32) -> Result<ChainData, Error> {
         get_gas_price(env, chain_id)
     }

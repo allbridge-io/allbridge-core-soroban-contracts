@@ -15,6 +15,7 @@ pub enum Error {
     GasUsageNotSet = 7,
     BrokenAddress = 8,
     NotFound = 9,
+    CastFailed = 10,
 
     // Pool
     ZeroAmount = 103,

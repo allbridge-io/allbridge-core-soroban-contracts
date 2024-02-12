@@ -1,11 +1,11 @@
-use shared::{soroban_data::SimpleSorobanData, Error, Event};
+use shared::{soroban_data::SimpleSorobanData, utils::safe_cast, Error, Event};
 use soroban_sdk::{token, Address, Env};
 
+use crate::storage::claimable_balance::ClaimableBalance;
 use crate::{
     events::SwappedFromVUsd,
     storage::{bridge_address::Bridge, pool::Pool},
 };
-use crate::storage::claimable_balance::ClaimableBalance;
 
 pub fn swap_from_v_usd(
     env: Env,
@@ -13,7 +13,7 @@ pub fn swap_from_v_usd(
     vusd_amount: u128,
     receive_amount_min: u128,
     zero_fee: bool,
-    claimable: bool
+    claimable: bool,
 ) -> Result<u128, Error> {
     let mut pool = Pool::get(&env)?;
 
@@ -27,7 +27,7 @@ pub fn swap_from_v_usd(
         })?;
     } else {
         let token_client = token::Client::new(&env, &pool.token);
-        token_client.transfer(&env.current_contract_address(), &user, &(amount as i128));
+        token_client.transfer(&env.current_contract_address(), &user, &safe_cast(amount)?);
     }
 
     pool.save(&env);

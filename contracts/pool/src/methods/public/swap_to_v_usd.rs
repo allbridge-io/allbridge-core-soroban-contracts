@@ -1,4 +1,4 @@
-use shared::{soroban_data::SimpleSorobanData, Error, Event};
+use shared::{soroban_data::SimpleSorobanData, utils::safe_cast, Error, Event};
 use soroban_sdk::{Address, Env};
 
 use crate::{
@@ -15,7 +15,7 @@ pub fn swap_to_v_usd(env: Env, user: Address, amount: u128, zero_fee: bool) -> R
     let current_pool = env.current_contract_address();
     let token_client = soroban_sdk::token::Client::new(&env, &pool.token);
 
-    token_client.transfer(&user, &current_pool, &(amount as i128));
+    token_client.transfer(&user, &current_pool, &safe_cast(amount)?);
 
     let (vusd_amount, fee) = pool.swap_to_v_usd(amount, zero_fee)?;
     pool.save(&env);
