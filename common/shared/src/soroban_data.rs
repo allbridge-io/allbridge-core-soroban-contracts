@@ -86,16 +86,17 @@ pub trait SorobanData:
                 .storage()
                 .instance()
                 .extend_ttl(Self::LIFETIME_THRESHOLD, Self::EXTEND_TTL_AMOUNT),
-            StorageType::Temporary => {
-                env.storage()
-                    .temporary()
-                    .extend_ttl(key, Self::LIFETIME_THRESHOLD, Self::EXTEND_TTL_AMOUNT)
-            }
-            StorageType::Persistent => {
-                env.storage()
-                    .persistent()
-                    .extend_ttl(key, Self::LIFETIME_THRESHOLD, Self::EXTEND_TTL_AMOUNT)
-            }
+            StorageType::Temporary => env.storage().temporary().extend_ttl(
+                key,
+                Self::LIFETIME_THRESHOLD,
+                Self::EXTEND_TTL_AMOUNT,
+            ),
+
+            StorageType::Persistent => env.storage().persistent().extend_ttl(
+                key,
+                Self::LIFETIME_THRESHOLD,
+                Self::EXTEND_TTL_AMOUNT,
+            ),
         }
     }
 

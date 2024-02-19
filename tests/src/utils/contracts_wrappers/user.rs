@@ -1,5 +1,5 @@
-use soroban_sdk::{testutils::Address as _, Address, BytesN, Env};
 use crate::utils::contract_id;
+use soroban_sdk::{testutils::Address as _, Address, BytesN, Env};
 
 pub struct User {
     pub tag: &'static str,
@@ -10,7 +10,7 @@ impl User {
     pub fn generate(env: &Env, tag: &'static str) -> User {
         User {
             tag,
-            address: Address::generate(&env),
+            address: Address::generate(env),
         }
     }
 

@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 
 use soroban_sdk::{token, Address, Env};
 
-use crate::utils::{consts::SP, float_to_int, int_to_float};
+use crate::utils::{consts::SP, float_to_uint, uint_to_float};
 
 use super::User;
 
@@ -16,8 +16,8 @@ pub struct Token {
 impl Token {
     pub fn create(env: &Env, tag: &'static str, admin: &Address) -> Token {
         let id = env.register_stellar_asset_contract(admin.clone());
-        let client = token::Client::new(&env, &id);
-        let asset_client = token::StellarAssetClient::new(&env, &id);
+        let client = token::Client::new(env, &id);
+        let asset_client = token::StellarAssetClient::new(env, &id);
 
         Token {
             id,
@@ -29,7 +29,7 @@ impl Token {
 
     pub fn clone_token(&self, env: &Env) -> Token {
         let client = token::Client::new(env, &self.id);
-        let asset_client = token::StellarAssetClient::new(&env, &self.id);
+        let asset_client = token::StellarAssetClient::new(env, &self.id);
 
         Token {
             id: self.id.clone(),
@@ -45,7 +45,7 @@ impl Token {
     }
 
     pub fn airdrop_user(&self, user: &User) {
-        self.airdrop(&user.as_address())
+        self.airdrop(&user.as_address());
     }
 
     pub fn amount_to_system_precision(&self, amount: u128) -> u128 {
@@ -69,14 +69,14 @@ impl Token {
     }
 
     pub fn balance_of(&self, id: &Address) -> u128 {
-        self.client.balance(&id) as u128
+        self.client.balance(id) as u128
     }
 
     pub fn float_to_uint(&self, amount: f64) -> u128 {
-        float_to_int(amount, self.client.decimals())
+        float_to_uint(amount, self.client.decimals())
     }
 
     pub fn int_to_float(&self, amount: u128) -> f64 {
-        int_to_float(amount, self.client.decimals())
+        uint_to_float(amount, self.client.decimals())
     }
 }

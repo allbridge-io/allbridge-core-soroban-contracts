@@ -1,6 +1,6 @@
 use bridge_storage::*;
 use proc_macros::{
-    extend_ttl_info_instance, data_storage_type, symbol_key, SorobanData, SorobanSimpleData,
+    data_storage_type, extend_ttl_info_instance, symbol_key, SorobanData, SorobanSimpleData,
 };
 use shared::{require, soroban_data::SimpleSorobanData, Error};
 use soroban_sdk::{contracttype, Address, BytesN, Env, Map};
@@ -59,7 +59,7 @@ impl Bridge {
         env: &Env,
         token: BytesN<32>,
     ) -> Result<pool::Client<'_>, Error> {
-        let pool_address = self.pools.get(token.clone()).ok_or(Error::NoReceivePool)?;
+        let pool_address = self.pools.get(token).ok_or(Error::NoReceivePool)?;
         Ok(pool::Client::new(env, &pool_address))
     }
 

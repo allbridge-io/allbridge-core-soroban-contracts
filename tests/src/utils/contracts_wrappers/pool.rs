@@ -3,7 +3,7 @@ use soroban_sdk::{Address, Env};
 use crate::utils::SYSTEM_PRECISION;
 use crate::{
     contracts::pool::{self, UserDeposit},
-    utils::{float_to_int, float_to_uint_sp, int_to_float, CallResult},
+    utils::{float_to_uint, float_to_uint_sp, uint_to_float, CallResult},
 };
 
 use super::User;
@@ -25,13 +25,13 @@ impl Pool {
         admin_fee: u128,
     ) -> Pool {
         let id = env.register_contract_wasm(None, pool::WASM);
-        let client = pool::Client::new(&env, &id);
+        let client = pool::Client::new(env, &id);
 
         client.initialize(
-            &admin,
-            &bridge,
+            admin,
+            bridge,
             &a,
-            &token,
+            token,
             &fee_share_bp,
             &balance_ratio_min_bp,
             &admin_fee,
@@ -85,7 +85,7 @@ impl Pool {
     }
 
     pub fn user_deposit_by_id(&self, id: &Address) -> UserDeposit {
-        self.client.get_user_deposit(&id)
+        self.client.get_user_deposit(id)
     }
 
     pub fn claim_rewards(&self, user: &User) -> CallResult {
@@ -110,16 +110,16 @@ impl Pool {
     }
 
     pub fn float_to_int(&self, amount: f64) -> u128 {
-        float_to_int(amount, self.client.get_pool().decimals)
+        float_to_uint(amount, self.client.get_pool().decimals)
     }
 
     pub fn int_to_float(&self, amount: u128) -> f64 {
-        int_to_float(amount, self.client.get_pool().decimals)
+        uint_to_float(amount, self.client.get_pool().decimals)
     }
 
     pub fn deposit_by_id(&self, user: &Address, deposit_amount: f64) -> CallResult {
         self.client
-            .try_deposit(&user, &self.float_to_int(deposit_amount))
+            .try_deposit(user, &self.float_to_int(deposit_amount))
             .map(Result::unwrap)
             .map_err(Result::unwrap)
     }
@@ -136,7 +136,7 @@ impl Pool {
     pub fn swap_from_v_usd(&self, user: &User, amount: f64, claimable: bool) -> u128 {
         self.client.swap_from_v_usd(
             &user.as_address(),
-            &float_to_int(amount, SYSTEM_PRECISION),
+            &float_to_uint(amount, SYSTEM_PRECISION),
             &0,
             &false,
             &claimable,

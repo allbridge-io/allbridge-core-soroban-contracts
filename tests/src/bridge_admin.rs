@@ -1,26 +1,23 @@
 use shared::consts::{CHAIN_PRECISION, ORACLE_PRECISION};
-use shared::Error;
 use soroban_sdk::testutils::{Address as _, BytesN as _, MockAuth, MockAuthInvoke};
-use soroban_sdk::{Address, BytesN, Env, IntoVal};
+use soroban_sdk::{Address, BytesN, IntoVal};
 
 use crate::utils::consts::GOERLI_CHAIN_ID;
-use crate::utils::{
-    contract_id, desoroban_result, expect_auth_error, expect_contract_error, BridgeEnv, Pool,
-};
+use crate::utils::{contract_id, BridgeEnv, Pool};
 
 #[test]
 fn add_pool() {
-    let env = Env::default();
     let BridgeEnv {
+        ref env,
         bridge,
         native_token,
         admin,
         ..
-    } = BridgeEnv::default(&env);
+    } = BridgeEnv::default();
 
     let init_bridge_config = bridge.client.get_config();
 
-    let pool = Pool::create(&env, &admin, &bridge.id, 20, &native_token.id, 30, 0, 1);
+    let pool = Pool::create(env, &admin, &bridge.id, 20, &native_token.id, 30, 0, 1);
 
     bridge.client.add_pool(&pool.id, &native_token.id);
 
@@ -48,7 +45,7 @@ fn add_pool() {
 
     let bridging_fee_conversion_factor_on_contract = bridge_config
         .bridging_fee_conversion_factor
-        .get(native_token.id.clone())
+        .get(native_token.id)
         .unwrap();
 
     assert_eq!(pool_id_on_contract, pool.id);
@@ -60,23 +57,16 @@ fn add_pool() {
 }
 
 #[test]
+#[should_panic = "Context(InvalidAction)"]
 fn set_gas_oracle_no_auth() {
-    let env = Env::default();
-    let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
-
-    let new_gas_oracle = Address::generate(&env);
+    let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
     env.mock_auths(&[]);
-
-    expect_auth_error(
-        &env,
-        desoroban_result(bridge.client.try_set_gas_oracle(&new_gas_oracle)),
-    );
+    bridge.set_gas_oracle(&Address::generate(&env));
 }
 
 #[test]
 fn set_gas_oracle() {
-    let env = Env::default();
-    let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
+    let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
 
     let new_gas_oracle = Address::generate(&env);
     bridge.client.set_gas_oracle(&new_gas_oracle);
@@ -86,23 +76,16 @@ fn set_gas_oracle() {
 }
 
 #[test]
+#[should_panic = "Context(InvalidAction)"]
 fn set_rebalancer_no_auth() {
-    let env = Env::default();
-    let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
-
-    let rebalancer = Address::generate(&env);
+    let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
     env.mock_auths(&[]);
-
-    expect_auth_error(
-        &env,
-        desoroban_result(bridge.client.try_set_rebalancer(&rebalancer)),
-    );
+    bridge.set_rebalancer(&Address::generate(&env));
 }
 
 #[test]
 fn set_rebalancer() {
-    let env = Env::default();
-    let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
+    let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
 
     let rebalancer = Address::generate(&env);
     bridge.client.set_rebalancer(&rebalancer);
@@ -112,16 +95,18 @@ fn set_rebalancer() {
 
 #[test]
 fn set_messenger() {
-    let env = Env::default();
     let BridgeEnv {
-        bridge, ref admin, ..
-    } = BridgeEnv::default(&env);
+        env,
+        bridge,
+        ref admin,
+        ..
+    } = BridgeEnv::default();
     env.mock_auths(&[]);
 
     let messenger = Address::generate(&env);
 
     env.mock_auths(&[MockAuth {
-        address: &admin,
+        address: admin,
         invoke: &MockAuthInvoke {
             contract: &bridge.id,
             fn_name: "set_messenger",
@@ -136,22 +121,35 @@ fn set_messenger() {
 }
 
 #[test]
+#[should_panic = "Context(InvalidAction)"]
 fn set_messenger_no_auth() {
-    let env = Env::default();
-    let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
-
+    let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
     env.mock_auths(&[]);
 
-    expect_auth_error(
-        &env,
-        desoroban_result(bridge.client.try_set_messenger(&Address::generate(&env))),
-    );
+    bridge.set_messenger(&Address::generate(&env));
+}
+
+#[test]
+fn set_admin() {
+    let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
+
+    let admin = Address::generate(&env);
+    bridge.set_admin(&admin);
+
+    assert_eq!(bridge.client.get_admin(), admin);
+}
+
+#[test]
+#[should_panic = "Context(InvalidAction)"]
+fn set_admin_no_auth() {
+    let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
+    env.mock_auths(&[]);
+    bridge.set_admin(&Address::generate(&env));
 }
 
 #[test]
 fn set_stop_authority() {
-    let env = Env::default();
-    let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
+    let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
 
     let stop_authority = Address::generate(&env);
     bridge.client.set_stop_authority(&stop_authority);
@@ -160,36 +158,26 @@ fn set_stop_authority() {
 }
 
 #[test]
-fn set_stop_authorityno_auth() {
-    let env = Env::default();
-    let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
-
-    let stop_authority = Address::generate(&env);
-
+#[should_panic = "Context(InvalidAction)"]
+fn set_stop_authority_no_auth() {
+    let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
     env.mock_auths(&[]);
-
-    expect_auth_error(
-        &env,
-        desoroban_result(bridge.client.try_set_stop_authority(&stop_authority)),
-    );
+    bridge.set_stop_authority(&Address::generate(&env));
 }
 
 #[test]
-fn sucessful_stop_swap() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
-    let BridgeEnv { ref bridge, .. } = bridge_env;
+#[should_panic = "Contract(SwapProhibited)"]
+fn sucessful_stop_swap_and_then_swap_and_bridge() {
+    let bridge_env = BridgeEnv::default();
+    let stop_authority = Address::generate(&bridge_env.env);
 
-    let stop_authority = Address::generate(&env);
-    bridge.client.set_stop_authority(&stop_authority);
+    bridge_env.bridge.client.set_stop_authority(&stop_authority);
+    bridge_env.bridge.client.stop_swap();
 
-    bridge.client.stop_swap();
-
-    let bridge_config = bridge.client.get_config();
+    let bridge_config = bridge_env.bridge.client.get_config();
     assert!(!bridge_config.can_swap);
 
-    let swap_and_bridge_call_result = bridge_env.do_swap_and_bridge(
-        &env,
+    bridge_env.do_swap_and_bridge(
         &bridge_env.alice,
         &bridge_env.yaro_token,
         10.0,
@@ -197,54 +185,82 @@ fn sucessful_stop_swap() {
         0.0,
         3.0,
         3.0,
-        0.0,
+        None,
     );
-    expect_contract_error(&env, swap_and_bridge_call_result, Error::SwapProhibited);
+}
 
-    let receive_tokens_call_result = bridge_env.do_receive_tokens(
-        &env,
+#[test]
+#[should_panic = "Contract(SwapProhibited)"]
+fn sucessful_stop_swap_and_then_receive_tokens() {
+    let bridge_env = BridgeEnv::default();
+    let BridgeEnv { ref bridge, .. } = bridge_env;
+
+    let stop_authority = Address::generate(&bridge_env.env);
+    bridge.client.set_stop_authority(&stop_authority);
+
+    bridge.client.stop_swap();
+
+    let bridge_config = bridge.client.get_config();
+    assert!(!bridge_config.can_swap);
+
+    bridge_env.do_receive_tokens(
         &bridge_env.alice,
         &bridge_env.yaro_token,
         10.0,
-        0,
+        0.0,
         1.5,
-        f64::NAN,
+        None,
     );
-    expect_contract_error(&env, receive_tokens_call_result, Error::SwapProhibited);
+}
 
-    let swap_call_result = bridge_env.do_swap(
-        &env,
+#[test]
+#[should_panic = "Contract(SwapProhibited)"]
+fn sucessful_stop_swap_and_then_swap() {
+    let bridge_env = BridgeEnv::default();
+    let BridgeEnv { ref bridge, .. } = bridge_env;
+
+    let stop_authority = Address::generate(&bridge_env.env);
+    bridge.client.set_stop_authority(&stop_authority);
+
+    bridge.client.stop_swap();
+
+    let bridge_config = bridge.client.get_config();
+    assert!(!bridge_config.can_swap);
+
+    bridge_env.do_swap(
         &bridge_env.alice,
         &bridge_env.alice,
         &bridge_env.yaro_token,
         &bridge_env.yusd_token,
         10.0,
         1.0,
-        f64::NAN,
-        f64::NAN,
+        None,
+        None,
     );
-    expect_contract_error(&env, swap_call_result, Error::SwapProhibited);
 }
 
 #[test]
+#[should_panic = "Context(InvalidAction)"]
 fn stop_swap_no_auth() {
-    let env = Env::default();
-    let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
+    let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
 
     let stop_authority = Address::generate(&env);
     bridge.client.set_stop_authority(&stop_authority);
 
     env.mock_auths(&[]);
-    expect_auth_error(&env, desoroban_result(bridge.client.try_stop_swap()));
+    bridge.stop_swap();
 }
 
 #[test]
 fn sucessful_swap_restart() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
-    let BridgeEnv { ref bridge, .. } = bridge_env;
+    let bridge_env = BridgeEnv::default();
+    let BridgeEnv {
+        ref env,
+        ref bridge,
+        ..
+    } = bridge_env;
 
-    let stop_authority = Address::generate(&env);
+    let stop_authority = Address::generate(env);
     bridge.client.set_stop_authority(&stop_authority);
 
     bridge.client.stop_swap();
@@ -257,99 +273,84 @@ fn sucessful_swap_restart() {
     let bridge_config = bridge.client.get_config();
     assert!(bridge_config.can_swap);
 
-    bridge_env
-        .do_swap_and_bridge(
-            &env,
-            &bridge_env.alice,
-            &bridge_env.yaro_token,
-            10.0,
-            30_00.0,
-            0.0,
-            3.0,
-            3.0,
-            f64::NAN,
-        )
-        .unwrap();
+    bridge_env.do_swap_and_bridge(
+        &bridge_env.alice,
+        &bridge_env.yaro_token,
+        10.0,
+        30_00.0,
+        0.0,
+        3.0,
+        3.0,
+        None,
+    );
 
-    bridge_env
-        .do_receive_tokens(
-            &env,
-            &bridge_env.alice,
-            &bridge_env.yaro_token,
-            10.0,
-            0,
-            1.5,
-            f64::NAN,
-        )
-        .unwrap();
+    bridge_env.do_receive_tokens(
+        &bridge_env.alice,
+        &bridge_env.yaro_token,
+        10.0,
+        0.0,
+        1.5,
+        None,
+    );
 
-    bridge_env
-        .do_swap(
-            &env,
-            &bridge_env.alice,
-            &bridge_env.alice,
-            &bridge_env.yaro_token,
-            &bridge_env.yusd_token,
-            10.0,
-            1.0,
-            f64::NAN,
-            f64::NAN,
-        )
-        .unwrap();
+    bridge_env.do_swap(
+        &bridge_env.alice,
+        &bridge_env.alice,
+        &bridge_env.yaro_token,
+        &bridge_env.yusd_token,
+        10.0,
+        1.0,
+        None,
+        None,
+    );
 }
 
 #[test]
+#[should_panic = "Context(InvalidAction)"]
 fn swap_restart_no_auth() {
-    let env = Env::default();
-    let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
+    let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
 
     let stop_authority = Address::generate(&env);
     bridge.client.set_stop_authority(&stop_authority);
-
     bridge.client.stop_swap();
 
     let bridge_config = bridge.client.get_config();
     assert!(!bridge_config.can_swap);
 
     env.mock_auths(&[]);
-    expect_auth_error(&env, desoroban_result(bridge.client.try_start_swap()));
+    bridge.start_swap();
 }
 
 #[test]
 fn register_bridge() {
-    let env = Env::default();
-    let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
+    let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
 
     let other_bridge = BytesN::random(&env);
     let chain_id = 5;
 
-    bridge.client.register_bridge(&chain_id, &other_bridge);
+    bridge.register_bridge(chain_id, &other_bridge);
 
     let another_bridge = bridge.client.get_another_bridge(&chain_id);
-    println!("{:?}", another_bridge);
     assert_eq!(another_bridge.address, other_bridge);
     assert_eq!(another_bridge.tokens.len(), 0);
 }
 
 #[test]
+#[should_panic = "Context(InvalidAction)"]
 fn register_bridge_no_auth() {
-    let env = Env::default();
-    let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
-
+    let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
     env.mock_auths(&[]);
-    let error = desoroban_result(bridge.client.try_register_bridge(&5, &BytesN::random(&env)));
-
-    expect_auth_error(&env, error);
+    bridge.register_bridge(5, &BytesN::random(&env));
 }
 
 #[test]
 fn change_bridge_address() {
-    let env = Env::default();
     let BridgeEnv {
+        env,
         bridge,
         goerli_bridge,
         ..
-    } = BridgeEnv::default(&env);
+    } = BridgeEnv::default();
 
     assert_eq!(
         bridge.client.get_another_bridge(&GOERLI_CHAIN_ID).address,
@@ -358,9 +359,7 @@ fn change_bridge_address() {
 
     let bridge_address = BytesN::random(&env);
 
-    bridge
-        .client
-        .register_bridge(&GOERLI_CHAIN_ID, &bridge_address);
+    bridge.register_bridge(GOERLI_CHAIN_ID, &bridge_address);
 
     assert_eq!(
         bridge.client.get_another_bridge(&GOERLI_CHAIN_ID).address,
@@ -370,8 +369,7 @@ fn change_bridge_address() {
 
 #[test]
 fn add_bridge_token() {
-    let env = Env::default();
-    let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
+    let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
 
     let token = BytesN::random(&env);
 
@@ -384,42 +382,27 @@ fn add_bridge_token() {
 }
 
 #[test]
+#[should_panic = "Context(InvalidAction)"]
 fn add_bridge_token_no_auth() {
-    let env = Env::default();
-    let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
-
+    let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
     env.mock_auths(&[]);
-    let error = desoroban_result(
-        bridge
-            .client
-            .try_add_bridge_token(&GOERLI_CHAIN_ID, &BytesN::random(&env)),
-    );
-
-    expect_auth_error(&env, error);
+    bridge.add_bridge_token(GOERLI_CHAIN_ID, &BytesN::random(&env));
 }
 
 #[test]
+#[should_panic = "Contract(UnknownAnotherChain)"]
 fn add_bridge_for_unregistered_bridge() {
-    let env = Env::default();
-    let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
-
-    let call_result = desoroban_result(
-        bridge
-            .client
-            .try_add_bridge_token(&10, &BytesN::random(&env)),
-    );
-
-    expect_contract_error(&env, call_result, Error::UnknownAnotherChain);
+    let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
+    bridge.add_bridge_token(10, &BytesN::random(&env));
 }
 
 #[test]
 fn remove_bridge_token() {
-    let env = Env::default();
-    let BridgeEnv { bridge, .. } = BridgeEnv::default(&env);
+    let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
 
     let token = BytesN::random(&env);
 
-    bridge.client.add_bridge_token(&GOERLI_CHAIN_ID, &token);
+    bridge.add_bridge_token(GOERLI_CHAIN_ID, &token);
 
     let another_bridge = bridge.client.get_another_bridge(&GOERLI_CHAIN_ID);
 
@@ -436,16 +419,16 @@ fn remove_bridge_token() {
 
 #[test]
 fn withdraw_gas_tokens() {
-    let env = Env::default();
     let BridgeEnv {
+        env,
         admin,
         native_token,
         bridge,
         ..
-    } = BridgeEnv::default(&env);
+    } = BridgeEnv::default();
 
     let user = Address::generate(&env);
-    let gas_amount = 10000000u128;
+    let gas_amount = 10_000_000u128;
     let half_gas_amount = gas_amount / 2;
 
     native_token.asset_client.mint(&user, &(gas_amount as i128));

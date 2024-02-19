@@ -22,7 +22,7 @@ impl GasUsage {
     }
 
     pub fn set(env: &Env, chian_id: u32, gas_usage_value: u128) {
-        let mut gas_usage = GasUsage::get(env).unwrap_or(GasUsage::default(env));
+        let mut gas_usage = GasUsage::get(env).unwrap_or_else(|_| GasUsage::default(env));
 
         gas_usage.0.set(chian_id, gas_usage_value);
         gas_usage.save(env);

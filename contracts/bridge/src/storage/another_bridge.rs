@@ -1,4 +1,4 @@
-use proc_macros::{extend_ttl_info, data_storage_type, SorobanData};
+use proc_macros::{data_storage_type, extend_ttl_info, SorobanData};
 use shared::{consts::DAY_IN_LEDGERS, soroban_data::SorobanData, Error};
 use soroban_sdk::{contracttype, BytesN, Env, Map};
 

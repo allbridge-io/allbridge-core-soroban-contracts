@@ -60,10 +60,9 @@ mod test {
         use alloc::vec;
 
         let address = hex::decode(address).unwrap();
-        let address = (vec![vec![0u8; 12], address]).concat();
-        let address = BytesN::<32>::from_array(env, arrayref::array_ref![address, 0, 32]);
+        let address = ([vec![0u8; 12], address]).concat();
 
-        address
+        BytesN::<32>::from_array(env, arrayref::array_ref![address, 0, 32])
     }
 
     #[test]

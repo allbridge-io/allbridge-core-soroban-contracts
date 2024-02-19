@@ -1,23 +1,20 @@
 use crate::{contracts::pool::Pool as PoolInfo, utils::format_diff};
+use color_print::cformat;
 use core::panic;
-use ethnum::U256;
-use shared::utils::num::sqrt;
-use std::ops::Index;
+use std::{cmp::Ordering, ops::Index};
 
-use super::BridgeEnv;
+use super::{int_to_float, BridgeEnv};
 
-impl PoolInfo {
-    pub fn get_y(&self, native_x: u128) -> u128 {
-        let a4 = self.a << 2;
-        let ddd = U256::new(self.d * self.d) * self.d;
-        // 4A(D - x) - D
-        let part1 = a4 as i128 * (self.d as i128 - native_x as i128) - self.d as i128;
-        // x * (4AD³ + x(part1²))
-        let part2 = (ddd * a4 + (U256::new((part1 * part1) as u128) * native_x)) * native_x;
-        // (sqrt(part2) + x(part1)) / 8Ax)
-        (sqrt(&part2).as_u128() as i128 + (native_x as i128 * part1)) as u128
-            / ((self.a << 3) * native_x)
-    }
+pub fn format_diff_with_float_diff(a: u128, b: u128, decimals: u32) -> (String, String) {
+    let float_diff = int_to_float(b as i128 - a as i128, decimals as i32);
+
+    let float_diff = match b.partial_cmp(&a).unwrap() {
+        Ordering::Equal => String::new(),
+        Ordering::Greater => cformat!("<bright-green>+{float_diff}</bright-green>"),
+        Ordering::Less => cformat!("<bright-red>{float_diff}</bright-red>"),
+    };
+
+    (format_diff(a, b), float_diff)
 }
 
 #[derive(Debug, Clone)]
@@ -68,6 +65,16 @@ impl Index<&str> for BalancesSnapshot {
             "pool_yaro_balance" => &self.pool_yaro_balance,
             "pool_yusd_balance" => &self.pool_yusd_balance,
             "messenger_native_balance" => &self.messenger_native_balance,
+
+            "pool_yaro_d" => &self.yaro_pool_info.d,
+            "pool_yusd_d" => &self.yusd_pool_info.d,
+            "pool_yaro_reserves" => &self.yaro_pool_info.reserves,
+            "pool_yusd_reserves" => &self.yusd_pool_info.reserves,
+            "pool_yaro_v_usd_balance" => &self.yaro_pool_info.v_usd_balance,
+            "pool_yusd_v_usd_balance" => &self.yusd_pool_info.v_usd_balance,
+            "pool_yaro_token_balance" => &self.yaro_pool_info.token_balance,
+            "pool_yusd_token_balance" => &self.yusd_pool_info.token_balance,
+
             _ => panic!("BalancesSnapshot: unknown field: {}", string),
         }
     }
@@ -124,122 +131,52 @@ impl BalancesSnapshot {
     #[allow(dead_code)]
     pub fn print_change_with(&self, other: &BalancesSnapshot, title: Option<&str>) {
         let title = title.unwrap_or("Diff");
-
         println!("----------------------| {title} |----------------------");
 
-        println!(
-            "Alice native balance change: {}",
-            &format_diff(self.alice_native_balance, other.alice_native_balance)
-        );
+        let balances = vec![
+            // Alice
+            ("Alice native balance", "alice_native_balance", Some(7)),
+            ("Alice yaro balance", "alice_yusd_balance", Some(7)),
+            ("Alice yusd balance", "alice_yaro_balance", Some(7)),
+            // Bob
+            ("Bob native balance", "bob_native_balance", Some(7)),
+            ("Bob yaro balance", "bob_yaro_balance", Some(7)),
+            ("Bob yusd balance", "bob_yusd_balance", Some(7)),
+            // Bridge
+            ("Bridge native balance", "bridge_native_balance", Some(7)),
+            ("Bridge yaro balance", "bridge_yaro_balance", Some(7)),
+            ("Bridge yusd balance", "bridge_yusd_balance", Some(7)),
+            // Messenger
+            (
+                "Messenger native balance",
+                "messenger_native_balance",
+                Some(7),
+            ),
+            // Pools
+            ("Pool yaro balance", "pool_yaro_balance", Some(7)),
+            ("Pool yusd balance", "pool_yusd_balance", Some(7)),
+            ("Pool yaro d", "pool_yaro_d", Some(3)),
+            ("Pool yusd d", "pool_yusd_d", Some(3)),
+            ("Pool yaro reserves", "pool_yaro_reserves", Some(3)),
+            ("Pool yusd reserves", "pool_yusd_reserves", Some(3)),
+            ("Pool yaro vUSD", "pool_yaro_v_usd_balance", Some(3)),
+            ("Pool yusd vUSD", "pool_yusd_v_usd_balance", Some(3)),
+        ];
 
-        println!(
-            "Alice yaro balance change: {}",
-            &format_diff(self.alice_yaro_balance, other.alice_yaro_balance)
-        );
+        for (title, value_key, use_float_diff) in balances {
+            let (before, after) = (self[value_key], other[value_key]);
 
-        println!(
-            "Alice yusd balance change: {}",
-            &format_diff(self.alice_yusd_balance, other.alice_yusd_balance)
-        );
-
-        println!(
-            "Bob native balance change: {}",
-            &format_diff(self.bob_native_balance, other.bob_native_balance)
-        );
-
-        println!(
-            "Bob yaro balance change: {}",
-            &format_diff(self.bob_yaro_balance, other.bob_yaro_balance)
-        );
-
-        println!(
-            "Bob yusd balance change: {}",
-            &format_diff(self.bob_yusd_balance, other.bob_yusd_balance)
-        );
-
-        println!(
-            "Pool yaro balance change: {}",
-            &format_diff(self.pool_yaro_balance, other.pool_yaro_balance)
-        );
-
-        println!(
-            "Pool yusd balance change: {}",
-            &format_diff(self.pool_yusd_balance, other.pool_yusd_balance)
-        );
-
-        println!(
-            "Bridge yaro balance change: {}",
-            &format_diff(self.bridge_yaro_balance, other.bridge_yaro_balance)
-        );
-
-        println!(
-            "Bridge yaro balance change: {}",
-            &format_diff(self.bridge_yusd_balance, other.bridge_yusd_balance)
-        );
-
-        println!(
-            "Bridge native balance change: {}",
-            &format_diff(self.bridge_native_balance, other.bridge_native_balance)
-        );
-
-        println!(
-            "Messenger native balance change: {}",
-            &format_diff(
-                self.messenger_native_balance,
-                other.messenger_native_balance
-            )
-        );
-
-        self.print_pool_change_with(other);
-    }
-
-    fn print_pool_change_with(&self, other: &BalancesSnapshot) {
-        println!("------| Pools |------");
-
-        println!(
-            "Yaro pool D change: {}",
-            &format_diff(self.yaro_pool_info.d, other.yaro_pool_info.d)
-        );
-        println!(
-            "Yaro pool token balance change: {}",
-            &format_diff(
-                self.yaro_pool_info.token_balance,
-                other.yaro_pool_info.token_balance
-            )
-        );
-        println!(
-            "Yaro pool vUsd balance change: {}",
-            &format_diff(
-                self.yaro_pool_info.v_usd_balance,
-                other.yaro_pool_info.v_usd_balance
-            )
-        );
-        println!(
-            "Yaro pool reserves change: {}",
-            &format_diff(self.yaro_pool_info.reserves, other.yaro_pool_info.reserves)
-        );
-
-        println!(
-            "Yusd pool D change: {}",
-            &format_diff(self.yusd_pool_info.d, other.yusd_pool_info.d)
-        );
-        println!(
-            "Yusd pool token balance change: {}",
-            &format_diff(
-                self.yusd_pool_info.token_balance,
-                other.yusd_pool_info.token_balance
-            )
-        );
-        println!(
-            "Yusd pool vUsd balance change: {}",
-            &format_diff(
-                self.yusd_pool_info.v_usd_balance,
-                other.yusd_pool_info.v_usd_balance
-            )
-        );
-        println!(
-            "Yusd pool reserves change: {}",
-            &format_diff(self.yusd_pool_info.reserves, other.yusd_pool_info.reserves)
-        );
+            match use_float_diff {
+                Some(decimals) => {
+                    let (balance_diff, diff) = format_diff_with_float_diff(before, after, decimals);
+                    if diff.is_empty() {
+                        println!("{}: {}", title, &balance_diff);
+                    } else {
+                        println!("{}: {} ({})", title, &balance_diff, &diff);
+                    }
+                }
+                None => println!("{}: {}", title, format_diff(before, after)),
+            }
+        }
     }
 }

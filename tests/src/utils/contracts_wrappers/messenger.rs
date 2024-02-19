@@ -9,7 +9,8 @@ use soroban_sdk::{
 use crate::{
     contracts::messenger,
     utils::{
-        consts::GOERLI_CHAIN_ID, desoroban_result, get_recover_id, signature_to_bytes, CallResult, contract_id
+        consts::GOERLI_CHAIN_ID, contract_id, desoroban_result, get_recover_id, signature_to_bytes,
+        unwrap_call_result,
     },
 };
 
@@ -28,6 +29,7 @@ pub struct MessengerConfig {
     pub secondary_validator_keys: Map<BytesN<65>, bool>,
 }
 
+#[allow(clippy::from_over_into)]
 impl Into<messenger::Config> for MessengerConfig {
     fn into(self) -> messenger::Config {
         messenger::Config {
@@ -62,12 +64,13 @@ impl MessengerConfig {
 pub struct Messenger {
     pub id: soroban_sdk::Address,
     pub client: messenger::Client<'static>,
+    pub env: Env,
 }
 
 impl Messenger {
     pub fn create(env: &Env, config: MessengerConfig) -> Messenger {
         let id = env.register_contract_wasm(None, messenger::WASM);
-        let client = messenger::Client::new(&env, &id);
+        let client = messenger::Client::new(env, &id);
 
         client.initialize(
             &config.admin,
@@ -81,28 +84,35 @@ impl Messenger {
 
         client.set_gas_usage(&2, &GAS_AMOUNT);
 
-        Messenger { id, client }
+        Messenger {
+            id,
+            client,
+            env: env.clone(),
+        }
     }
 
-    pub fn send_message(&self, sender: &User, message_hash: &BytesN<32>) -> CallResult<BytesN<32>> {
-        desoroban_result::<(), soroban_sdk::ConversionError>(
-            self.client
-                .try_send_message(&message_hash, &sender.as_address()),
-        )
-        .map(|_| message_hash.clone())
+    pub fn send_message(&self, sender: &User, message_hash: &BytesN<32>) -> BytesN<32> {
+        unwrap_call_result(
+            &self.env,
+            desoroban_result::<(), soroban_sdk::ConversionError>(
+                self.client
+                    .try_send_message(message_hash, &sender.as_address()),
+            ),
+        );
+
+        message_hash.clone()
     }
 
     pub fn hash_and_send_message(
         &self,
-        env: &Env,
         sender: &User,
         amount_sp: u128,
         recipient: &Address,
         receive_token: &Token,
         nonce: &U256,
-    ) -> CallResult<BytesN<32>> {
+    ) -> BytesN<32> {
         let message_hash = hash_message(
-            &env,
+            &self.env,
             amount_sp,
             &contract_id(recipient),
             CHAIN_ID,
@@ -116,11 +126,10 @@ impl Messenger {
 
     pub fn receive_message(
         &self,
-        env: &Env,
         message_hash: &BytesN<32>,
         primary_signature: &Signature,
         secondary_signature: &Signature,
-    ) -> CallResult {
+    ) {
         println!("Message: \t\t{:?}", hex::encode(message_hash.to_array()));
         println!("Primary signature: \t{:?}", primary_signature.to_string());
         println!(
@@ -128,13 +137,16 @@ impl Messenger {
             secondary_signature.to_string()
         );
 
-        desoroban_result(self.client.try_receive_message(
-            &message_hash,
-            &signature_to_bytes(env, primary_signature),
-            &get_recover_id(primary_signature),
-            &signature_to_bytes(env, secondary_signature),
-            &get_recover_id(secondary_signature),
-        ))
+        unwrap_call_result(
+            &self.env,
+            desoroban_result(self.client.try_receive_message(
+                message_hash,
+                &signature_to_bytes(&self.env, primary_signature),
+                &get_recover_id(primary_signature),
+                &signature_to_bytes(&self.env, secondary_signature),
+                &get_recover_id(secondary_signature),
+            )),
+        );
     }
 
     pub fn other_chain_ids(&self) -> BytesN<32> {

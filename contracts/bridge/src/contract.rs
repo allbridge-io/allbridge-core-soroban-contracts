@@ -5,7 +5,7 @@ use shared::utils::extend_ttl_instance;
 use shared::Error;
 use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, U256};
 
-use crate::methods::admin::set_messenger;
+use crate::methods::admin::{set_admin, set_messenger};
 use crate::storage::another_bridge::AnotherBridge;
 use crate::{
     methods::{
@@ -110,7 +110,7 @@ impl BridgeContract {
             token,
             receive_token,
             recipient,
-            receive_amount_min
+            receive_amount_min,
         )
     }
 
@@ -252,5 +252,11 @@ impl BridgeContract {
 
     pub fn get_another_bridge(env: Env, chain_id: u32) -> Result<AnotherBridge, Error> {
         get_another_bridge(env, chain_id)
+    }
+
+    pub fn set_admin(env: Env, new_admin: Address) -> Result<(), Error> {
+        extend_ttl_instance(&env);
+
+        set_admin(env, new_admin)
     }
 }

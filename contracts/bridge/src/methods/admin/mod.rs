@@ -1,5 +1,6 @@
 mod add_pool;
 mod bridge_config;
+mod set_admin;
 mod set_gas_oracle;
 mod set_gas_usage;
 mod set_messenger;
@@ -10,6 +11,7 @@ mod withdraw_gas_tokens;
 
 pub use add_pool::*;
 pub use bridge_config::*;
+pub use set_admin::*;
 pub use set_gas_oracle::*;
 pub use set_gas_usage::*;
 pub use set_messenger::*;

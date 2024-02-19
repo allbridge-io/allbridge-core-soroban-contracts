@@ -1,379 +1,315 @@
-use shared::{consts::CHAIN_ID, Error};
+use shared::consts::CHAIN_ID;
 
-use soroban_sdk::{
-    testutils::{Address as _, BytesN as _},
-    xdr::ScError,
-    Address, BytesN, Env,
-};
+use soroban_sdk::Address;
+use soroban_sdk::{testutils::Address as _, testutils::BytesN as _, BytesN};
 
-use crate::utils::{consts::GOERLI_CHAIN_ID, contract_id, expect_sc_error};
-use crate::utils::{
-    expect_contract_error, float_to_uint_sp, gen_nonce, BridgeEnv, BridgeEnvConfig,
-};
+use crate::utils::{consts::GOERLI_CHAIN_ID, contract_id};
+use crate::utils::{float_to_uint_sp, gen_nonce, BridgeEnv, BridgeEnvConfig, ExpectedPoolDiff};
 
 #[test]
 fn swap_and_bridge() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
+    let bridge_env = BridgeEnv::default();
 
-    bridge_env
-        .do_swap_and_bridge(
-            &env,
-            &bridge_env.alice,
-            &bridge_env.yaro_token,
-            1000.0,
-            30_00.0,
-            0.0,
-            3.0,
-            3.0,
-            49000.487,
-        )
-        .unwrap();
+    bridge_env.do_swap_and_bridge(
+        &bridge_env.alice,
+        &bridge_env.yaro_token,
+        1_000.0,
+        3_000.0,
+        0.0,
+        3.0,
+        3.0,
+        Some(ExpectedPoolDiff {
+            v_usd_diff: 999.513,
+            token_balance_diff: 1_000.0,
+        }),
+    );
 }
 
 #[test]
 fn swap_and_bridge_fee_share_gt_zero() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::create(
-        &env,
-        BridgeEnvConfig {
-            yaro_fee_share_bp: 0.05,
-            ..Default::default()
-        },
-    );
+    let bridge_env = BridgeEnv::create(BridgeEnvConfig::default().with_yaro_fee_share(5.0));
 
-    bridge_env
-        .do_swap_and_bridge(
-            &env,
-            &bridge_env.alice,
-            &bridge_env.yaro_token,
-            1000.0,
-            30_00.0,
-            0.0,
-            3.0,
-            3.0,
-            49050.44,
-        )
-        .unwrap();
+    bridge_env.do_swap_and_bridge(
+        &bridge_env.alice,
+        &bridge_env.yaro_token,
+        1_000.0,
+        3_000.0,
+        0.0,
+        3.0,
+        3.0,
+        Some(ExpectedPoolDiff {
+            v_usd_diff: 949.56,
+            token_balance_diff: 950.0,
+        }),
+    );
 }
 
-// TODO
 #[test]
 fn swap_and_bridge_near_zero() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
+    let bridge_env = BridgeEnv::default();
 
-    bridge_env
-        .do_swap_and_bridge(
-            &env,
-            &bridge_env.alice,
-            &bridge_env.yaro_token,
-            0.0001,
-            30_00.0,
-            0.0,
-            3.0,
-            3.0,
-            50000.0,
-        )
-        .unwrap();
+    bridge_env.do_swap_and_bridge(
+        &bridge_env.alice,
+        &bridge_env.yaro_token,
+        0.0001,
+        3_000.0,
+        0.0,
+        3.0,
+        3.0,
+        Some(ExpectedPoolDiff {
+            v_usd_diff: 0.0,
+            token_balance_diff: 0.0,
+        }),
+    );
 }
 
 #[test]
 fn swap_and_bridge_near_zero_unbalanced_pool() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
+    let bridge_env = BridgeEnv::default();
 
-    bridge_env
-        .do_receive_tokens(
-            &env,
-            &bridge_env.alice,
-            &bridge_env.yaro_token,
-            200_000.0,
-            0,
-            200_000.0,
-            82.599,
-        )
-        .unwrap();
+    bridge_env.do_receive_tokens(
+        &bridge_env.alice,
+        &bridge_env.yaro_token,
+        200_000.0,
+        0.0,
+        200_000.0,
+        Some(ExpectedPoolDiff {
+            v_usd_diff: 200_000.0,
+            token_balance_diff: 49_917.401,
+        }),
+    );
 
-    bridge_env
-        .do_swap_and_bridge(
-            &env,
-            &bridge_env.alice,
-            &bridge_env.yaro_token,
-            0.001,
-            30_00.0,
-            0.0,
-            3.0,
-            3.0,
-            249999.451,
-        )
-        .unwrap();
+    bridge_env.do_swap_and_bridge(
+        &bridge_env.alice,
+        &bridge_env.yaro_token,
+        0.001,
+        3_000.0,
+        0.0,
+        3.0,
+        3.0,
+        Some(ExpectedPoolDiff {
+            v_usd_diff: 0.549,
+            token_balance_diff: 0.001,
+        }),
+    );
 }
 
 #[test]
 fn swap_and_bridge_fee_fully_in_token() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
+    let bridge_env = BridgeEnv::default();
 
-    bridge_env
-        .do_swap_and_bridge(
-            &env,
-            &bridge_env.alice,
-            &bridge_env.yaro_token,
-            1000.0,
-            0.0,
-            5.0,
-            3.0,
-            3.0,
-            49005.482,
-        )
-        .unwrap();
+    bridge_env.do_swap_and_bridge(
+        &bridge_env.alice,
+        &bridge_env.yaro_token,
+        1_000.0,
+        0.0,
+        5.0,
+        3.0,
+        3.0,
+        Some(ExpectedPoolDiff {
+            v_usd_diff: 994.518,
+            token_balance_diff: 995.0,
+        }),
+    );
 }
 
 #[test]
 fn swap_and_bridge_fee_partially_in_token() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
+    let bridge_env = BridgeEnv::default();
 
-    bridge_env
-        .do_swap_and_bridge(
-            &env,
-            &bridge_env.alice,
-            &bridge_env.yaro_token,
-            100.0,
-            5.0,
-            0.1,
-            3.0,
-            3.0,
-            49900.104,
-        )
-        .unwrap();
+    bridge_env.do_swap_and_bridge(
+        &bridge_env.alice,
+        &bridge_env.yaro_token,
+        100.0,
+        5.0,
+        0.1,
+        3.0,
+        3.0,
+        Some(ExpectedPoolDiff {
+            v_usd_diff: 99.896,
+            token_balance_diff: 99.9,
+        }),
+    );
 }
 
 #[test]
+#[should_panic = "Contract(BridgeToTheZeroAddress)"]
 fn swap_and_bridge_bridge_to_the_zero_address() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
+    let bridge_env = BridgeEnv::default();
 
-    let call_result = bridge_env.bridge.swap_and_bridge(
+    bridge_env.bridge.swap_and_bridge(
         &bridge_env.alice,
         &bridge_env.yaro_token,
         1_000.0,
         5_000.0,
         0.0,
         GOERLI_CHAIN_ID,
-        &BytesN::<32>::from_array(&env, &[0; 32]),
+        &BytesN::<32>::from_array(&bridge_env.env, &[0; 32]),
         &bridge_env.goerli_token,
-        &gen_nonce(&env),
+        &gen_nonce(&bridge_env.env),
     );
-
-    expect_contract_error(&env, call_result, Error::BridgeToTheZeroAddress)
 }
 
 #[test]
-fn swap_and_bridge_bridge_swap_prohibited() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
-
-    bridge_env.bridge.client.stop_swap();
-
-    let call_result = bridge_env.bridge.swap_and_bridge(
-        &bridge_env.alice,
-        &bridge_env.yaro_token,
-        1_000.0,
-        5_000.0,
-        0.0,
-        GOERLI_CHAIN_ID,
-        &BytesN::random(&env),
-        &bridge_env.goerli_token,
-        &gen_nonce(&env),
-    );
-
-    expect_contract_error(&env, call_result, Error::SwapProhibited);
-}
-
-#[test]
+#[should_panic = "Contract(InvalidOtherChainId)"]
 fn swap_and_bridge_invalid_other_chain_id() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
+    let bridge_env = BridgeEnv::default();
 
-    let call_result = bridge_env.bridge.swap_and_bridge(
+    bridge_env.bridge.swap_and_bridge(
         &bridge_env.alice,
         &bridge_env.yaro_token,
         1_000.0,
         5_000.0,
         0.0,
         CHAIN_ID,
-        &BytesN::random(&env),
+        &BytesN::random(&bridge_env.env),
         &bridge_env.goerli_token,
-        &gen_nonce(&env),
+        &gen_nonce(&bridge_env.env),
     );
-
-    expect_contract_error(&env, call_result, Error::InvalidOtherChainId);
 }
 
 #[test]
+#[should_panic = "Contract(UnknownAnotherChain)"]
 fn swap_and_bridge_unknown_chain() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
+    let bridge_env = BridgeEnv::default();
 
-    let call_result = bridge_env.bridge.swap_and_bridge(
+    bridge_env.bridge.swap_and_bridge(
         &bridge_env.alice,
         &bridge_env.yaro_token,
         1_000.0,
         5_000.0,
         0.0,
         10,
-        &BytesN::random(&env),
+        &BytesN::random(&bridge_env.env),
         &bridge_env.goerli_token,
-        &gen_nonce(&env),
+        &gen_nonce(&bridge_env.env),
     );
-
-    expect_contract_error(&env, call_result, Error::UnknownAnotherChain);
 }
 
 #[test]
+#[should_panic = "Contract(UnknownAnotherToken)"]
 fn swap_and_bridge_unknown_token() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
+    let bridge_env = BridgeEnv::default();
 
-    let call_result = bridge_env.bridge.swap_and_bridge(
+    bridge_env.bridge.swap_and_bridge(
         &bridge_env.alice,
         &bridge_env.yaro_token,
         1_000.0,
         5_000.0,
         0.0,
         GOERLI_CHAIN_ID,
-        &BytesN::random(&env),
-        &BytesN::random(&env),
-        &gen_nonce(&env),
+        &BytesN::random(&bridge_env.env),
+        &BytesN::random(&bridge_env.env),
+        &gen_nonce(&bridge_env.env),
     );
-
-    expect_contract_error(&env, call_result, Error::UnknownAnotherToken);
 }
 
 #[test]
+#[should_panic = "Contract(AmountTooLowForFee)"]
 fn swap_and_bridge_amount_too_low_for_fee() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
+    let bridge_env = BridgeEnv::default();
 
-    let call_result = bridge_env.bridge.swap_and_bridge(
+    bridge_env.bridge.swap_and_bridge(
         &bridge_env.alice,
         &bridge_env.yaro_token,
         1_000.0,
         0.0,
         0.0,
         GOERLI_CHAIN_ID,
-        &BytesN::random(&env),
+        &BytesN::random(&bridge_env.env),
         &bridge_env.goerli_token,
-        &gen_nonce(&env),
+        &gen_nonce(&bridge_env.env),
     );
-
-    expect_contract_error(&env, call_result, Error::AmountTooLowForFee);
 }
 
 #[test]
 pub fn receive_tokens() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
+    let bridge_env = BridgeEnv::default();
 
-    bridge_env
-        .do_receive_tokens(
-            &env,
-            &bridge_env.alice,
-            &bridge_env.yaro_token,
-            100.0,
-            0,
-            1.5,
-            49900.004,
-        )
-        .unwrap();
+    bridge_env.do_receive_tokens(
+        &bridge_env.alice,
+        &bridge_env.yaro_token,
+        100.0,
+        0.0,
+        1.5,
+        Some(ExpectedPoolDiff {
+            v_usd_diff: 100.0,
+            token_balance_diff: 99.996,
+        }),
+    );
 }
 
 #[test]
 pub fn receive_tokens_fee_share_gt_zero() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::create(
-        &env,
-        BridgeEnvConfig {
-            yaro_fee_share_bp: 0.05,
-            ..Default::default()
-        },
-    );
+    let bridge_env = BridgeEnv::create(BridgeEnvConfig::default().with_yaro_fee_share(5.0));
 
-    bridge_env
-        .do_receive_tokens(
-            &env,
-            &bridge_env.alice,
-            &bridge_env.yaro_token,
-            100.0,
-            0,
-            100.0,
-            49900.004,
-        )
-        .unwrap();
+    bridge_env.do_receive_tokens(
+        &bridge_env.alice,
+        &bridge_env.yaro_token,
+        100.0,
+        0.0,
+        100.0,
+        Some(ExpectedPoolDiff {
+            v_usd_diff: 100.0,
+            token_balance_diff: 99.996,
+        }),
+    );
 }
 
 #[test]
 pub fn receive_tokens_zero_amount() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
+    let bridge_env = BridgeEnv::default();
 
-    bridge_env
-        .do_receive_tokens(
-            &env,
-            &bridge_env.alice,
-            &bridge_env.yaro_token,
-            0.0,
-            0,
-            0.0,
-            50000.0,
-        )
-        .unwrap();
+    bridge_env.do_receive_tokens(
+        &bridge_env.alice,
+        &bridge_env.yaro_token,
+        0.0,
+        0.0,
+        0.0,
+        Some(ExpectedPoolDiff {
+            v_usd_diff: 0.0,
+            token_balance_diff: 0.0,
+        }),
+    );
 }
 
 #[test]
 pub fn receive_tokens_extra_gas() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
+    let bridge_env = BridgeEnv::default();
 
-    bridge_env
-        .do_receive_tokens(
-            &env,
-            &bridge_env.alice,
-            &bridge_env.yusd_token,
-            100.0,
-            1000,
-            1.5,
-            49900.004,
-        )
-        .unwrap();
+    bridge_env.do_receive_tokens(
+        &bridge_env.alice,
+        &bridge_env.yusd_token,
+        100.0,
+        0.0001,
+        1.5,
+        Some(ExpectedPoolDiff {
+            v_usd_diff: 100.0,
+            token_balance_diff: 99.996,
+        }),
+    );
 }
 
 #[test]
+#[should_panic = "Contract(TokenInsufficientBalance)"]
 pub fn receive_tokens_extra_gas_not_enough_native_token_on_bridge() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
-
-    let nonce = gen_nonce(&env);
+    let bridge_env = BridgeEnv::default();
+    let nonce = gen_nonce(&bridge_env.env);
 
     bridge_env.native_token.client.transfer(
         &bridge_env.bridge.id,
-        &Address::generate(&env),
+        &Address::generate(&bridge_env.env),
         &(bridge_env.native_token.balance_of(&bridge_env.bridge.id) as i128),
     );
 
-    bridge_env
-        .hash_and_receive_message(
-            &env,
-            float_to_uint_sp(1_000.0),
-            &bridge_env.alice.as_address(),
-            &bridge_env.yaro_token,
-            &nonce,
-        )
-        .unwrap();
+    bridge_env.hash_and_receive_message(
+        float_to_uint_sp(1_000.0),
+        &bridge_env.alice.as_address(),
+        &bridge_env.yaro_token,
+        &nonce,
+    );
 
-    let call_result = bridge_env.bridge.receive_tokens(
+    bridge_env.bridge.receive_tokens(
         &bridge_env.bridge.id,
         1_000.0,
         &bridge_env.alice,
@@ -382,99 +318,60 @@ pub fn receive_tokens_extra_gas_not_enough_native_token_on_bridge() {
         &nonce,
         0.0,
         false,
-        &Some(1000),
+        &Some(0.0001),
     );
-
-    expect_sc_error(&env, call_result, ScError::Contract(10));
 }
 
 #[test]
+#[should_panic = "Contract(NoMessage)"]
 pub fn receive_tokens_no_message() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
-
-    let amount = 1_000.0;
-
-    let call_result = bridge_env.bridge.receive_tokens(
+    let bridge_env = BridgeEnv::default();
+    bridge_env.bridge.receive_tokens(
         &bridge_env.bridge.id,
-        amount,
+        1_000.0,
         &bridge_env.alice,
         GOERLI_CHAIN_ID,
         &bridge_env.yaro_token,
-        &gen_nonce(&env),
-        amount - 10.0,
+        &gen_nonce(&bridge_env.env),
+        990.0,
         false,
-        &Some(0u128),
+        &Some(0.0),
     );
-
-    expect_contract_error(&env, call_result, Error::NoMessage);
 }
 
 #[test]
-pub fn receive_tokens_swap_prohibited() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
-
-    bridge_env.bridge.client.stop_swap();
-
-    let amount = 1_000.0;
-
-    let call_result = bridge_env.bridge.receive_tokens(
-        &bridge_env.bridge.id,
-        amount,
-        &bridge_env.alice,
-        GOERLI_CHAIN_ID,
-        &bridge_env.yaro_token,
-        &gen_nonce(&env),
-        amount - 10.0,
-        false,
-        &Some(0u128),
-    );
-
-    expect_contract_error(&env, call_result, Error::SwapProhibited);
-}
-
-#[test]
+#[should_panic = "Contract(SourceNotRegistered)"]
 pub fn receive_tokens_source_not_registered() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
-
-    let amount = 1_000.0;
-
-    let call_result = bridge_env.bridge.receive_tokens(
+    let bridge_env = BridgeEnv::default();
+    bridge_env.bridge.receive_tokens(
         &bridge_env.bridge.id,
-        amount,
+        1_000.0,
         &bridge_env.alice,
         10,
         &bridge_env.yaro_token,
-        &gen_nonce(&env),
-        amount - 10.0,
+        &gen_nonce(&bridge_env.env),
+        990.0,
         false,
-        &Some(0u128),
+        &Some(0.0),
     );
-
-    expect_contract_error(&env, call_result, Error::SourceNotRegistered);
 }
 
 #[test]
+#[should_panic = "Contract(InsufficientReceivedAmount)"]
 pub fn receive_tokens_insufficient_received_amount() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
+    let bridge_env = BridgeEnv::default();
 
     let amount = 1_000.0;
-    let nonce = gen_nonce(&env);
+    let nonce = gen_nonce(&bridge_env.env);
 
-    bridge_env
-        .hash_and_receive_message(
-            &env,
-            float_to_uint_sp(amount),
-            &bridge_env.alice.as_address(),
-            &bridge_env.yaro_token,
-            &nonce,
-        )
-        .unwrap();
+    bridge_env.hash_and_receive_message(
+        float_to_uint_sp(amount),
+        &bridge_env.alice.as_address(),
+        &bridge_env.yaro_token,
+        &nonce,
+    );
 
-    let call_result = bridge_env.bridge.receive_tokens(
+    bridge_env.bridge.receive_tokens(
         &bridge_env.bridge.id,
         amount,
         &bridge_env.alice,
@@ -483,30 +380,25 @@ pub fn receive_tokens_insufficient_received_amount() {
         &nonce,
         amount + 10.0,
         false,
-        &Some(0u128),
+        &Some(0.0),
     );
-
-    expect_contract_error(&env, call_result, Error::InsufficientReceivedAmount);
 }
 
 #[test]
+#[should_panic = "Contract(MessageProcessed)"]
 pub fn receive_tokens_message_processed() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
+    let bridge_env = BridgeEnv::default();
 
-    let nonce = gen_nonce(&env);
+    let nonce = gen_nonce(&bridge_env.env);
     let amount = 1_000.0;
     let amount_sp = float_to_uint_sp(amount);
 
-    bridge_env
-        .hash_and_receive_message(
-            &env,
-            float_to_uint_sp(amount),
-            &bridge_env.alice.as_address(),
-            &bridge_env.yaro_token,
-            &nonce,
-        )
-        .unwrap();
+    bridge_env.hash_and_receive_message(
+        float_to_uint_sp(amount),
+        &bridge_env.alice.as_address(),
+        &bridge_env.yaro_token,
+        &nonce,
+    );
 
     bridge_env.bridge.client.receive_tokens(
         &bridge_env.bridge.id,
@@ -520,7 +412,7 @@ pub fn receive_tokens_message_processed() {
         &Some(0u128),
     );
 
-    let call_result = bridge_env.bridge.receive_tokens(
+    bridge_env.bridge.receive_tokens(
         &bridge_env.bridge.id,
         amount,
         &bridge_env.alice,
@@ -529,28 +421,28 @@ pub fn receive_tokens_message_processed() {
         &nonce,
         0.0,
         false,
-        &Some(0u128),
+        &Some(0.0),
     );
-
-    expect_contract_error(&env, call_result, Error::MessageProcessed);
 }
 
 #[test]
 pub fn swap() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
+    let bridge_env = BridgeEnv::default();
 
-    bridge_env
-        .do_swap(
-            &env,
-            &bridge_env.alice,
-            &bridge_env.alice,
-            &bridge_env.yaro_token,
-            &bridge_env.yusd_token,
-            10.0,
-            1.0,
-            49990.0,
-            49990.0,
-        )
-        .unwrap();
+    bridge_env.do_swap(
+        &bridge_env.alice,
+        &bridge_env.alice,
+        &bridge_env.yaro_token,
+        &bridge_env.yusd_token,
+        1_000.0,
+        1.0,
+        Some(ExpectedPoolDiff {
+            v_usd_diff: 999.513,
+            token_balance_diff: 1_000.0,
+        }),
+        Some(ExpectedPoolDiff {
+            v_usd_diff: 999.513,
+            token_balance_diff: 999.026,
+        }),
+    );
 }

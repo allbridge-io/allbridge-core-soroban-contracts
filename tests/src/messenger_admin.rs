@@ -1,15 +1,14 @@
 use soroban_sdk::{
     testutils::{Address as _, BytesN as _},
-    Address, BytesN, Env,
+    Address, BytesN,
 };
 
-use crate::utils::consts::GOERLI_CHAIN_ID;
-use crate::utils::{desoroban_result, expect_auth_error, BridgeEnv};
+use crate::utils::{consts::GOERLI_CHAIN_ID, unwrap_call_result};
+use crate::utils::{desoroban_result, BridgeEnv};
 
 #[test]
 fn set_other_chain_ids() {
-    let env = Env::default();
-    let BridgeEnv { ref messenger, .. } = BridgeEnv::default(&env);
+    let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
 
     let other_chains_id = BytesN::random(&env);
     messenger.client.set_other_chain_ids(&other_chains_id);
@@ -18,9 +17,9 @@ fn set_other_chain_ids() {
 }
 
 #[test]
+#[should_panic = "Context(InvalidAction)"]
 fn set_other_chain_ids_no_auth() {
-    let env = Env::default();
-    let BridgeEnv { ref messenger, .. } = BridgeEnv::default(&env);
+    let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
 
     env.mock_auths(&[]);
 
@@ -29,13 +28,12 @@ fn set_other_chain_ids_no_auth() {
             .client
             .try_set_other_chain_ids(&BytesN::random(&env)),
     );
-    expect_auth_error(&env, call_result)
+    unwrap_call_result(&env, call_result);
 }
 
 #[test]
 fn set_gas_oracle() {
-    let env = Env::default();
-    let BridgeEnv { ref messenger, .. } = BridgeEnv::default(&env);
+    let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
 
     let gas_oracle = Address::generate(&env);
     messenger.client.set_gas_oracle(&gas_oracle);
@@ -44,20 +42,23 @@ fn set_gas_oracle() {
 }
 
 #[test]
+#[should_panic = "Context(InvalidAction)"]
 fn set_gas_oracle_no_auth() {
-    let env = Env::default();
-    let BridgeEnv { ref messenger, .. } = BridgeEnv::default(&env);
+    let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
 
     env.mock_auths(&[]);
-    let call_result = desoroban_result(messenger.client.try_set_gas_oracle(&Address::generate(&env)));
+    let call_result = desoroban_result(
+        messenger
+            .client
+            .try_set_gas_oracle(&Address::generate(&env)),
+    );
 
-    expect_auth_error(&env, call_result);
+    unwrap_call_result(&env, call_result);
 }
 
 #[test]
 fn set_gas_admin() {
-    let env = Env::default();
-    let BridgeEnv { ref messenger, .. } = BridgeEnv::default(&env);
+    let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
 
     let admin = Address::generate(&env);
     messenger.client.set_admin(&admin);
@@ -66,20 +67,19 @@ fn set_gas_admin() {
 }
 
 #[test]
+#[should_panic = "Context(InvalidAction)"]
 fn set_gas_admin_no_auth() {
-    let env = Env::default();
-    let BridgeEnv { ref messenger, .. } = BridgeEnv::default(&env);
+    let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
 
     env.mock_auths(&[]);
     let call_result = desoroban_result(messenger.client.try_set_admin(&Address::generate(&env)));
 
-    expect_auth_error(&env, call_result);
+    unwrap_call_result(&env, call_result);
 }
 
 #[test]
 fn set_primary_validator() {
-    let env = Env::default();
-    let BridgeEnv { ref messenger, .. } = BridgeEnv::default(&env);
+    let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
 
     let validator_address = BytesN::random(&env);
     messenger.client.set_primary_validator(&validator_address);
@@ -88,9 +88,9 @@ fn set_primary_validator() {
 }
 
 #[test]
+#[should_panic = "Context(InvalidAction)"]
 fn set_primary_validator_no_auth() {
-    let env = Env::default();
-    let BridgeEnv { ref messenger, .. } = BridgeEnv::default(&env);
+    let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
 
     env.mock_auths(&[]);
     let call_result = desoroban_result(
@@ -99,13 +99,12 @@ fn set_primary_validator_no_auth() {
             .try_set_primary_validator(&BytesN::random(&env)),
     );
 
-    expect_auth_error(&env, call_result);
+    unwrap_call_result(&env, call_result);
 }
 
 #[test]
 fn add_secondary_validator() {
-    let env = Env::default();
-    let BridgeEnv { ref messenger, .. } = BridgeEnv::default(&env);
+    let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
 
     let validator_address = BytesN::random(&env);
     messenger.client.add_secondary_validator(&validator_address);
@@ -114,9 +113,9 @@ fn add_secondary_validator() {
 }
 
 #[test]
+#[should_panic = "Context(InvalidAction)"]
 fn add_secondary_validator_no_auth() {
-    let env = Env::default();
-    let BridgeEnv { ref messenger, .. } = BridgeEnv::default(&env);
+    let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
 
     env.mock_auths(&[]);
     let call_result = desoroban_result(
@@ -125,13 +124,12 @@ fn add_secondary_validator_no_auth() {
             .try_add_secondary_validator(&BytesN::random(&env)),
     );
 
-    expect_auth_error(&env, call_result);
+    unwrap_call_result(&env, call_result);
 }
 
 #[test]
 fn remove_secondary_validator() {
-    let env = Env::default();
-    let BridgeEnv { ref messenger, .. } = BridgeEnv::default(&env);
+    let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
 
     let validator_address = BytesN::random(&env);
     messenger.client.add_secondary_validator(&validator_address);
@@ -144,9 +142,9 @@ fn remove_secondary_validator() {
 }
 
 #[test]
+#[should_panic = "Context(InvalidAction)"]
 fn remove_secondary_validator_no_auth() {
-    let env = Env::default();
-    let BridgeEnv { ref messenger, .. } = BridgeEnv::default(&env);
+    let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
 
     let validator_address = BytesN::random(&env);
     messenger.client.add_secondary_validator(&validator_address);
@@ -159,13 +157,12 @@ fn remove_secondary_validator_no_auth() {
             .try_remove_secondary_validator(&validator_address),
     );
 
-    expect_auth_error(&env, call_result);
+    unwrap_call_result(&env, call_result);
 }
 
 #[test]
 fn set_gas_usage() {
-    let env = Env::default();
-    let BridgeEnv { ref messenger, .. } = BridgeEnv::default(&env);
+    let BridgeEnv { messenger, .. } = BridgeEnv::default();
 
     messenger.client.set_gas_usage(&GOERLI_CHAIN_ID, &100_000);
 
@@ -173,9 +170,9 @@ fn set_gas_usage() {
 }
 
 #[test]
+#[should_panic = "Context(InvalidAction)"]
 fn set_gas_usage_no_auth() {
-    let env = Env::default();
-    let BridgeEnv { ref messenger, .. } = BridgeEnv::default(&env);
+    let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
 
     env.mock_auths(&[]);
     let call_result = desoroban_result(
@@ -183,5 +180,5 @@ fn set_gas_usage_no_auth() {
             .client
             .try_set_gas_usage(&GOERLI_CHAIN_ID, &100_000),
     );
-    expect_auth_error(&env, call_result);
+    unwrap_call_result(&env, call_result);
 }

@@ -8,3 +8,9 @@ soroban-sdk = { workspace = true }
 soroban-env-common = { workspace = true }
 shared = { workspace = true }
 proc_macros = { workspace = true }
+
+[lints.clippy]
+redundant_clone = "warn"
+unreadable_literal = "warn"
+semicolon_if_nothing_returned = "warn"
+or_fun_call = "warn"

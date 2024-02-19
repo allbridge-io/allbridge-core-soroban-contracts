@@ -16,3 +16,10 @@ arrayref = { workspace = true }
 rand = "0.8.5"
 color-print = "0.3.5"
 ethnum = "1.4.0"
+
+[lints.clippy]
+redundant_clone = "warn"
+unreadable_literal = "warn"
+semicolon_if_nothing_returned = "warn"
+or_fun_call = "warn"
+too_many_arguments = "allow"

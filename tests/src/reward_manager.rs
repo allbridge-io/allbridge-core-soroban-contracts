@@ -1,75 +1,57 @@
-use soroban_sdk::Env;
+use crate::utils::{uint_to_float_sp, BalancesSnapshot, BridgeEnv, BridgeEnvConfig};
 
-use crate::utils::{int_to_float_sp, BalancesSnapshot, BridgeEnv, BridgeEnvConfig};
+pub fn swap_a_to_b(bridge_env: &BridgeEnv, swap_amount: f64) {
+    bridge_env.do_swap_and_bridge(
+        &bridge_env.alice,
+        &bridge_env.yaro_token,
+        swap_amount,
+        3_000.0,
+        0.0,
+        3.0,
+        3.0,
+        None,
+    );
 
-pub fn swap_a_to_b(env: &Env, bridge_env: &BridgeEnv, swap_amount: f64) {
-    bridge_env
-        .do_swap_and_bridge(
-            &env,
-            &bridge_env.alice,
-            &bridge_env.yaro_token,
-            swap_amount,
-            3000.0,
-            0.0,
-            3.0,
-            3.0,
-            f64::NAN,
-        )
-        .unwrap();
-
-    bridge_env
-        .do_receive_tokens(
-            &env,
-            &bridge_env.bob,
-            &bridge_env.yusd_token,
-            swap_amount,
-            0,
-            15.0,
-            f64::NAN,
-        )
-        .unwrap();
+    bridge_env.do_receive_tokens(
+        &bridge_env.bob,
+        &bridge_env.yusd_token,
+        swap_amount,
+        0.0,
+        15.0,
+        None,
+    );
 }
 
-pub fn swap_b_to_a(env: &Env, bridge_env: &BridgeEnv, swap_amount: f64) {
-    bridge_env
-        .do_swap_and_bridge(
-            &env,
-            &bridge_env.bob,
-            &bridge_env.yusd_token,
-            swap_amount,
-            3000.0,
-            0.0,
-            3.0,
-            3.0,
-            f64::NAN,
-        )
-        .unwrap();
+pub fn swap_b_to_a(bridge_env: &BridgeEnv, swap_amount: f64) {
+    bridge_env.do_swap_and_bridge(
+        &bridge_env.bob,
+        &bridge_env.yusd_token,
+        swap_amount,
+        3_000.0,
+        0.0,
+        3.0,
+        3.0,
+        None,
+    );
 
-    bridge_env
-        .do_receive_tokens(
-            &env,
-            &bridge_env.alice,
-            &bridge_env.yaro_token,
-            swap_amount,
-            0,
-            1.5,
-            f64::NAN,
-        )
-        .unwrap();
+    bridge_env.do_receive_tokens(
+        &bridge_env.alice,
+        &bridge_env.yaro_token,
+        swap_amount,
+        0.0,
+        1.5,
+        None,
+    );
 }
 
 #[test]
 fn common_flow() {
-    let env = Env::default();
     let bridge_env = BridgeEnv::create(
-        &env,
-        BridgeEnvConfig {
-            yaro_fee_share_bp: 0.01,
-            yusd_fee_share_bp: 0.1,
-            yaro_admin_deposit: 0.0,
-            yusd_admin_deposit: 0.0,
-            ..BridgeEnvConfig::default()
-        },
+        BridgeEnvConfig::default()
+            .with_yaro_fee_share(1.0)
+            .with_yusd_fee_share(10.0)
+            .with_yaro_admin_deposit(0.0)
+            .with_yusd_admin_deposit(0.0),
     );
 
     let deposit_amount = 2_000.0;
@@ -78,11 +60,11 @@ fn common_flow() {
     bridge_env.do_deposit(deposit_amount, &bridge_env.alice, &bridge_env.yaro_pool);
     bridge_env.do_deposit(deposit_amount, &bridge_env.bob, &bridge_env.yusd_pool);
 
-    swap_a_to_b(&env, &bridge_env, swap_amount);
-    swap_b_to_a(&env, &bridge_env, swap_amount);
+    swap_a_to_b(&bridge_env, swap_amount);
+    swap_b_to_a(&bridge_env, swap_amount);
     // check alice reward
 
-    let alice_reward = 2.0023999;
+    let alice_reward = 2.002_399_9;
     let balances_before = BalancesSnapshot::take(&bridge_env);
 
     bridge_env
@@ -93,8 +75,8 @@ fn common_flow() {
     let alice_deposit_after = bridge_env.yaro_pool.user_deposit(&bridge_env.alice);
     let balances_after = BalancesSnapshot::take(&bridge_env);
 
-    assert_eq!(int_to_float_sp(bridge_env.yaro_pool.d()), 2_000.0);
-    assert_eq!(int_to_float_sp(alice_deposit_after.lp_amount), 2_000.0);
+    assert_eq!(uint_to_float_sp(bridge_env.yaro_pool.d()), 2_000.0);
+    assert_eq!(uint_to_float_sp(alice_deposit_after.lp_amount), 2_000.0);
     assert_eq!(
         bridge_env
             .yaro_token
@@ -118,7 +100,7 @@ fn common_flow() {
 
     // check bob reward
 
-    let bob_reward = 19.9754999;
+    let bob_reward = 19.975_499_9;
 
     let balances_before = BalancesSnapshot::take(&bridge_env);
 
@@ -127,8 +109,8 @@ fn common_flow() {
     let bob_deposit_after = bridge_env.yusd_pool.user_deposit(&bridge_env.bob);
     let balances_after = BalancesSnapshot::take(&bridge_env);
 
-    assert_eq!(int_to_float_sp(bridge_env.yusd_pool.d()), 2_000.0);
-    assert_eq!(int_to_float_sp(bob_deposit_after.lp_amount), 2_000.0);
+    assert_eq!(uint_to_float_sp(bridge_env.yusd_pool.d()), 2_000.0);
+    assert_eq!(uint_to_float_sp(bob_deposit_after.lp_amount), 2_000.0);
     assert_eq!(
         bridge_env
             .yusd_token
@@ -150,8 +132,8 @@ fn common_flow() {
         bob_reward
     );
 
-    swap_a_to_b(&env, &bridge_env, swap_amount);
-    swap_b_to_a(&env, &bridge_env, swap_amount);
+    swap_a_to_b(&bridge_env, swap_amount);
+    swap_b_to_a(&bridge_env, swap_amount);
 
     // alice withdraw
 
@@ -162,13 +144,13 @@ fn common_flow() {
 
     let alice_deposit = bridge_env.yaro_pool.user_deposit(&bridge_env.alice);
 
-    assert_eq!(int_to_float_sp(bridge_env.yaro_pool.d()), 5.0);
-    assert_eq!(int_to_float_sp(alice_deposit.lp_amount), 5.0);
+    assert_eq!(uint_to_float_sp(bridge_env.yaro_pool.d()), 5.0);
+    assert_eq!(uint_to_float_sp(alice_deposit.lp_amount), 5.0);
     assert_eq!(
         bridge_env
             .yaro_token
             .int_to_float(alice_deposit.reward_debt),
-        0.0100118
+        0.010_011_8
     );
 
     // bob withdraw
@@ -180,10 +162,10 @@ fn common_flow() {
 
     let bob_deposit = bridge_env.yusd_pool.user_deposit(&bridge_env.bob);
 
-    assert_eq!(int_to_float_sp(bridge_env.yusd_pool.d()), 20.01);
-    assert_eq!(int_to_float_sp(bob_deposit.lp_amount), 20.0);
+    assert_eq!(uint_to_float_sp(bridge_env.yusd_pool.d()), 20.01);
+    assert_eq!(uint_to_float_sp(bob_deposit.lp_amount), 20.0);
     assert_eq!(
         bridge_env.yaro_token.int_to_float(bob_deposit.reward_debt),
-        0.3994609
+        0.399_460_9
     );
 }

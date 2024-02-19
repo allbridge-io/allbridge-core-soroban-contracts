@@ -59,10 +59,9 @@ mod test {
         use alloc::vec;
 
         let address = hex::decode(address).unwrap();
-        let address = (vec![vec![0u8; 12], address]).concat();
-        let address = BytesN::<32>::from_array(env, arrayref::array_ref![address, 0, 32]);
+        let address = ([vec![0u8; 12], address]).concat();
 
-        address
+        BytesN::<32>::from_array(env, arrayref::array_ref![address, 0, 32])
     }
 
     #[test]
@@ -71,7 +70,7 @@ mod test {
 
         let recipient = "B3fcA30B51AE8e5488598D54240bD692025a03F4";
         let receive_token = "991dc6e4965fa74135b3f67c36e46d9bcf736278";
-        let amount = 100000;
+        let amount = 100_000;
         let source_chain_id = 7;
         let destination_chain_id = 3;
         let nonce = U256::from_u32(&env, 9823);

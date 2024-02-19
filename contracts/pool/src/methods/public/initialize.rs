@@ -17,6 +17,9 @@ pub fn initialize(
 ) -> Result<(), Error> {
     require!(!Pool::has(&env), Error::Initialized);
 
+    require!(fee_share_bp < Pool::BP, Error::InvalidArg);
+    require!(admin_fee_share_bp < Pool::BP, Error::InvalidArg);
+
     let token_client = token::Client::new(&env, &token);
     let decimals = token_client.decimals();
 

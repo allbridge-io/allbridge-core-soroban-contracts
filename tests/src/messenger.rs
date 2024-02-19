@@ -1,7 +1,6 @@
 use shared::{
     consts::CHAIN_ID,
     utils::{hash_message, hash_with_sender, hash_with_sender_address},
-    Error,
 };
 use soroban_sdk::{
     map,
@@ -10,8 +9,8 @@ use soroban_sdk::{
 };
 
 use crate::utils::{
-    consts::GOERLI_CHAIN_ID, contract_id, expect_contract_error, gen_nonce,
-    message_hash_vec_to_byte, sign_message, vec_to_bytes, BridgeEnv, Messenger, MessengerConfig,
+    consts::GOERLI_CHAIN_ID, contract_id, gen_nonce, message_hash_vec_to_byte, sign_message,
+    vec_to_bytes, BridgeEnv, Messenger, MessengerConfig,
 };
 
 #[test]
@@ -20,13 +19,13 @@ fn messenger_init() {
     env.mock_all_auths();
 
     let admin = Address::generate(&env);
-    let native_token_address = env.register_stellar_asset_contract(admin.clone());
-    let gas_oracle_id = Address::generate(&env);
+    let native_token = env.register_stellar_asset_contract(admin.clone());
+    let gas_oracle = Address::generate(&env);
 
     let init_config = MessengerConfig {
-        admin: admin.clone(),
-        native_token: native_token_address.clone(),
-        gas_oracle: gas_oracle_id.clone(),
+        admin,
+        native_token,
+        gas_oracle,
         secondary_validator_keys: map![&env, (BytesN::random(&env), true)],
         ..MessengerConfig::default_config(&env)
     };
@@ -38,8 +37,8 @@ fn messenger_init() {
 
 #[test]
 fn messenger_send_message() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
+    let bridge_env = BridgeEnv::default();
+    let BridgeEnv { env, .. } = bridge_env;
 
     let mut message = BytesN::random(&env);
     message.set(0, CHAIN_ID as u8);
@@ -49,10 +48,9 @@ fn messenger_send_message() {
 
     bridge_env
         .messenger
-        .send_message(&bridge_env.alice, &message)
-        .unwrap();
+        .send_message(&bridge_env.alice, &message);
 
-    let expected_fee = 300_000_00;
+    let expected_fee = 30_000_000;
 
     assert!(bridge_env
         .messenger
@@ -68,39 +66,37 @@ fn messenger_send_message() {
 }
 
 #[test]
+#[should_panic = "Contract(InvalidChainId)"]
 fn send_message_to_unsupported_chain() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
+    let bridge_env = BridgeEnv::default();
+    let BridgeEnv { env, .. } = bridge_env;
 
     let mut message = BytesN::random(&env);
     message.set(0, 8);
     message.set(1, GOERLI_CHAIN_ID as u8);
 
-    let try_result = bridge_env
+    bridge_env
         .messenger
         .send_message(&bridge_env.alice, &message);
-
-    expect_contract_error(&env, try_result, Error::InvalidChainId);
 }
 
 #[test]
+#[should_panic = "Contract(InvalidOtherChainId)"]
 fn send_message_with_wrong_chain_id() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
+    let bridge_env = BridgeEnv::default();
+    let BridgeEnv { env, .. } = bridge_env;
 
     let mut message = BytesN::random(&env);
     message.set(0, CHAIN_ID as u8);
     message.set(1, 8);
 
-    let try_result = bridge_env
+    bridge_env
         .messenger
         .send_message(&bridge_env.alice, &message);
-
-    expect_contract_error(&env, try_result, Error::InvalidOtherChainId);
 }
 
 #[test]
-fn messenger_receive_message() {
+fn receive_message() {
     let env = Env::default();
     env.mock_all_auths();
     let admin = Address::generate(&env);
@@ -121,7 +117,7 @@ fn messenger_receive_message() {
     let messenger = Messenger::create(
         &env,
         MessengerConfig {
-            admin: admin.clone(),
+            admin,
             primary_validator_key: primary_validator,
             secondary_validator_keys: map![&env, (secondary_validator, true)],
             ..MessengerConfig::default_config(&env)
@@ -136,9 +132,9 @@ fn messenger_receive_message() {
 }
 
 #[test]
-pub fn messenger_receive_message_full() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
+pub fn receive_message_full() {
+    let bridge_env = BridgeEnv::default();
+    let BridgeEnv { env, .. } = bridge_env;
 
     let user = Address::generate(&env);
     let yaro_token = Address::generate(&env);
@@ -161,21 +157,18 @@ pub fn messenger_receive_message_full() {
     let secondary_signature =
         sign_message(&env, &message_hash, &bridge_env.secondary_validator_wallet);
 
-    bridge_env
-        .messenger
-        .receive_message(
-            &env,
-            &message_hash_vec_to_byte(&env, &message_hash),
-            &primary_signature,
-            &secondary_signature,
-        )
-        .unwrap();
+    bridge_env.messenger.receive_message(
+        &message_hash_vec_to_byte(&env, &message_hash),
+        &primary_signature,
+        &secondary_signature,
+    );
 }
 
 #[test]
+#[should_panic = "Contract(HasMessage)"]
 fn send_message_twice() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
+    let bridge_env = BridgeEnv::default();
+    let BridgeEnv { env, .. } = bridge_env;
     let BridgeEnv {
         ref alice,
         ref yaro_token,
@@ -183,68 +176,56 @@ fn send_message_twice() {
         ..
     } = bridge_env;
 
-    let message = bridge_env
-        .messenger
-        .hash_and_send_message(
-            &env,
-            &alice,
-            100_000,
-            &alice.as_address(),
-            &yaro_token,
-            &gen_nonce(&env),
-        )
-        .unwrap();
+    let message = bridge_env.messenger.hash_and_send_message(
+        alice,
+        100_000,
+        &alice.as_address(),
+        yaro_token,
+        &gen_nonce(&env),
+    );
 
-    let try_result = messenger.send_message(&alice, &message);
-
-    expect_contract_error(&env, try_result, Error::HasMessage);
+    messenger.send_message(alice, &message);
 }
 
 #[test]
+#[should_panic = "Contract(InvalidPrimarySignature)"]
 fn confirm_message_with_broken_validator() {
-    let env = Env::default();
-    let mut bridge_env = BridgeEnv::default(&env);
+    let mut bridge_env = BridgeEnv::default();
 
     bridge_env.override_primary_validator(
         "a07d0e5f33e159bd7b471d0e79e4211205f4e89949247ec01ba7559b71acee77",
     );
 
-    let try_result = bridge_env.hash_and_receive_message(
-        &env,
+    bridge_env.hash_and_receive_message(
         100_000,
         &bridge_env.alice.as_address(),
         &bridge_env.yaro_token,
-        &gen_nonce(&env),
+        &gen_nonce(&bridge_env.env),
     );
-
-    expect_contract_error(&env, try_result, Error::InvalidPrimarySignature);
 }
 
 #[test]
+#[should_panic = "Contract(InvalidSecondarySignature)"]
 fn confirm_message_with_broken_secondary_validator() {
-    let env = Env::default();
-    let mut bridge_env = BridgeEnv::default(&env);
+    let mut bridge_env = BridgeEnv::default();
 
     bridge_env.override_secondary_validator(
         "a07d0e5f33e159bd7b471d0e79e4211205f4e89949247ec01ba7559b71acee77",
     );
 
-    let try_result = bridge_env.hash_and_receive_message(
-        &env,
+    bridge_env.hash_and_receive_message(
         100_000,
         &bridge_env.alice.as_address(),
         &bridge_env.yaro_token,
-        &gen_nonce(&env),
+        &gen_nonce(&bridge_env.env),
     );
-
-    expect_contract_error(&env, try_result, Error::InvalidSecondarySignature);
 }
 
 #[test]
 fn withdraw_gas_tokens() {
-    let env = Env::default();
-    let bridge_env = BridgeEnv::default(&env);
+    let bridge_env = BridgeEnv::default();
     let BridgeEnv {
+        env,
         ref alice,
         ref yaro_token,
         ref messenger,
@@ -253,23 +234,19 @@ fn withdraw_gas_tokens() {
         ..
     } = bridge_env;
 
-    bridge_env
-        .messenger
-        .hash_and_send_message(
-            &env,
-            &alice,
-            100_000,
-            &alice.as_address(),
-            &yaro_token,
-            &gen_nonce(&env),
-        )
-        .unwrap();
+    bridge_env.messenger.hash_and_send_message(
+        alice,
+        100_000,
+        &alice.as_address(),
+        yaro_token,
+        &gen_nonce(&env),
+    );
 
     let messenger_balance = native_token.balance_of(&messenger.id);
 
     messenger
         .client
-        .withdraw_gas_tokens(&admin, &messenger_balance);
+        .withdraw_gas_tokens(admin, &messenger_balance);
 
     let messenger_balance = native_token.balance_of(&messenger.id);
 

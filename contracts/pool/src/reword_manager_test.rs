@@ -18,7 +18,7 @@ use crate::{
 const TOKEN_DECIMALS: u32 = 7;
 
 pub fn float_to_int(amount: f64, decimals: u32) -> u128 {
-    (amount as f64 * 10.0f64.powi(decimals as i32)) as u128
+    (amount * 10.0f64.powi(decimals as i32)) as u128
 }
 
 const P: u128 = 2u128.pow(Pool::P as u32);
@@ -117,7 +117,7 @@ fn common_flow() {
     reward_manager.add_rewards(&float_to_int(100.0, SP));
     assert_eq!(
         reward_manager.get_pool().acc_reward_per_share_p,
-        P * 1 * 80 / 100
+        P * 80 / 100
     );
 
     // Bob added liquidity

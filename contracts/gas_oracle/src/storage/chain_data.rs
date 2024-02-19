@@ -24,7 +24,7 @@ impl ChainData {
         price: Option<u128>,
         gas_price: Option<u128>,
     ) {
-        let prev_chain_data = ChainData::get_by_key(env, &chain_id).unwrap_or(ChainData::default());
+        let prev_chain_data = ChainData::get_by_key(env, &chain_id).unwrap_or_default();
 
         let chain_data = ChainData {
             price: price.unwrap_or(prev_chain_data.price),
@@ -32,6 +32,6 @@ impl ChainData {
         };
 
         env.storage().temporary().set(&chain_id, &chain_data);
-        Self::extend_ttl_by_key(env, &chain_id)
+        Self::extend_ttl_by_key(env, &chain_id);
     }
 }

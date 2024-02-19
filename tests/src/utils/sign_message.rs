@@ -5,9 +5,9 @@ use ethers_core::{
 use ethers_signers::LocalWallet;
 use soroban_sdk::{Bytes, Env};
 
-pub fn sign_message(env: &Env, message_bytes: &Vec<u8>, wallet: &LocalWallet) -> Signature {
+pub fn sign_message(env: &Env, message_bytes: &[u8], wallet: &LocalWallet) -> Signature {
     let message = env.crypto().keccak256(&Bytes::from_array(
-        &env,
+        env,
         arrayref::array_ref![message_bytes, 0, 32],
     ));
     let hash = H256::decode(message.to_array()).unwrap();

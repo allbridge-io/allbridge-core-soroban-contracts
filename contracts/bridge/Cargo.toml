@@ -16,3 +16,9 @@ bridge_storage = { workspace = true }
 soroban-sdk = { workspace = true, features = ["testutils"] }
 hex = "0.4.3"
 arrayref = { workspace = true }
+
+[lints.clippy]
+redundant_clone = "warn"
+unreadable_literal = "warn"
+semicolon_if_nothing_returned = "warn"
+or_fun_call = "warn"

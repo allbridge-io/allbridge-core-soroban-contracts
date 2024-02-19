@@ -1,4 +1,5 @@
 #![cfg(test)]
+#![allow(clippy::too_many_arguments)]
 
 pub mod contracts;
 pub mod utils;
