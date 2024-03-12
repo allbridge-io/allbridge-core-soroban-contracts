@@ -1,6 +1,7 @@
 use bridge_storage::view::{get_admin, get_gas_oracle, get_gas_usage};
 use shared::{soroban_data::SimpleSorobanData, utils::extend_ttl_instance, Error};
 use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, Map};
+use bridge_storage::Admin;
 
 use crate::{
     methods::{
@@ -155,5 +156,12 @@ impl Messenger {
 
     pub fn get_gas_oracle(env: Env) -> Result<Address, Error> {
         get_gas_oracle(env)
+    }
+
+    pub fn upgrade(env: Env, new_wasm_hash: BytesN<32>) -> Result<(), Error> {
+        Admin::require_exist_auth(&env)?;
+
+        env.deployer().update_current_contract_wasm(new_wasm_hash);
+        Ok(())
     }
 }

@@ -1,6 +1,7 @@
 use bridge_storage::view::{get_admin, get_stop_authority};
 use shared::{utils::extend_ttl_instance, Error};
-use soroban_sdk::{contract, contractimpl, Address, Env};
+use soroban_sdk::{contract, contractimpl, Address, Env, BytesN};
+use bridge_storage::Admin;
 
 use crate::{
     methods::{
@@ -191,5 +192,12 @@ impl PoolContract {
 
     pub fn get_claimable_balance(env: Env, user: Address) -> Result<u128, Error> {
         get_claimable_balance(env, user)
+    }
+
+    pub fn upgrade(env: Env, new_wasm_hash: BytesN<32>) -> Result<(), Error> {
+        Admin::require_exist_auth(&env)?;
+
+        env.deployer().update_current_contract_wasm(new_wasm_hash);
+        Ok(())
     }
 }

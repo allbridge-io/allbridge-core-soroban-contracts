@@ -4,6 +4,7 @@ use bridge_storage::view::{get_admin, get_gas_oracle, get_gas_usage, get_stop_au
 use shared::utils::extend_ttl_instance;
 use shared::Error;
 use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, U256};
+use bridge_storage::Admin;
 
 use crate::methods::admin::{set_admin, set_messenger};
 use crate::storage::another_bridge::AnotherBridge;
@@ -258,5 +259,12 @@ impl BridgeContract {
         extend_ttl_instance(&env);
 
         set_admin(env, new_admin)
+    }
+
+    pub fn upgrade(env: Env, new_wasm_hash: BytesN<32>) -> Result<(), Error> {
+        Admin::require_exist_auth(&env)?;
+
+        env.deployer().update_current_contract_wasm(new_wasm_hash);
+        Ok(())
     }
 }
