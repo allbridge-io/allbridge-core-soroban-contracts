@@ -86,10 +86,10 @@ impl PoolContract {
         claim_rewards(env, sender)
     }
 
-    pub fn claim_balance(env: Env, user: Address) -> Result<(), Error> {
+    pub fn claim_balance(env: Env, user: Address, transfer_id: BytesN<32>) -> Result<(), Error> {
         extend_ttl_instance(&env);
 
-        claim_balance(env, user)
+        claim_balance(env, user, transfer_id)
     }
 
     /// `admin`

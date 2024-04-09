@@ -1,4 +1,4 @@
-use soroban_sdk::{contracttype, Address};
+use soroban_sdk::{contracttype, Address, BytesN};
 
 use proc_macros::Event;
 
@@ -48,4 +48,5 @@ pub struct RewardsClaimed {
 pub struct BalanceClaimed {
     pub user: Address,
     pub amount: u128,
+    pub transfer_id: BytesN<32>
 }
