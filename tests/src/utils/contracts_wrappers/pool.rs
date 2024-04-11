@@ -1,4 +1,4 @@
-use soroban_sdk::{Address, Env};
+use soroban_sdk::{Address, BytesN, Env};
 
 use crate::utils::SYSTEM_PRECISION;
 use crate::{
@@ -140,5 +140,10 @@ impl Pool {
             &0,
             &false,
         )
+    }
+
+    pub fn upgrade(&self, new_hash: &BytesN<32>) -> CallResult {
+        self.client.try_upgrade(new_hash).map(Result::unwrap)
+            .map_err(Result::unwrap)
     }
 }

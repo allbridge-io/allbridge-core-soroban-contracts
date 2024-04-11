@@ -175,4 +175,8 @@ impl Messenger {
             .secondary_validator_keys
             .contains_key(key.to_owned())
     }
+
+    pub fn upgrade(&self, new_hash: &BytesN<32>) {
+        unwrap_call_result(&self.env, desoroban_result(self.client.try_upgrade(new_hash)));
+    }
 }

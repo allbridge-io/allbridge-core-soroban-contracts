@@ -2,6 +2,7 @@ use soroban_sdk::{
     testutils::{Address as _, BytesN as _},
     Address, BytesN,
 };
+use crate::contracts::messenger;
 
 use crate::utils::{consts::GOERLI_CHAIN_ID, unwrap_call_result};
 use crate::utils::{desoroban_result, BridgeEnv};
@@ -181,4 +182,20 @@ fn set_gas_usage_no_auth() {
             .try_set_gas_usage(&GOERLI_CHAIN_ID, &100_000),
     );
     unwrap_call_result(&env, call_result);
+}
+
+#[test]
+fn upgrade() {
+    let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
+    let hash =  env.deployer().upload_contract_wasm(messenger::WASM);
+    messenger.upgrade(&hash)
+}
+
+#[test]
+#[should_panic = "Context(InvalidAction)"]
+fn upgrade_no_auth() {
+    let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
+    env.mock_auths(&[]);
+    let hash =  env.deployer().upload_contract_wasm(messenger::WASM);
+    messenger.upgrade(&hash)
 }

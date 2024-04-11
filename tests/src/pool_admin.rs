@@ -1,4 +1,5 @@
 use soroban_sdk::{testutils::Address as _, Address};
+use crate::contracts::pool;
 
 use crate::utils::{desoroban_result, unwrap_call_result, BridgeEnv, BridgeEnvConfig};
 
@@ -269,4 +270,26 @@ fn adjust_total_lp_amount_no_auth() {
         &bridge_env.env,
         desoroban_result(bridge_env.yaro_pool.client.try_adjust_total_lp_amount()),
     );
+}
+
+#[test]
+fn upgrade() {
+    let BridgeEnv { env, yaro_pool, .. } = BridgeEnv::default();
+    let hash = env.deployer().upload_contract_wasm(pool::WASM);
+    unwrap_call_result(
+        &env,
+        yaro_pool.upgrade(&hash),
+    )
+}
+
+#[test]
+#[should_panic = "Context(InvalidAction)"]
+fn upgrade_no_auth() {
+    let BridgeEnv { env, yaro_pool, .. } = BridgeEnv::default();
+    env.mock_auths(&[]);
+    let hash = env.deployer().upload_contract_wasm(pool::WASM);
+    unwrap_call_result(
+        &env,
+        yaro_pool.upgrade(&hash),
+    )
 }

@@ -186,4 +186,8 @@ impl Bridge {
     pub fn start_swap(&self) {
         unwrap_call_result(&self.env, desoroban_result(self.client.try_start_swap()));
     }
+
+    pub fn upgrade(&self, new_hash: &BytesN<32>) {
+        unwrap_call_result(&self.env, desoroban_result(self.client.try_upgrade(new_hash)));
+    }
 }
