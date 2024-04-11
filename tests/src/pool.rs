@@ -4,8 +4,6 @@ use crate::{
         assert_rel_eq, float_to_uint_sp, format_diff, get_latest_event, BridgeEnv, BridgeEnvConfig,
     },
 };
-use crate::contracts::pool::BalanceClaimed;
-use crate::utils::vec_to_bytes;
 
 #[test]
 fn deposit() {
@@ -119,7 +117,7 @@ fn success() {
     let vusd_amount = yaro_pool.swap_to_v_usd(bob, 50_000_000.0);
     yusd_pool
         .client
-        .swap_from_v_usd(&bob.as_address(), &vusd_amount, &0, &false, &false);
+        .swap_from_v_usd(&bob.as_address(), &vusd_amount, &0, &false);
 
     yaro_pool.deposit(bob, 50_000_000.0).unwrap();
     yaro_pool
@@ -135,79 +133,5 @@ fn success() {
     assert_eq!(
         yaro_pool.user_deposit_by_id(admin).lp_amount - init_owner_lp_amount.lp_amount,
         yaro_pool.d() - total_lp_amount_before
-    );
-}
-
-#[test]
-fn claim_balance() {
-    let bridge_env = BridgeEnv::create(
-        BridgeEnvConfig::default()
-            .with_yaro_admin_deposit(1_000_000_000.0)
-            .with_yusd_admin_deposit(1_000_000_000.0),
-    );
-
-    let BridgeEnv {
-        ref yaro_pool,
-        ref bob,
-        ref yaro_token,
-        ..
-    } = bridge_env;
-    yaro_token.balance_of(&bob.as_address());
-
-    let transfer_id_slice =
-        hex::decode("1122334455667788990011223344556677889900112233445566778899001122").unwrap();
-
-    let transfer_id = vec_to_bytes::<32>(&bridge_env.env, transfer_id_slice);
-
-    let bob_balance_before_swap = yaro_token.balance_of(&bob.as_address());
-    let claimable_balance_before_swap = yaro_pool.get_claimable_balance(bob);
-    assert_eq!(claimable_balance_before_swap, 0);
-
-    let vusd_amount = 50.0;
-    let amount = yaro_pool.swap_from_v_usd(bob, vusd_amount, true);
-    let claimable_balance_after_swap = yaro_pool.get_claimable_balance(bob);
-
-    assert_eq!(claimable_balance_after_swap, amount);
-
-    let bob_balance_after_swap = yaro_token.balance_of(&bob.as_address());
-
-    assert_eq!(bob_balance_before_swap, bob_balance_after_swap);
-
-    yaro_pool.client.claim_balance(&bob.address, &transfer_id);
-    let claimable_balance_after_claim = yaro_pool.get_claimable_balance(bob);
-    assert_eq!(claimable_balance_after_claim, 0);
-
-
-    let bob_balance_after_claim = yaro_token.balance_of(&bob.as_address());
-
-    assert_eq!(bob_balance_before_swap + amount, bob_balance_after_claim);
-
-    let balance_claimed_event = get_latest_event::<BalanceClaimed>(&bridge_env.env);
-    assert!(balance_claimed_event.is_some());
-    assert_eq!(
-        balance_claimed_event.unwrap(),
-        BalanceClaimed {
-            user: bob.address.clone(),
-            amount,
-            transfer_id: transfer_id.clone()
-        }
-    );
-
-    //claim again
-    yaro_pool.client.claim_balance(&bob.address, &transfer_id);
-
-    let bob_balance_after_claim_again = yaro_token.balance_of(&bob.as_address());
-
-    assert_eq!(bob_balance_after_claim_again, bob_balance_after_claim);
-
-    let balance_claimed_event = get_latest_event::<BalanceClaimed>(&bridge_env.env);
-    assert!(balance_claimed_event.is_some());
-    assert_eq!(
-        balance_claimed_event.unwrap(),
-        BalanceClaimed {
-            user: bob.address.clone(),
-            amount: 0,
-            transfer_id: transfer_id.clone()
-        }
     );
 }

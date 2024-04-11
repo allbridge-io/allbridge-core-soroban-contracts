@@ -317,7 +317,6 @@ pub fn receive_tokens_extra_gas_not_enough_native_token_on_bridge() {
         &bridge_env.yaro_token,
         &nonce,
         0.0,
-        false,
         &Some(0.0001),
     );
 }
@@ -334,7 +333,6 @@ pub fn receive_tokens_no_message() {
         &bridge_env.yaro_token,
         &gen_nonce(&bridge_env.env),
         990.0,
-        false,
         &Some(0.0),
     );
 }
@@ -351,7 +349,6 @@ pub fn receive_tokens_source_not_registered() {
         &bridge_env.yaro_token,
         &gen_nonce(&bridge_env.env),
         990.0,
-        false,
         &Some(0.0),
     );
 }
@@ -379,7 +376,6 @@ pub fn receive_tokens_insufficient_received_amount() {
         &bridge_env.yaro_token,
         &nonce,
         amount + 10.0,
-        false,
         &Some(0.0),
     );
 }
@@ -408,7 +404,6 @@ pub fn receive_tokens_message_processed() {
         &contract_id(&bridge_env.yaro_token.id),
         &nonce,
         &0,
-        &false,
         &Some(0u128),
     );
 
@@ -420,7 +415,6 @@ pub fn receive_tokens_message_processed() {
         &bridge_env.yaro_token,
         &nonce,
         0.0,
-        false,
         &Some(0.0),
     );
 }
