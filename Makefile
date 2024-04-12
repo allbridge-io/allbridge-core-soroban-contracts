@@ -4,39 +4,45 @@ all: build-bridge
 
 optimize-all: optimize-gas-oracle optimize-messenger optimize-pool optimize-bridge
 
+ADDRESS_PATH = soroban-deploy
+
 #NATIVE_ADDRESS = CB64D3G7SM2RTH6JSGG34DDTFTQ5CFDKVDZJZSODMCX4NJ2HV2KN7OHT #Futurenet
 NATIVE_ADDRESS = CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC #Testnet
-MESSENGER_ADDRESS_PATH = soroban-deploy/messenger
+#NATIVE_ADDRESS = CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA #Mainnet
+MESSENGER_ADDRESS_PATH = $(ADDRESS_PATH)/messenger
 MESSENGER_ADDRESS = $$(cat $(MESSENGER_ADDRESS_PATH))
 
-GAS_ORACLE_ADDRESS_PATH = soroban-deploy/gas_orace
+GAS_ORACLE_ADDRESS_PATH = $(ADDRESS_PATH)/gas_orace
 GAS_ORACLE_WASM_PATH = target/wasm32-unknown-unknown/release/gas_oracle.wasm
 GAS_ORACLE_WASM_PATH_OP = target/wasm32-unknown-unknown/release/gas_oracle.optimized.wasm
 GAS_ORACLE_ADDRESS = $$(cat $(GAS_ORACLE_ADDRESS_PATH))
 
 POOL_WASM_PATH = target/wasm32-unknown-unknown/release/pool.wasm
 POOL_WASM_PATH_OP = target/wasm32-unknown-unknown/release/pool.optimized.wasm
-POOL_YARO_ADDRESS_PATH = soroban-deploy/pool_yaro
+POOL_YARO_ADDRESS_PATH = $(ADDRESS_PATH)/pool_yaro
 POOL_YARO_ADDRESS = $$(cat $(POOL_YARO_ADDRESS_PATH))
 
-POOL_USDY_ADDRESS_PATH = soroban-deploy/pool_usdy
+POOL_USDY_ADDRESS_PATH = $(ADDRESS_PATH)/pool_usdy
 POOL_USDY_ADDRESS = $$(cat $(POOL_USDY_ADDRESS_PATH))
+
+POOL_USDC_ADDRESS_PATH = $(ADDRESS_PATH)/pool
+POOL_USDC_ADDRESS = $$(cat $(POOL_USDC_ADDRESS_PATH))
 
 MESSENGER_WASM_PATH = target/wasm32-unknown-unknown/release/messenger.wasm
 MESSENGER_WASM_PATH_OP = target/wasm32-unknown-unknown/release/messenger.optimized.wasm
-MESSENGER_ADDRESS_PATH = soroban-deploy/messenger
+MESSENGER_ADDRESS_PATH = $(ADDRESS_PATH)/messenger
 MESSENGER_ADDRESS = $$(cat $(MESSENGER_ADDRESS_PATH))
 
 BRIDGE_WASM_PATH = target/wasm32-unknown-unknown/release/bridge.wasm
 BRIDGE_WASM_PATH_OP = target/wasm32-unknown-unknown/release/bridge.optimized.wasm
-BRIDGE_ADDRESS_PATH = soroban-deploy/bridge
+BRIDGE_ADDRESS_PATH = $(ADDRESS_PATH)/bridge
 BRIDGE_ADDRESS = $$(cat $(BRIDGE_ADDRESS_PATH))
 
 POOL_ADDRESS_PATH=$(POOL_YARO_ADDRESS_PATH)
 POOL_ADDRESS=$(POOL_YARO_ADDRESS)
 
-ALICE = $$(soroban config identity address prod)
-ADMIN_ALIAS = prod
+ALICE = $$(soroban config identity address alice)
+ADMIN_ALIAS = alice
 ADMIN = $$(soroban config identity address $(ADMIN_ALIAS))
 
 #YARO_ADDRESS=CDFVZVTV4K5S66GQXER7YVK6RB23BMPMD3HQUA3TGEZUGDL3NM3R5GDW #Futurenet
@@ -44,6 +50,8 @@ ADMIN = $$(soroban config identity address $(ADMIN_ALIAS))
 
 YARO_ADDRESS=CACOK7HB7D7SRPMH3LYYOW77T6D4D2F7TR7UEVKY2TVSUDSRDM6DZVLK #Testnet
 USDY_ADDRESS=CAOPX7DVI3PFLHE7637YSFU6TLG6Z27Z5O3M547ANAYXQOAYCYYV6NO6 #Testnet
+
+USDC_ADDRESS=CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75
 
 #TOKEN_ADDRESS=$(YARO_ADDRESS)
 #POOL_ADDRESS_PATH=$(POOL_YARO_ADDRESS_PATH)
@@ -53,7 +61,11 @@ TOKEN_ADDRESS=$(USDY_ADDRESS)
 POOL_ADDRESS_PATH=$(POOL_USDY_ADDRESS_PATH)
 POOL_ADDRESS=$(POOL_USDY_ADDRESS)
 
-NETWORK=mainnet
+#TOKEN_ADDRESS=$(USDC_ADDRESS)
+#POOL_ADDRESS_PATH=$(POOL_USDC_ADDRESS_PATH)
+#POOL_ADDRESS=$(POOL_USDC_ADDRESS)
+
+NETWORK=testnet
 
 test: all
 	cargo test
@@ -106,7 +118,7 @@ gas-oracle-set-price:
 		-- \
 		set_price \
 		--chain_id 7 \
-        --price 1000000000000000000 \
+        --price 136000000000000000 \
         --gas_price 50
 
 gas-oracle-set-price-1:
@@ -117,8 +129,8 @@ gas-oracle-set-price-1:
 		-- \
 		set_price \
 		--chain_id 1 \
-        --price 1000000000000000000 \
-        --gas_price 50
+        --price 0 \
+        --gas_price 0
 
 gas-oracle-get-price-data:
 	soroban contract invoke \
@@ -128,21 +140,24 @@ gas-oracle-get-price-data:
 		--is-view \
 		-- \
 		get_gas_price \
-		--chain_id 1
+		--chain_id 7
 
 gas-oracle-get-price:
 	soroban contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
 		--is-view \
 		-- \
 		get_price \
-		--chain_id 1
+		--chain_id 2
 
-gas-oracle-get_admin:
+gas-oracle-get-admin:
 	soroban contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
+		--is-view \
 		-- \
 		get_admin
 
@@ -150,16 +165,18 @@ gas-oracle-get-gas-cost-in-native-token:
 	soroban contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
 		--is-view \
 		-- \
 		get_gas_cost_in_native_token \
-		--other_chain_id 1 \
+		--other_chain_id 2 \
 		--gas_amount 250000
 
 gas-oracle-get-transaction-gas-cost-in-usd:
 	soroban contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
 		--is-view \
 		-- \
 		get_transaction_gas_cost_in_usd \
@@ -170,6 +187,7 @@ gas-oracle-crossrate:
 	soroban contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
 		--is-view \
 		-- \
 		crossrate \
@@ -188,13 +206,29 @@ gas-oracle-update-contract:
 		--network $(NETWORK) 	\
         -- \
         upgrade \
-        --new_wasm_hash 83fbb8f73818e044bb01d79a5320f8dbe950dd5628ba7ef9a7cecd02b0347f33
+        --new_wasm_hash a16f4b45aff547518e6c1bb2ffe2e26b232562edb2405fd9be413e31d495098d
+
+
+gas-oracle-restore-contract:
+	soroban contract restore \
+	--id $(GAS_ORACLE_ADDRESS) \
+	--source $(ADMIN_ALIAS) \
+	--network $(NETWORK) 	\
+	--durability persistent \
+	--ledgers-to-extend 535679
 
 #----------------POOL----------------------------
 
 pool-deploy:
 	soroban contract deploy \
           --wasm $(POOL_WASM_PATH_OP) \
+          --source $(ADMIN_ALIAS) \
+          --network $(NETWORK) 	\
+          > $(POOL_ADDRESS_PATH) && echo $(POOL_ADDRESS)
+
+pool-deploy-by-hash:
+	soroban contract deploy \
+          --wasm-hash <hash> \
           --source $(ADMIN_ALIAS) \
           --network $(NETWORK) 	\
           > $(POOL_ADDRESS_PATH) && echo $(POOL_ADDRESS)
@@ -210,9 +244,9 @@ pool-initialize:
         --bridge $(BRIDGE_ADDRESS) \
         --a 20 \
         --token $(TOKEN_ADDRESS) \
-        --fee_share_bp 10 \
-        --balance_ratio_min_bp 0 \
-        --admin_fee_share_bp 10
+        --fee_share_bp 15 \
+        --balance_ratio_min_bp 1000 \
+        --admin_fee_share_bp 2000
 
 pool-set-bridge:
 	soroban contract invoke \
@@ -231,12 +265,13 @@ pool-deposit:
 		-- \
 		deposit \
 		--sender $(ADMIN) \
-		--amount 10000000000
+		--amount 100000000
 
 pool-get-pool-info:
 	soroban contract invoke \
 		--id $(POOL_ADDRESS) \
 		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
 		--is-view \
 		-- \
 		get_pool
@@ -250,34 +285,37 @@ pool-get-admin:
 		-- \
 		get_admin
 
-pool-get_pending_reward:
+pool-get-pending-reward:
 	soroban contract invoke \
 		--id $(POOL_ADDRESS) \
 		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
 		--is-view \
 		-- \
 		pending_reward \
 		--user $(ADMIN)
 
-pool-get_user_deposit:
+pool-get-user-deposit:
 	soroban contract invoke \
 		--id $(POOL_ADDRESS) \
 		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
 		--is-view \
 		-- \
 		get_user_deposit \
 		--user $(ADMIN)
 
-pool-get_claimable_balance:
+pool-get-claimable-balance:
 	soroban contract invoke \
 		--id $(POOL_ADDRESS) \
 		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
 		--is-view \
 		-- \
 		get_claimable_balance \
 		--user GB664P4XTBKNBK3YGPAFFCYPSW2SIO2FR6B6HC6SKFS7KGRTCDQYVUJ7
 
-pool-claim_balance:
+pool-claim-balance:
 	soroban contract invoke \
 		--id $(POOL_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
@@ -290,7 +328,7 @@ pool-install:
 	soroban contract install \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
-		--wasm $(GAS_ORACLE_WASM_PATH)
+		--wasm $(POOL_WASM_PATH_OP)
 
 pool-update-contract:
 	soroban contract invoke \
@@ -299,7 +337,15 @@ pool-update-contract:
 		--network $(NETWORK) 	\
         -- \
         upgrade \
-        --new_wasm_hash 83fbb8f73818e044bb01d79a5320f8dbe950dd5628ba7ef9a7cecd02b0347f33
+        --new_wasm_hash 8f1bf6f8b9e82b29415e93202525058012898769cbcd3b5c81affdfb0bf645f4
+
+pool-restore-contract:
+	soroban contract restore \
+	--id $(POOL_ADDRESS) \
+	--source $(ADMIN_ALIAS) \
+	--network $(NETWORK) 	\
+	--durability persistent \
+	--ledgers-to-extend 535679
 
 #---------------MESSENGER---------------------------
 messenger-deploy:
@@ -324,8 +370,6 @@ messenger-initialize:
         --primary_validator_key 04734fc43dde79306ddf1bd5b4840d2cc9195bb48dbef92d081e71805694f5828d9cce76008f1f1a2a8a6ccd564b84937f83630d3d3af9541a5a3f3c1c1ea62c98 \
         --secondary_validator_keys '{ "04734fc43dde79306ddf1bd5b4840d2cc9195bb48dbef92d081e71805694f5828d9cce76008f1f1a2a8a6ccd564b84937f83630d3d3af9541a5a3f3c1c1ea62c98": true }'
 
-
-
 messenger-set-gas-usage:
 	soroban contract invoke \
 		--id $(MESSENGER_ADDRESS) \
@@ -333,11 +377,11 @@ messenger-set-gas-usage:
 		--network $(NETWORK) 	\
 		-- \
 		set_gas_usage \
-		--chain_id 10\
-        --gas_usage 100000
+		--chain_id 4\
+        --gas_usage 1300
 
 
-send-message:
+messenger-send-message:
 	soroban contract invoke \
 		  --id $(MESSENGER_ADDRESS) \
 		  --source alice \
@@ -347,23 +391,59 @@ send-message:
 		  --message 0701efefefefefefefefefefefefefefefefefefefefefefefefefefefefefef \
 		  --sender $(ALICE)
 
+messenger-receive_message:
+	soroban contract invoke \
+		  --id $(MESSENGER_ADDRESS) \
+		  --source alice \
+		  --network $(NETWORK) \
+		  --cost \
+		  -- \
+		  receive_message \
+		  --message 02071be378bf6338f627121187e82e54fcf64577ff705e2ee3fc12a930a43bd3 \
+          --primary_signature 807131e734509d76ad48da6a075a93257897d51a49e2b6dc53e945a313dbb1f10e1fbb57050a156a29976be1a3dd3f87d6cca948eb4bd1d34328e3c58a7d0032 \
+          --primary_recovery_id 0 \
+          --secondary_signature 807131e734509d76ad48da6a075a93257897d51a49e2b6dc53e945a313dbb1f10e1fbb57050a156a29976be1a3dd3f87d6cca948eb4bd1d34328e3c58a7d0032 \
+          --secondary_recovery_id 0
+
 messenger-get-gas-usage:
 	soroban contract invoke \
 		--id $(MESSENGER_ADDRESS) \
-		--source alice \
 		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
+		--is-view \
 		-- \
 		get_gas_usage \
 		--chain_id 1
 
-messenger-get_transaction_cost:
+messenger-get-transaction-cost:
 	soroban contract invoke \
 		--id $(MESSENGER_ADDRESS) \
 		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
 		--is-view \
 		-- \
 		get_transaction_cost \
 		--chain_id 1
+
+messenger-has-received-message:
+	soroban contract invoke \
+		--id $(MESSENGER_ADDRESS) \
+		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
+		--is-view \
+		-- \
+		has_received_message \
+		--message 020777b64e53254cc42d1d695036cf5f438312735b915adec350b68ff713c997
+
+messenger-has-sent-message:
+	soroban contract invoke \
+		--id $(MESSENGER_ADDRESS) \
+		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
+		--is-view \
+		-- \
+		has_sent_message \
+		--message 020777b64e53254cc42d1d695036cf5f438312735b915adec350b68ff713c997
 
 messenger-install:
 	soroban contract install \
@@ -378,7 +458,15 @@ messenger-update-contract:
 		--network $(NETWORK) 	\
         -- \
         upgrade \
-        --new_wasm_hash 83fbb8f73818e044bb01d79a5320f8dbe950dd5628ba7ef9a7cecd02b0347f33
+        --new_wasm_hash 5accf5d0f95f58fa341bc6ac968908bd2ebc864cb9bf6eeda6c799022cde1d45
+
+messenger-restore-contract:
+	soroban contract restore \
+	--id $(MESSENGER_ADDRESS) \
+	--source $(ADMIN_ALIAS) \
+	--network $(NETWORK) 	\
+	--durability persistent \
+	--ledgers-to-extend 535679
 
 #---------------BRIDGE---------------------------
 bridge-deploy:
@@ -416,8 +504,8 @@ bridge-set-gas-usage:
 		--network $(NETWORK) 	\
 		-- \
 		set_gas_usage \
-		--chain_id 10 \
-		--gas_usage 250000
+		--chain_id 25 \
+		--gas_usage 25
 
 bridge-register-bridge:
 	soroban contract invoke \
@@ -508,11 +596,11 @@ bridge-swap-and-bridge:
 		--sender $(ADMIN) \
         --token $(TOKEN_ADDRESS) \
         --amount 10000000 \
-        --recipient 3ce641702a6be6401c7627d5a76acab18bdc7114a7b2ae48b137f5d99d503d11 \
-        --destination_chain_id 4 \
-        --receive_token 00000000000000000000000049be77224dc061bd53699b25431b9aa7029a2cb8 \
+        --recipient 000000000000000000000000be959eed208225aab424505569d41bf3212142c0 \
+        --destination_chain_id 30 \
+        --receive_token 0000000000000000000000003c499c542cef5e3811e1192ce70d8cc03d5c3359 \
         --nonce 0000000000000000000000000000000000000000000000000000000000000019 \
-        --gas_amount 50000000 \
+        --gas_amount 20000000 \
         --fee_token_amount 0
 
 bridge-swap-and-bridge-2:
@@ -527,7 +615,7 @@ bridge-swap-and-bridge-2:
         --amount 10000000 \
         --recipient 000000000000000000000000be959eed208225aab424505569d41bf3212142c0 \
         --destination_chain_id 2 \
-        --receive_token dc1f342783eef1ba0c9940714c5b5fe1a76d1f0f2ddab4a4faab53277e07dce3 \
+        --receive_token 0000000000000000000000000209da4a278956ca15438af8b108bd85642f096c \
         --nonce 0000000000000000000000000000000000000000000000000000000000000019 \
         --gas_amount 50000000 \
         --fee_token_amount 0
@@ -547,20 +635,38 @@ bridge-swap:
         --receive_amount_min 0 \
         --claimable false
 
-bridge-get_transaction_cost:
+
+bridge-receive:
+	soroban contract invoke \
+    		--id $(BRIDGE_ADDRESS) \
+    		--source $(ADMIN_ALIAS) \
+    		--network $(NETWORK) 	\
+    		-- \
+    		receive_tokens \
+			--sender GCDIRA4GRYWVUWB33F6UQUQYAN4L5FXIWJRFPJQMG5YS5EQTWIKAMONK \
+			--amount 10048 \
+			--recipient GDL27JZFDPBXX7B4DTWPSEWRFHGTAQM6HK365M3J6LVAOBY6VCEUGRCU \
+			--source_chain_id 2 \
+			--receive_token 1cfbfc7546de559c9ff6ff89169e9acdecebf9ebb6cef3e0683178381816315f \
+			--nonce 70705596976575299460036823042420755475664960130040039088966393669628405923302 \
+			--receive_amount_min 99009791 \
+			--claimable false
+
+bridge-get-transaction-cost:
 	soroban contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
 		--is-view \
 		-- \
 		get_transaction_cost \
 		--chain_id 1
 
-bridge-get_pool_address:
+bridge-get-pool-address:
 	soroban contract invoke \
 		--id $(BRIDGE_ADDRESS) \
-		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
 		--is-view \
 		-- \
 		get_pool_address \
@@ -569,8 +675,8 @@ bridge-get_pool_address:
 bridge-get-config:
 	soroban contract invoke \
 		--id $(BRIDGE_ADDRESS) \
-		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
 		--is-view \
 		-- \
 		get_config
@@ -578,18 +684,29 @@ bridge-get-config:
 bridge-get-gas-usage:
 	soroban contract invoke \
 		--id $(BRIDGE_ADDRESS) \
-		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
-		--is-view \
+		--source $(ADMIN_ALIAS) \
+        --is-view \
 		-- \
 		get_gas_usage \
-		--chain_id 1
+		--chain_id 7
+
+bridge-get-another-bridge:
+	soroban contract invoke \
+		--id $(BRIDGE_ADDRESS) \
+		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
+        --is-view \
+		-- \
+		get_another_bridge \
+		--chain_id 6
 
 bridge-has-received-message:
 	soroban contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--network $(NETWORK) 	\
-		--is-view \
+		--source $(ADMIN_ALIAS) \
+        --is-view \
 		-- \
 		has_received_message \
 		--message 0107155a5bc1db9cb9d8fc56150518f01011f56ca2e3f0bdeb8dee115344d75b
@@ -607,9 +724,18 @@ bridge-update-contract:
 		--network $(NETWORK) 	\
         -- \
         upgrade \
-        --new_wasm_hash 83fbb8f73818e044bb01d79a5320f8dbe950dd5628ba7ef9a7cecd02b0347f33
+        --new_wasm_hash 349aaa0f85aaf2ab74bb251dfeb4b150939f0dbaa9f82bf922648604d21ec6fa
 
-#----------TOKEN--------------------------
+
+bridge-restore-contract:
+	soroban contract restore \
+	--id $(BRIDGE_ADDRESS) \
+	--source $(ADMIN_ALIAS) \
+	--network $(NETWORK) 	\
+	--durability persistent \
+	--ledgers-to-extend 535679
+
+#----------UTILS--------------------------
 token-transfer:
 	soroban contract invoke \
 		--id $(TOKEN_ADDRESS) \
@@ -630,7 +756,7 @@ token-native-transfer:
 		transfer \
 		--from $(ADMIN) \
 		--to $(BRIDGE_ADDRESS) \
-		--amount 1000000000
+		--amount 100000000
 
 token-get-balance:
 	soroban contract invoke \
@@ -660,14 +786,15 @@ wrap-token:
 native-token-address:
 	soroban lab token id \
  		--network $(NETWORK) \
+ 		--source $(ADMIN_ALIAS) \
  		--asset native
 
 generate-types:
 	soroban contract bindings typescript \
 	--network $(NETWORK) \
-	--output-dir ./types/messenger \
-	--wasm $(MESSENGER_WASM_PATH_OP) \
-	--contract-id $(MESSENGER_ADDRESS)
+	--output-dir ./types/gas-oracle \
+	--wasm $(GAS_ORACLE_WASM_PATH_OP) \
+	--contract-id $(GAS_ORACLE_ADDRESS)
 
 install-cli:
 	cargo install --locked --version 20.3.1 soroban-cli
