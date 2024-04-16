@@ -74,7 +74,6 @@ impl BridgeContract {
         receive_token: BytesN<32>,
         nonce: U256,
         receive_amount_min: u128,
-        claimable: bool,
         extra_gas: Option<u128>,
     ) -> Result<(), Error> {
         extend_ttl_instance(&env);
@@ -88,7 +87,6 @@ impl BridgeContract {
             receive_token,
             nonce,
             receive_amount_min,
-            claimable,
             extra_gas,
         )
     }

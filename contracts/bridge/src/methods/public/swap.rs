@@ -27,8 +27,7 @@ pub fn swap(
         &receive_token,
         &recipient,
         v_usd_amount,
-        receive_amount_min,
-        false
+        receive_amount_min
     )?;
 
     Swapped {

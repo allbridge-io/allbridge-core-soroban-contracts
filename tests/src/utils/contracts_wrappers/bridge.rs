@@ -77,7 +77,6 @@ impl Bridge {
         receive_token: &Token,
         nonce: &U256,
         receive_amount_min: f64,
-        claimable: bool,
         extra_gas: &Option<f64>,
     ) {
         let amount_sp = float_to_uint_sp(amount);
@@ -94,7 +93,6 @@ impl Bridge {
                 &contract_id(&receive_token.id),
                 nonce,
                 &receive_amount_min,
-                &claimable,
                 &extra_gas,
             )),
         );
@@ -187,5 +185,9 @@ impl Bridge {
 
     pub fn start_swap(&self) {
         unwrap_call_result(&self.env, desoroban_result(self.client.try_start_swap()));
+    }
+
+    pub fn upgrade(&self, new_hash: &BytesN<32>) {
+        unwrap_call_result(&self.env, desoroban_result(self.client.try_upgrade(new_hash)));
     }
 }

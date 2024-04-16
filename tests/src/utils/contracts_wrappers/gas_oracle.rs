@@ -1,4 +1,4 @@
-use soroban_sdk::{Address, Env};
+use soroban_sdk::{Address, BytesN, Env};
 
 use crate::{
     contracts::gas_oracle::{self, ChainData},
@@ -65,5 +65,9 @@ impl GasOracle {
             &self.env,
             desoroban_result(self.client.try_set_admin(admin)),
         );
+    }
+
+    pub fn upgrade(&self, new_hash: &BytesN<32>) {
+        unwrap_call_result(&self.env, desoroban_result(self.client.try_upgrade(new_hash)));
     }
 }

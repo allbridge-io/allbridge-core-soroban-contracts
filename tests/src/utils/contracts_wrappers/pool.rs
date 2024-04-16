@@ -1,4 +1,4 @@
-use soroban_sdk::{Address, Env};
+use soroban_sdk::{Address, BytesN, Env};
 
 use crate::utils::SYSTEM_PRECISION;
 use crate::{
@@ -133,17 +133,17 @@ impl Pool {
             .swap_to_v_usd(&user.as_address(), &self.float_to_int(amount), &false)
     }
 
-    pub fn swap_from_v_usd(&self, user: &User, amount: f64, claimable: bool) -> u128 {
+    pub fn swap_from_v_usd(&self, user: &User, amount: f64) -> u128 {
         self.client.swap_from_v_usd(
             &user.as_address(),
             &float_to_uint(amount, SYSTEM_PRECISION),
             &0,
             &false,
-            &claimable,
         )
     }
 
-    pub fn get_claimable_balance(&self, user: &User) -> u128 {
-        self.client.get_claimable_balance(&user.as_address())
+    pub fn upgrade(&self, new_hash: &BytesN<32>) -> CallResult {
+        self.client.try_upgrade(new_hash).map(Result::unwrap)
+            .map_err(Result::unwrap)
     }
 }

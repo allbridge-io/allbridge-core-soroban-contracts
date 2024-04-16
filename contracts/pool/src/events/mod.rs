@@ -43,9 +43,3 @@ pub struct RewardsClaimed {
     pub amount: u128,
 }
 
-#[derive(Event)]
-#[contracttype]
-pub struct BalanceClaimed {
-    pub user: Address,
-    pub amount: u128,
-}

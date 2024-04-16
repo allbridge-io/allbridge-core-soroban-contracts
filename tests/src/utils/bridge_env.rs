@@ -634,7 +634,6 @@ impl BridgeEnv {
             token,
             &nonce,
             receive_amount_min,
-            false,
             &Some(extra_gas),
         );
 

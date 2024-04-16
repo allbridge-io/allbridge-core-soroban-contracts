@@ -28,8 +28,7 @@ pub struct TokensReceived {
     pub amount: u128,
     pub recipient: BytesN<32>,
     pub nonce: U256,
-    pub message: BytesN<32>,
-    pub claimable: bool
+    pub message: BytesN<32>
 }
 
 #[derive(Event)]

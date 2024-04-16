@@ -117,7 +117,7 @@ fn success() {
     let vusd_amount = yaro_pool.swap_to_v_usd(bob, 50_000_000.0);
     yusd_pool
         .client
-        .swap_from_v_usd(&bob.as_address(), &vusd_amount, &0, &false, &false);
+        .swap_from_v_usd(&bob.as_address(), &vusd_amount, &0, &false);
 
     yaro_pool.deposit(bob, 50_000_000.0).unwrap();
     yaro_pool
@@ -134,43 +134,4 @@ fn success() {
         yaro_pool.user_deposit_by_id(admin).lp_amount - init_owner_lp_amount.lp_amount,
         yaro_pool.d() - total_lp_amount_before
     );
-}
-
-#[test]
-fn claim_balance() {
-    let bridge_env = BridgeEnv::create(
-        BridgeEnvConfig::default()
-            .with_yaro_admin_deposit(1_000_000_000.0)
-            .with_yusd_admin_deposit(1_000_000_000.0),
-    );
-
-    let BridgeEnv {
-        ref yaro_pool,
-        ref bob,
-        ref yaro_token,
-        ..
-    } = bridge_env;
-    yaro_token.balance_of(&bob.as_address());
-
-    let bob_balance_before_swap = yaro_token.balance_of(&bob.as_address());
-    let claimable_balance_before_swap = yaro_pool.get_claimable_balance(bob);
-    assert_eq!(claimable_balance_before_swap, 0);
-
-    let vusd_amount = 50.0;
-    let amount = yaro_pool.swap_from_v_usd(bob, vusd_amount, true);
-    let claimable_balance_after_swap = yaro_pool.get_claimable_balance(bob);
-
-    assert_eq!(claimable_balance_after_swap, amount);
-
-    let bob_balance_after_swap = yaro_token.balance_of(&bob.as_address());
-
-    assert_eq!(bob_balance_before_swap, bob_balance_after_swap);
-
-    yaro_pool.client.claim_balance(&bob.address);
-    let claimable_balance_after_claim = yaro_pool.get_claimable_balance(bob);
-    assert_eq!(claimable_balance_after_claim, 0);
-
-    let bob_balance_after_claim = yaro_token.balance_of(&bob.as_address());
-
-    assert_eq!(bob_balance_before_swap + amount, bob_balance_after_claim);
 }

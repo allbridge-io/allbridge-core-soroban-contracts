@@ -1,6 +1,7 @@
 use shared::consts::{CHAIN_PRECISION, ORACLE_PRECISION};
 use soroban_sdk::testutils::{Address as _, BytesN as _, MockAuth, MockAuthInvoke};
 use soroban_sdk::{Address, BytesN, IntoVal};
+use crate::contracts::bridge;
 
 use crate::utils::consts::GOERLI_CHAIN_ID;
 use crate::utils::{contract_id, BridgeEnv, Pool};
@@ -452,4 +453,20 @@ fn withdraw_gas_tokens() {
         bridge_token_balance,
         init_bridge_token_balance - half_gas_amount
     );
+}
+
+#[test]
+fn upgrade() {
+    let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
+    let hash =  env.deployer().upload_contract_wasm(bridge::WASM);
+    bridge.upgrade(&hash)
+}
+
+#[test]
+#[should_panic = "Context(InvalidAction)"]
+fn upgrade_no_auth() {
+    let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
+    env.mock_auths(&[]);
+    let hash =  env.deployer().upload_contract_wasm(bridge::WASM);
+    bridge.upgrade(&hash)
 }

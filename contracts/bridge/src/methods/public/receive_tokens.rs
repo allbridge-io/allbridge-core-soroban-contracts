@@ -25,7 +25,6 @@ pub fn receive_tokens(
     receive_token: BytesN<32>,
     nonce: U256,
     receive_amount_min: u128,
-    claimable: bool,
     extra_gas: Option<u128>,
 ) -> Result<(), Error> {
     sender.require_auth();
@@ -67,7 +66,6 @@ pub fn receive_tokens(
         &recipient_address,
         amount,
         receive_amount_min,
-        claimable,
     )?;
 
     // pass extra gas from the sender to the recipient
@@ -84,7 +82,6 @@ pub fn receive_tokens(
         recipient: recipient_bytes,
         nonce,
         message: message_with_sender,
-        claimable,
     }
     .publish(&env);
 
