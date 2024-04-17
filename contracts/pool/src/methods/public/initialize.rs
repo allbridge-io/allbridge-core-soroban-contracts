@@ -19,6 +19,7 @@ pub fn initialize(
 
     require!(fee_share_bp < Pool::BP, Error::InvalidArg);
     require!(admin_fee_share_bp < Pool::BP, Error::InvalidArg);
+    require!(a <= Pool::MAX_A, Error::InvalidArg);
 
     let token_client = token::Client::new(&env, &token);
     let decimals = token_client.decimals();

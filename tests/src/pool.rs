@@ -2,6 +2,7 @@ use crate::{
     contracts::pool::{Deposit, Withdraw},
     utils::{
         assert_rel_eq, float_to_uint_sp, format_diff, get_latest_event, BridgeEnv, BridgeEnvConfig,
+        Pool,
     },
 };
 
@@ -79,9 +80,11 @@ fn withdraw() {
 
 #[test]
 fn zero_diff() {
-    let bridge_env = BridgeEnv::create(BridgeEnvConfig::default()
-    .with_yaro_admin_deposit(1_000_000_000.0)
-    .with_yusd_admin_deposit(1_000_000_000.0),);
+    let bridge_env = BridgeEnv::create(
+        BridgeEnvConfig::default()
+            .with_yaro_admin_deposit(1_000_000_000.0)
+            .with_yusd_admin_deposit(1_000_000_000.0),
+    );
     let BridgeEnv { ref yaro_pool, .. } = bridge_env;
 
     let total_lp_amount_before = yaro_pool.total_lp_amount();
@@ -133,5 +136,56 @@ fn success() {
     assert_eq!(
         yaro_pool.user_deposit_by_id(admin).lp_amount - init_owner_lp_amount.lp_amount,
         yaro_pool.d() - total_lp_amount_before
+    );
+}
+
+#[test]
+#[should_panic = "Contract(InvalidArg)"]
+fn init_invalid_a() {
+    let bridge_env = BridgeEnv::default();
+
+    Pool::create(
+        &bridge_env.env,
+        &bridge_env.admin,
+        &bridge_env.bridge.id,
+        65,
+        &bridge_env.yaro_token.id,
+        10,
+        10_000,
+        100,
+    );
+}
+
+#[test]
+#[should_panic = "Contract(InvalidArg)"]
+fn init_invalid_admin_fee_share() {
+    let bridge_env = BridgeEnv::default();
+
+    Pool::create(
+        &bridge_env.env,
+        &bridge_env.admin,
+        &bridge_env.bridge.id,
+        10,
+        &bridge_env.yaro_token.id,
+        10,
+        10_000,
+        10_000,
+    );
+}
+
+#[test]
+#[should_panic = "Contract(InvalidArg)"]
+fn init_invalid_fee_share() {
+    let bridge_env = BridgeEnv::default();
+
+    Pool::create(
+        &bridge_env.env,
+        &bridge_env.admin,
+        &bridge_env.bridge.id,
+        10,
+        &bridge_env.yaro_token.id,
+        10_000,
+        10_000,
+        10,
     );
 }

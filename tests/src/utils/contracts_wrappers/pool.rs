@@ -1,6 +1,6 @@
 use soroban_sdk::{Address, BytesN, Env};
 
-use crate::utils::SYSTEM_PRECISION;
+use crate::utils::{desoroban_result, unwrap_call_result, SYSTEM_PRECISION};
 use crate::{
     contracts::pool::{self, UserDeposit},
     utils::{float_to_uint, float_to_uint_sp, uint_to_float, CallResult},
@@ -27,14 +27,17 @@ impl Pool {
         let id = env.register_contract_wasm(None, pool::WASM);
         let client = pool::Client::new(env, &id);
 
-        client.initialize(
-            admin,
-            bridge,
-            &a,
-            token,
-            &fee_share_bp,
-            &balance_ratio_min_bp,
-            &admin_fee,
+        unwrap_call_result(
+            env,
+            desoroban_result(client.try_initialize(
+                admin,
+                bridge,
+                &a,
+                token,
+                &fee_share_bp,
+                &balance_ratio_min_bp,
+                &admin_fee,
+            )),
         );
 
         Pool { id, client }
@@ -143,7 +146,9 @@ impl Pool {
     }
 
     pub fn upgrade(&self, new_hash: &BytesN<32>) -> CallResult {
-        self.client.try_upgrade(new_hash).map(Result::unwrap)
+        self.client
+            .try_upgrade(new_hash)
+            .map(Result::unwrap)
             .map_err(Result::unwrap)
     }
 }
