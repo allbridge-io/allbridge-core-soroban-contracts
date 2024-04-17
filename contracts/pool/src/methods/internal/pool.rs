@@ -11,6 +11,7 @@ use crate::storage::{pool::Pool, user_deposit::UserDeposit};
 impl Pool {
     const MAX_TOKEN_BALANCE: u128 = 2u128.pow(40);
     pub const BP: u128 = 10000;
+    pub const MAX_A: u128 = 60;
 
     pub const P: u128 = 48;
     const SYSTEM_PRECISION: u32 = 3;
@@ -32,7 +33,7 @@ impl Pool {
             self.token_balance += amount_sp * self.token_balance / old_balance;
             self.v_usd_balance += amount_sp * self.v_usd_balance / old_balance;
         }
-        self.update_d();
+        self.update_d()?;
 
         require!(
             self.token_balance < Self::MAX_TOKEN_BALANCE,
@@ -59,7 +60,7 @@ impl Pool {
         self.reserves -= amount_lp;
         let old_d = self.d;
         // Always equal amounts removed from actual and virtual tokens
-        self.update_d();
+        self.update_d()?;
         require!(self.d < old_d, Error::ZeroChanges);
 
         Ok(self.amount_from_system_precision(amount_lp) + reward_amount)
@@ -211,11 +212,13 @@ impl Pool {
         Ok(sqrt_sum as u128 / ((self.a << 3) * native_x))
     }
 
-    fn update_d(&mut self) {
-        self.d = self.get_d(self.token_balance, self.v_usd_balance);
+    fn update_d(&mut self) -> Result<(), Error> {
+        self.d = self.get_d(self.token_balance, self.v_usd_balance)?;
+
+        Ok(())
     }
 
-    pub fn get_d(&self, x: u128, y: u128) -> u128 {
+    pub fn get_d(&self, x: u128, y: u128) -> Result<u128, Error> {
         let xy: u128 = x * y;
         // Axy(x+y)
         let p1 = U256::new(self.a * (x + y) * xy);
@@ -224,16 +227,17 @@ impl Pool {
         let p2 = U256::new(xy * ((self.a << 2) - 1) / 3);
 
         // sqrt(p1² + p2³)
-        let p3 = sqrt(&((p1 * p1) + (p2 * p2 * p2)));
+        let p3 = sqrt(&(square(p1)? + cube(p2)?));
 
         // cbrt(p1 + p3) + cbrt(p1 - p3)
-        let mut d = cbrt(&(p1 + p3));
+        let mut d = cbrt(&(p1.checked_add(p3).ok_or(Error::U256Overflow)?))?;
         if p3.gt(&p1) {
-            d -= cbrt(&(p3 - p1));
+            d -= cbrt(&(p3 - p1))?;
         } else {
-            d += cbrt(&(p1 - p3));
+            d += cbrt(&(p1 - p3))?;
         }
-        d << 1
+
+        Ok(d << 1)
     }
 
     pub(crate) fn amount_to_system_precision(&self, amount: u128) -> u128 {
@@ -276,19 +280,25 @@ mod tests {
         let env = Env::default();
         let pool = Pool::from_init_params(20, Address::generate(&env), 100, 1, 2000, 7);
 
-        assert_eq!(pool.get_d(0, 0), 0);
-        assert_eq!(pool.get_d(100_000, 100_000), 200_000);
-        assert_eq!(pool.get_d(15_819, 189_999), 200_000);
-        assert_eq!(pool.get_d(295_237, 14_763), 295_240);
-        assert_eq!(pool.get_d(23_504, 282_313), 297_172);
-        assert_eq!(pool.get_d(104_762, 5_239), 104_764);
-        assert_eq!(pool.get_d(8_133, 97_685), 102_826);
-        assert_eq!(pool.get_d(4_777, 4_749), 9_526);
-        assert_eq!(pool.get_d(22_221, 21_607), 43_828);
+        assert_eq!(pool.get_d(0, 0).unwrap(), 0);
+        assert_eq!(pool.get_d(100_000, 100_000).unwrap(), 200_000);
+        assert_eq!(pool.get_d(15_819, 189_999).unwrap(), 200_000);
+        assert_eq!(pool.get_d(295_237, 14_763).unwrap(), 295_240);
+        assert_eq!(pool.get_d(23_504, 282_313).unwrap(), 297_172);
+        assert_eq!(pool.get_d(104_762, 5_239).unwrap(), 104_764);
+        assert_eq!(pool.get_d(8_133, 97_685).unwrap(), 102_826);
+        assert_eq!(pool.get_d(4_777, 4_749).unwrap(), 9_526);
+        assert_eq!(pool.get_d(22_221, 21_607).unwrap(), 43_828);
 
-        assert!(pool.get_d(11_000_001_000, 251_819).abs_diff(2_000_000_000) <= 1_000);
+        assert!(
+            pool.get_d(11_000_001_000, 251_819)
+                .unwrap()
+                .abs_diff(2_000_000_000)
+                <= 1_000
+        );
         assert!(
             pool.get_d(100_118_986, 1_999_748_181)
+                .unwrap()
                 .abs_diff(2_000_000_000)
                 <= 100
         );

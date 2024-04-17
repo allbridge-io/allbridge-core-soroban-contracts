@@ -17,6 +17,7 @@ pub enum Error {
     NotFound = 9,
     TokenInsufficientBalance = 10,
     CastFailed = 11,
+    U256Overflow = 12,
 
     // Pool
     ZeroAmount = 103,
