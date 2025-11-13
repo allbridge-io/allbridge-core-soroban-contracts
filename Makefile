@@ -4,7 +4,7 @@ all: build-bridge
 
 optimize-all: optimize-gas-oracle optimize-messenger optimize-pool optimize-bridge
 
-ADDRESS_PATH = soroban-deploy
+ADDRESS_PATH = soroban-deploy-testnet
 
 #NATIVE_ADDRESS = CB64D3G7SM2RTH6JSGG34DDTFTQ5CFDKVDZJZSODMCX4NJ2HV2KN7OHT #Futurenet
 NATIVE_ADDRESS = CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC #Testnet
@@ -14,11 +14,11 @@ MESSENGER_ADDRESS = $$(cat $(MESSENGER_ADDRESS_PATH))
 
 GAS_ORACLE_ADDRESS_PATH = $(ADDRESS_PATH)/gas_orace
 GAS_ORACLE_WASM_PATH = target/wasm32-unknown-unknown/release/gas_oracle.wasm
-GAS_ORACLE_WASM_PATH_OP = target/wasm32-unknown-unknown/release/gas_oracle.optimized.wasm
+GAS_ORACLE_WASM_PATH_OP = target/wasm32-unknown-unknown/release/gas_oracle.wasm
 GAS_ORACLE_ADDRESS = $$(cat $(GAS_ORACLE_ADDRESS_PATH))
 
 POOL_WASM_PATH = target/wasm32-unknown-unknown/release/pool.wasm
-POOL_WASM_PATH_OP = target/wasm32-unknown-unknown/release/pool.optimized.wasm
+POOL_WASM_PATH_OP = target/wasm32-unknown-unknown/release/pool.wasm
 POOL_YARO_ADDRESS_PATH = $(ADDRESS_PATH)/pool_yaro
 POOL_YARO_ADDRESS = $$(cat $(POOL_YARO_ADDRESS_PATH))
 
@@ -29,21 +29,18 @@ POOL_USDC_ADDRESS_PATH = $(ADDRESS_PATH)/pool
 POOL_USDC_ADDRESS = $$(cat $(POOL_USDC_ADDRESS_PATH))
 
 MESSENGER_WASM_PATH = target/wasm32-unknown-unknown/release/messenger.wasm
-MESSENGER_WASM_PATH_OP = target/wasm32-unknown-unknown/release/messenger.optimized.wasm
+MESSENGER_WASM_PATH_OP = target/wasm32-unknown-unknown/release/messenger.wasm
 MESSENGER_ADDRESS_PATH = $(ADDRESS_PATH)/messenger
 MESSENGER_ADDRESS = $$(cat $(MESSENGER_ADDRESS_PATH))
 
 BRIDGE_WASM_PATH = target/wasm32-unknown-unknown/release/bridge.wasm
-BRIDGE_WASM_PATH_OP = target/wasm32-unknown-unknown/release/bridge.optimized.wasm
+BRIDGE_WASM_PATH_OP = target/wasm32-unknown-unknown/release/bridge.wasm
 BRIDGE_ADDRESS_PATH = $(ADDRESS_PATH)/bridge
 BRIDGE_ADDRESS = $$(cat $(BRIDGE_ADDRESS_PATH))
 
-POOL_ADDRESS_PATH=$(POOL_YARO_ADDRESS_PATH)
-POOL_ADDRESS=$(POOL_YARO_ADDRESS)
-
-ALICE = $$(soroban config identity address alice)
+ALICE = $$(soroban keys address alice)
 ADMIN_ALIAS = alice
-ADMIN = $$(soroban config identity address $(ADMIN_ALIAS))
+ADMIN = $$(soroban keys address $(ADMIN_ALIAS))
 
 #YARO_ADDRESS=CDFVZVTV4K5S66GQXER7YVK6RB23BMPMD3HQUA3TGEZUGDL3NM3R5GDW #Futurenet
 #USDY_ADDRESS=CD7KQQY27G5WXQT2IUYJVHNQH6N2I6GEM5ND2BLZ2GHDAPB2V3KWCW7M #Futurenet
@@ -51,19 +48,19 @@ ADMIN = $$(soroban config identity address $(ADMIN_ALIAS))
 YARO_ADDRESS=CACOK7HB7D7SRPMH3LYYOW77T6D4D2F7TR7UEVKY2TVSUDSRDM6DZVLK #Testnet
 USDY_ADDRESS=CAOPX7DVI3PFLHE7637YSFU6TLG6Z27Z5O3M547ANAYXQOAYCYYV6NO6 #Testnet
 
-USDC_ADDRESS=CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75
+USDC_ADDRESS=CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA
 
 #TOKEN_ADDRESS=$(YARO_ADDRESS)
 #POOL_ADDRESS_PATH=$(POOL_YARO_ADDRESS_PATH)
 #POOL_ADDRESS=$(POOL_YARO_ADDRESS)
 
-TOKEN_ADDRESS=$(USDY_ADDRESS)
-POOL_ADDRESS_PATH=$(POOL_USDY_ADDRESS_PATH)
-POOL_ADDRESS=$(POOL_USDY_ADDRESS)
+#TOKEN_ADDRESS=$(USDY_ADDRESS)
+#POOL_ADDRESS_PATH=$(POOL_USDY_ADDRESS_PATH)
+#POOL_ADDRESS=$(POOL_USDY_ADDRESS)
 
-#TOKEN_ADDRESS=$(USDC_ADDRESS)
-#POOL_ADDRESS_PATH=$(POOL_USDC_ADDRESS_PATH)
-#POOL_ADDRESS=$(POOL_USDC_ADDRESS)
+TOKEN_ADDRESS=$(USDC_ADDRESS)
+POOL_ADDRESS_PATH=$(POOL_USDC_ADDRESS_PATH)
+POOL_ADDRESS=$(POOL_USDC_ADDRESS)
 
 NETWORK=testnet
 
@@ -140,7 +137,7 @@ gas-oracle-get-price-data:
 		--is-view \
 		-- \
 		get_gas_price \
-		--chain_id 7
+		--chain_id 2
 
 gas-oracle-get-price:
 	soroban contract invoke \
@@ -150,7 +147,7 @@ gas-oracle-get-price:
 		--is-view \
 		-- \
 		get_price \
-		--chain_id 2
+		--chain_id 7
 
 gas-oracle-get-admin:
 	soroban contract invoke \
@@ -265,7 +262,7 @@ pool-deposit:
 		-- \
 		deposit \
 		--sender $(ADMIN) \
-		--amount 100000000
+		--amount 1000000000000
 
 pool-get-pool-info:
 	soroban contract invoke \
@@ -347,6 +344,15 @@ pool-restore-contract:
 	--durability persistent \
 	--ledgers-to-extend 535679
 
+pool-set-admin:
+	soroban contract invoke \
+		--id $(POOL_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		set_admin \
+		--new_admin GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF
+
 #---------------MESSENGER---------------------------
 messenger-deploy:
 	soroban contract deploy \
@@ -377,8 +383,30 @@ messenger-set-gas-usage:
 		--network $(NETWORK) 	\
 		-- \
 		set_gas_usage \
-		--chain_id 4\
-        --gas_usage 1300
+		--chain_id 16\
+        --gas_usage 100000
+
+define messenger-set-gas-usage-param
+	soroban contract invoke \
+    		--id $(MESSENGER_ADDRESS) \
+    		--source $(ADMIN_ALIAS) \
+    		--network $(NETWORK) 	\
+    		-- \
+    		set_gas_usage \
+    		--chain_id $1\
+            --gas_usage $2
+endef
+
+messenger-set-all-gas-usage:
+	$(call messenger-set-gas-usage-param,2,100000)
+	$(call messenger-set-gas-usage-param,3,100000)
+	$(call messenger-set-gas-usage-param,4,1300)
+	$(call messenger-set-gas-usage-param,5,100000)
+	$(call messenger-set-gas-usage-param,6,100000)
+	$(call messenger-set-gas-usage-param,10,100000)
+	$(call messenger-set-gas-usage-param,13,4000)
+	$(call messenger-set-gas-usage-param,15,8000)
+	$(call messenger-set-gas-usage-param,60,100000)
 
 
 messenger-send-message:
@@ -413,7 +441,7 @@ messenger-get-gas-usage:
 		--is-view \
 		-- \
 		get_gas_usage \
-		--chain_id 1
+		--chain_id 2
 
 messenger-get-transaction-cost:
 	soroban contract invoke \
@@ -423,7 +451,7 @@ messenger-get-transaction-cost:
 		--is-view \
 		-- \
 		get_transaction_cost \
-		--chain_id 1
+		--chain_id 2
 
 messenger-has-received-message:
 	soroban contract invoke \
@@ -433,7 +461,7 @@ messenger-has-received-message:
 		--is-view \
 		-- \
 		has_received_message \
-		--message 020777b64e53254cc42d1d695036cf5f438312735b915adec350b68ff713c997
+		--message 0207a3508a81ab1b0043a51568079044f4e34648226124dccd21f5d89c51f3fb
 
 messenger-has-sent-message:
 	soroban contract invoke \
@@ -497,6 +525,7 @@ bridge-set-messenger:
 		set_messenger \
 		--messenger $(MESSENGER_ADDRESS)
 
+
 bridge-set-gas-usage:
 	soroban contract invoke \
 		--id $(BRIDGE_ADDRESS) \
@@ -504,8 +533,30 @@ bridge-set-gas-usage:
 		--network $(NETWORK) 	\
 		-- \
 		set_gas_usage \
-		--chain_id 25 \
-		--gas_usage 25
+		--chain_id 16 \
+		--gas_usage 150000
+
+define bridge-set-gas-usage-param
+	soroban contract invoke \
+			--id $(BRIDGE_ADDRESS) \
+			--source $(ADMIN_ALIAS) \
+			--network $(NETWORK) 	\
+			-- \
+			set_gas_usage \
+    		--chain_id $1\
+            --gas_usage $2
+endef
+
+bridge-set-all-gas-usage:
+	$(call bridge-set-gas-usage-param,2,250000)
+	$(call bridge-set-gas-usage-param,3,150000)
+	$(call bridge-set-gas-usage-param,4,3500)
+	$(call bridge-set-gas-usage-param,5,250000)
+	$(call bridge-set-gas-usage-param,6,250000)
+	$(call bridge-set-gas-usage-param,10,250000)
+	$(call bridge-set-gas-usage-param,13,7000)
+	$(call bridge-set-gas-usage-param,15,7000)
+	$(call bridge-set-gas-usage-param,16,150000)
 
 bridge-register-bridge:
 	soroban contract invoke \
@@ -514,20 +565,31 @@ bridge-register-bridge:
 		--network $(NETWORK) 	\
 		-- \
 		register_bridge \
-#		--chain_id 10 \
-#		--bridge_address 000000000000000000000000760d5d74bead2ccef05ccbfde32a08ebe7e4cfce
-#		--chain_id 6 \
-#		--bridge_address 000000000000000000000000c63c0261c2f1d21b3efe7828032e646c797ee21e
-#		--chain_id 5 \
-#		--bridge_address 000000000000000000000000763e75ca7bc589396f0e5c1b8049ac5ed7c8387f
-#		--chain_id 4 \
-#		--bridge_address 270a35d028b2940decaca3c3634f0bf4030c49a7a9a1c70c35bfa5dde5dd6208
-#		--chain_id 3 \
-#		--bridge_address 0000000000000000000000000e1de5c7267dc1c1bc498cc9bc3dbcaab305e8da
-#		--chain_id 2 \
-#		--bridge_address 000000000000000000000000aa8d065e35929942f10fa8cb58a9af24ee03655d
-#		--chain_id 1 \
-#		--bridge_address 000000000000000000000000a32196e86caa4e5d8bb44a7e7f162804421e38b7
+		--chain_id 16 \
+		--bridge_address 02361abd90805a1dfb58fa709d5eff79ce99a47b9a8358cd75c7b29021737b22
+
+define bridge-register-bridge-param
+	soroban contract invoke \
+		--id $(BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		register_bridge \
+		--chain_id $1 \
+		--bridge_address $2
+endef
+
+bridge-register-bridge-all:
+	$(call bridge-register-bridge-param,16,02361abd90805a1dfb58fa709d5eff79ce99a47b9a8358cd75c7b29021737b22)
+	$(call bridge-register-bridge-param,15,0e544b1db5cb742ad501a5f77f166b34c67e3be2d38d7e462af9643eea33f794)
+	$(call bridge-register-bridge-param,13,fedfeb84cb16ec880259934a9c802cf775c01f2ecb20d91adf178ecce0112354)
+	$(call bridge-register-bridge-param,10,000000000000000000000000760d5d74bead2ccef05ccbfde32a08ebe7e4cfce)
+	$(call bridge-register-bridge-param,6,000000000000000000000000835a712cdfb05bb05adf5d44a48f98ee1447f61a)
+	$(call bridge-register-bridge-param,5,0000000000000000000000007620b91fC4DaA8f047e624cFB123E75379198498)
+	$(call bridge-register-bridge-param,4,270a35d028b2940decaca3c3634f0bf4030c49a7a9a1c70c35bfa5dde5dd6208)
+	$(call bridge-register-bridge-param,3,0000000000000000000000000e1de5c7267dc1c1bc498cc9bc3dbcaab305e8da)
+	$(call bridge-register-bridge-param,2,000000000000000000000000aa8d065e35929942f10fa8cb58a9af24ee03655d)
+
 
 bridge-add-bridge-token:
 	soroban contract invoke \
@@ -536,36 +598,40 @@ bridge-add-bridge-token:
     		--network $(NETWORK) 	\
     		-- \
     		add_bridge_token \
-#    		--chain_id 10 \
-#    		--token_address 000000000000000000000000ac7d9d0cc7da68f704a229a7258dc2ba654ffcbc
-#    		--chain_id 10 \
-#    		--token_address 00000000000000000000000097034742df00c506bd8b9f90e51330bf91ea59b4
-#    		--chain_id 6 \
-#    		--token_address 000000000000000000000000fd064A18f3BF249cf1f87FC203E90D8f650f2d63
-#    		--chain_id 5 \
-#    		--token_address 000000000000000000000000d18967827f4cc29193a7dbe2aa5ad440f6b27597
-#    		--chain_id 5 \
-#    		--token_address 0000000000000000000000003dbe838b635c54502c318f752187a8d8e7c73743
-#    		--chain_id 4 \
-#    		--token_address 3b442cb3912157f13a933d0134282d032b5ffecd01a2dbf1b7790608df002ea7
-#    		--chain_id 4 \
-#    		--token_address dc1f342783eef1ba0c9940714c5b5fe1a76d1f0f2ddab4a4faab53277e07dce3
-#    		--chain_id 4 \
-#    		--token_address 09c0917b1690e4929808fbc5378d9619a1ff49b3aaff441b2fa4bd58ab035a33
-#    		--chain_id 3 \
-#    		--token_address 0000000000000000000000003693bdbc20d9d8d0999b1d8effa686e88617e129
-#    		--chain_id 3 \
-#    		--token_address 0000000000000000000000003224f74a9e32e3f57c1b78a6aee79c257065110b
-#    		--chain_id 2 \
-#    		--token_address 0000000000000000000000000209da4a278956ca15438af8b108bd85642f096c
-#    		--chain_id 2 \
-#    		--token_address 00000000000000000000000049be77224dc061bd53699b25431b9aa7029a2cb8
-#    		--chain_id 1 \
-#    		--token_address 00000000000000000000000007865c6e87b9f70255377e024ace6630c1eaa37f
-#    		--chain_id 1 \
-#    		--token_address 000000000000000000000000c7dbc4a896b34b7a10dda2ef72052145a9122f43
-#    		--chain_id 1 \
-#    		--token_address 000000000000000000000000ddac3cb57dea3fbeff4997d78215535eb5787117
+			--chain_id 16 \
+			--token_address 93176772a423589cee546e6121968792fc9d4adf7f04d713075856614192e65a
+
+define bridge-add-bridge-token-param
+	soroban contract invoke \
+		--id $(BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		add_bridge_token \
+		--chain_id $1 \
+		--token_address $2
+endef
+
+bridge-add-bridge-token-all:
+	$(call bridge-add-bridge-token-param,16,93176772a423589cee546e6121968792fc9d4adf7f04d713075856614192e65a)
+	$(call bridge-add-bridge-token-param,16,7d53c865deee2dc29dc38bd87f0296cd28f13a21bc7cc69f7a88a91c4dc6aca1)
+	$(call bridge-add-bridge-token-param,15,000000000000000000000000000000000000000000000000000000002c615a73)
+	$(call bridge-add-bridge-token-param,15,000000000000000000000000000000000000000000000000000000002c7158e3)
+	$(call bridge-add-bridge-token-param,13,b53b0620f575a4ab2bdf1322641ac7392716f8f6d52701c6f91c5283fc9c590a)
+	$(call bridge-add-bridge-token-param,13,d4fb9b021179ee578547ddfcbcd24b0725c703428b3fe05467616f87e40b6e18)
+	$(call bridge-add-bridge-token-param,10,000000000000000000000000ac7d9d0cc7da68f704a229a7258dc2ba654ffcbc)
+	$(call bridge-add-bridge-token-param,10,00000000000000000000000097034742df00c506bd8b9f90e51330bf91ea59b4)
+	$(call bridge-add-bridge-token-param,6,00000000000000000000000075faf114eafb1BDbe2F0316DF893fd58CE46AA4d)
+	$(call bridge-add-bridge-token-param,5,00000000000000000000000041e94eb019c0762f9bfcf9fb1e58725bfb0e7582)
+	$(call bridge-add-bridge-token-param,4,3b442cb3912157f13a933d0134282d032b5ffecd01a2dbf1b7790608df002ea7)
+	$(call bridge-add-bridge-token-param,4,dc1f342783eef1ba0c9940714c5b5fe1a76d1f0f2ddab4a4faab53277e07dce3)
+	$(call bridge-add-bridge-token-param,4,09c0917b1690e4929808fbc5378d9619a1ff49b3aaff441b2fa4bd58ab035a33)
+	$(call bridge-add-bridge-token-param,3,0000000000000000000000003693bdbc20d9d8d0999b1d8effa686e88617e129)
+	$(call bridge-add-bridge-token-param,3,0000000000000000000000003224f74a9e32e3f57c1b78a6aee79c257065110b)
+	$(call bridge-add-bridge-token-param,2,0000000000000000000000000209da4a278956ca15438af8b108bd85642f096c)
+	$(call bridge-add-bridge-token-param,2,00000000000000000000000049be77224dc061bd53699b25431b9aa7029a2cb8)
+	$(call bridge-add-bridge-token-param,2,0000000000000000000000001c7D4B196Cb0C7B01d743Fbc6116a902379C7238)
+
 
 bridge-add-pool:
 	soroban contract invoke \
@@ -597,10 +663,10 @@ bridge-swap-and-bridge:
         --token $(TOKEN_ADDRESS) \
         --amount 10000000 \
         --recipient 000000000000000000000000be959eed208225aab424505569d41bf3212142c0 \
-        --destination_chain_id 30 \
-        --receive_token 0000000000000000000000003c499c542cef5e3811e1192ce70d8cc03d5c3359 \
-        --nonce 0000000000000000000000000000000000000000000000000000000000000019 \
-        --gas_amount 20000000 \
+        --destination_chain_id 2 \
+        --receive_token 0000000000000000000000000209da4a278956ca15438af8b108bd85642f096c \
+        --nonce 0000000000000000000000000000000000000000000000000000000000000020 \
+        --gas_amount 200000000 \
         --fee_token_amount 0
 
 bridge-swap-and-bridge-2:
@@ -615,8 +681,8 @@ bridge-swap-and-bridge-2:
         --amount 10000000 \
         --recipient 000000000000000000000000be959eed208225aab424505569d41bf3212142c0 \
         --destination_chain_id 2 \
-        --receive_token 0000000000000000000000000209da4a278956ca15438af8b108bd85642f096c \
-        --nonce 0000000000000000000000000000000000000000000000000000000000000019 \
+        --receive_token 00000000000000000000000049be77224dc061bd53699b25431b9aa7029a2cb8 \
+        --nonce 0000000000000000000000000000000000000000000000000000000000000021 \
         --gas_amount 50000000 \
         --fee_token_amount 0
 
@@ -632,8 +698,7 @@ bridge-swap:
         --amount 10000000 \
         --recipient $(ADMIN) \
         --receive_token fea8431af9bb6bc27a45309a9db03f9ba478c4675a3d0579d18e303c3aaed561 \
-        --receive_amount_min 0 \
-        --claimable false
+        --receive_amount_min 0
 
 
 bridge-receive:
@@ -660,7 +725,7 @@ bridge-get-transaction-cost:
 		--is-view \
 		-- \
 		get_transaction_cost \
-		--chain_id 1
+		--chain_id 2
 
 bridge-get-pool-address:
 	soroban contract invoke \
@@ -689,7 +754,7 @@ bridge-get-gas-usage:
         --is-view \
 		-- \
 		get_gas_usage \
-		--chain_id 7
+		--chain_id 2
 
 bridge-get-another-bridge:
 	soroban contract invoke \
@@ -699,7 +764,7 @@ bridge-get-another-bridge:
         --is-view \
 		-- \
 		get_another_bridge \
-		--chain_id 6
+		--chain_id 2
 
 bridge-has-received-message:
 	soroban contract invoke \
@@ -724,7 +789,16 @@ bridge-update-contract:
 		--network $(NETWORK) 	\
         -- \
         upgrade \
-        --new_wasm_hash 349aaa0f85aaf2ab74bb251dfeb4b150939f0dbaa9f82bf922648604d21ec6fa
+        --new_wasm_hash 4fa4fc1edb540c7c21cd73155838f11be5144e5f2a7060bc89a6b6bee5c24c09
+
+bridge-set-admin:
+	soroban contract invoke \
+		--id $(BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		set_admin \
+		--new_admin GDQO6XBJ4AFNMFVQMEBCONE36SVZKZ6HUC5ZBU3Z2UYLDEKJVCS6MREW
 
 
 bridge-restore-contract:
@@ -739,13 +813,13 @@ bridge-restore-contract:
 token-transfer:
 	soroban contract invoke \
 		--id $(TOKEN_ADDRESS) \
-		--source SBTECKZAIBLA6ZGPCG5IKON2IG4SJ37AVZEIY5OHCCKJ7KYCAJQKF5EB \
+		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
 		-- \
 		transfer \
-		--from GA2LLFIX5V3JT6IW67HH2JESPYALDGCV2AGCSEQOOEMKMF5K3WL2K7OS \
-		--to $(ADMIN) \
-		--amount 10000000000000
+		--from GDL27JZFDPBXX7B4DTWPSEWRFHGTAQM6HK365M3J6LVAOBY6VCEUGRCU \
+		--to GCDIRA4GRYWVUWB33F6UQUQYAN4L5FXIWJRFPJQMG5YS5EQTWIKAMONK \
+		--amount 1000
 
 token-native-transfer:
 	soroban contract invoke \
@@ -756,16 +830,17 @@ token-native-transfer:
 		transfer \
 		--from $(ADMIN) \
 		--to $(BRIDGE_ADDRESS) \
-		--amount 100000000
+		--amount 10000000000
 
 token-get-balance:
 	soroban contract invoke \
 		--id $(TOKEN_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
 		--is-view \
 		-- \
 		balance \
-		--id $(POOL_ADDRESS)
+		--id GDL27JZFDPBXX7B4DTWPSEWRFHGTAQM6HK365M3J6LVAOBY6VCEUGRCU
 
 
 token-get-name:
@@ -778,23 +853,47 @@ token-get-name:
 		name
 
 wrap-token:
-	soroban lab token wrap \
-		--network testnet 	\
-		--source alice \
-		--asset BOGD:GAYODJWF27E5OQO2C6LA6Z6QXQ2EYUONMXFNL2MNMGRJP6RED2CPQKTW
+	soroban contract asset deploy \
+		--network $(NETWORK) 	\
+		--source  $(ADMIN_ALIAS) \
+		--asset USDY:GAYODJWF27E5OQO2C6LA6Z6QXQ2EYUONMXFNL2MNMGRJP6RED2CPQKTW
 
 native-token-address:
-	soroban lab token id \
+	soroban contract asset id \
  		--network $(NETWORK) \
- 		--source $(ADMIN_ALIAS) \
  		--asset native
 
-generate-types:
+generate-types: generate-types-gas-oracle generate-types-pool generate-types-bridge generate-types-messenger generate-types-token
+
+generate-types-gas-oracle:
 	soroban contract bindings typescript \
 	--network $(NETWORK) \
 	--output-dir ./types/gas-oracle \
-	--wasm $(GAS_ORACLE_WASM_PATH_OP) \
 	--contract-id $(GAS_ORACLE_ADDRESS)
 
+generate-types-pool:
+	soroban contract bindings typescript \
+	--network $(NETWORK) \
+	--output-dir ./types/pool \
+	--contract-id $(POOL_ADDRESS)
+
+generate-types-bridge:
+	soroban contract bindings typescript \
+	--network $(NETWORK) \
+	--output-dir ./types/bridge \
+	--contract-id $(BRIDGE_ADDRESS)
+
+generate-types-messenger:
+	soroban contract bindings typescript \
+	--network $(NETWORK) \
+	--output-dir ./types/messenger \
+	--contract-id $(MESSENGER_ADDRESS)
+
+generate-types-token:
+	soroban contract bindings typescript \
+	--network $(NETWORK) \
+	--output-dir ./types/token \
+	--contract-id $(TOKEN_ADDRESS)
+
 install-cli:
-	cargo install --locked --version 20.3.1 soroban-cli
+	cargo install soroban-cli --features opt
