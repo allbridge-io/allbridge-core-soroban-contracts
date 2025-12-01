@@ -18,6 +18,7 @@ pub trait Event: IntoVal<Env, Val> + Sized {
     const EVENT_NAME: &'static str;
 
     fn publish(self, env: &Env) {
+        #[allow(deprecated)]
         env.events()
             .publish((Symbol::new(env, Self::EVENT_NAME),), self);
     }

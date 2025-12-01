@@ -1,5 +1,7 @@
 .DEFAULT_GOAL := all
 
+PROFILE = release-with-logs
+
 all: build-bridge
 
 optimize-all: optimize-gas-oracle optimize-messenger optimize-pool optimize-bridge
@@ -67,20 +69,28 @@ POOL_ADDRESS=$(POOL_USDY_ADDRESS)
 
 NETWORK=testnet
 
+build-auto-deposit-factory: build-bridge build-auto-deposit-wallet
+	 cargo build --target wasm32-unknown-unknown --profile $(PROFILE) --package auto-deposit-factory
+
+build-auto-deposit-wallet:
+	 cargo build --target wasm32-unknown-unknown --profile $(PROFILE) --package auto-deposit-wallet
+
+build-auto-deposit: build-auto-deposit-factory
+
 test: all
 	cargo test
 
 build-gas-oracle:
-	 cargo build --target wasm32-unknown-unknown --release --package gas-oracle
+	 cargo build --target wasm32-unknown-unknown --profile $(PROFILE) --package gas-oracle
 
 build-messenger: build-gas-oracle
-	 cargo build --target wasm32-unknown-unknown --release --package messenger
+	 cargo build --target wasm32-unknown-unknown --profile $(PROFILE) --package messenger
 
-build-pool: 
-	cargo build --target wasm32-unknown-unknown --release --package pool
+build-pool:
+	cargo build --target wasm32-unknown-unknown --profile $(PROFILE) --package pool
 
 build-bridge: build-messenger build-pool
-	cargo build --target wasm32-unknown-unknown --release --package bridge
+	cargo build --target wasm32-unknown-unknown --profile $(PROFILE) --package bridge
 
 optimize-gas-oracle:
 	soroban contract optimize --wasm $(GAS_ORACLE_WASM_PATH)

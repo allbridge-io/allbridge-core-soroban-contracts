@@ -1,10 +1,10 @@
 #![allow(clippy::too_many_arguments)]
 
 use bridge_storage::view::{get_admin, get_gas_oracle, get_gas_usage, get_stop_authority};
+use bridge_storage::Admin;
 use shared::utils::extend_ttl_instance;
 use shared::Error;
 use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, U256};
-use bridge_storage::Admin;
 
 use crate::methods::admin::{set_admin, set_messenger};
 use crate::storage::another_bridge::AnotherBridge;

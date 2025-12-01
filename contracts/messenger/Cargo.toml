@@ -12,7 +12,7 @@ shared = { workspace = true }
 bridge_storage = { workspace = true }
 proc_macros = { workspace = true }
 
-[dev_dependencies]
+[dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
 hex = "0.4.3"
 

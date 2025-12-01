@@ -98,6 +98,7 @@ impl BridgeEnv {
         let env = Env::default();
 
         env.mock_all_auths();
+        #[allow(deprecated)]
         env.budget().reset_limits(u64::MAX, u64::MAX);
 
         let admin = Address::generate(&env);

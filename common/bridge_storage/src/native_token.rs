@@ -1,5 +1,5 @@
 use proc_macros::{
-    extend_ttl_info_instance, data_storage_type, symbol_key, SorobanData, SorobanSimpleData,
+    data_storage_type, extend_ttl_info_instance, symbol_key, SorobanData, SorobanSimpleData,
 };
 use shared::{soroban_data::SimpleSorobanData, Error};
 use soroban_sdk::{contracttype, symbol_short, token, Address, Env, Symbol};
@@ -20,7 +20,7 @@ impl NativeToken {
     }
 
     #[inline]
-    pub fn get_client(env: &Env) -> Result<token::Client, Error> {
+    pub fn get_client(env: &Env) -> Result<token::Client<'_>, Error> {
         let address = Self::get(env)?.as_address();
         Ok(token::Client::new(env, &address))
     }

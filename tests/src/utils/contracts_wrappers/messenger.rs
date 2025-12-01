@@ -69,6 +69,7 @@ pub struct Messenger {
 
 impl Messenger {
     pub fn create(env: &Env, config: MessengerConfig) -> Messenger {
+        #[allow(deprecated)]
         let id = env.register_contract_wasm(None, messenger::WASM);
         let client = messenger::Client::new(env, &id);
 
@@ -177,6 +178,9 @@ impl Messenger {
     }
 
     pub fn upgrade(&self, new_hash: &BytesN<32>) {
-        unwrap_call_result(&self.env, desoroban_result(self.client.try_upgrade(new_hash)));
+        unwrap_call_result(
+            &self.env,
+            desoroban_result(self.client.try_upgrade(new_hash)),
+        );
     }
 }

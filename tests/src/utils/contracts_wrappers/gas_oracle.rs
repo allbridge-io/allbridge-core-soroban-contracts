@@ -13,6 +13,7 @@ pub struct GasOracle {
 
 impl GasOracle {
     pub fn create(env: &Env, admin: &Address) -> GasOracle {
+        #[allow(deprecated)]
         let id = env.register_contract_wasm(None, gas_oracle::WASM);
         let client = gas_oracle::Client::new(env, &id);
 
@@ -68,6 +69,9 @@ impl GasOracle {
     }
 
     pub fn upgrade(&self, new_hash: &BytesN<32>) {
-        unwrap_call_result(&self.env, desoroban_result(self.client.try_upgrade(new_hash)));
+        unwrap_call_result(
+            &self.env,
+            desoroban_result(self.client.try_upgrade(new_hash)),
+        );
     }
 }

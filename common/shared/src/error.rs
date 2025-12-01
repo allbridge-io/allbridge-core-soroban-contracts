@@ -18,6 +18,7 @@ pub enum Error {
     TokenInsufficientBalance = 10,
     CastFailed = 11,
     U256Overflow = 12,
+    AddressDoesntExists = 13,
 
     // Pool
     ZeroAmount = 103,
@@ -53,4 +54,10 @@ pub enum Error {
 
     // Gas Oracle
     NoGasDataForChain = 400,
+
+    /// Auto deposit
+    ADMinDepositAmountIsZero = 500,
+    ADNotEnoughFee = 501,
+    ADAmountTooLow = 502,
+    ADBridgingIsSupported = 503,
 }

@@ -171,7 +171,7 @@ pub fn assert_rel_eq(a: u128, b: u128, d: u128) {
 pub fn contract_id(address: &Address) -> BytesN<32> {
     let sc_address: ScAddress = address.try_into().unwrap();
     if let ScAddress::Contract(c) = sc_address {
-        BytesN::from_array(address.env(), &c.0)
+        BytesN::from_array(address.env(), c.0.as_ref())
     } else {
         panic!("address is not a contract {:?}", address);
     }
