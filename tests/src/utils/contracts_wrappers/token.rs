@@ -15,8 +15,9 @@ pub struct Token {
 
 impl Token {
     pub fn create(env: &Env, tag: &'static str, admin: &Address) -> Token {
-        #[allow(deprecated)]
-        let id = env.register_stellar_asset_contract(admin.clone());
+        let id = env
+            .register_stellar_asset_contract_v2(admin.clone())
+            .address();
         let client = token::Client::new(env, &id);
         let asset_client = token::StellarAssetClient::new(env, &id);
 

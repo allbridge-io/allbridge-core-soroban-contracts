@@ -10,6 +10,7 @@ proc_macros = { path = "./common/proc_macros" }
 bridge_storage = { path = "./common/bridge_storage" }
 ethnum = "1.4.0"
 arrayref = "0.3.7"
+hex = "0.4.3"
 
 [profile.release]
 opt-level = "z"

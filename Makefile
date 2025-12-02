@@ -1,12 +1,12 @@
 .DEFAULT_GOAL := all
 
-PROFILE = release-with-logs
+PROFILE = release
 
-all: build-bridge
+all: build-auto-deposit
 
 optimize-all: optimize-gas-oracle optimize-messenger optimize-pool optimize-bridge
 
-ADDRESS_PATH = soroban-deploy-testnet
+ADDRESS_PATH = stellar-deploy-testnet
 
 #NATIVE_ADDRESS = CB64D3G7SM2RTH6JSGG34DDTFTQ5CFDKVDZJZSODMCX4NJ2HV2KN7OHT #Futurenet
 NATIVE_ADDRESS = CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC #Testnet
@@ -40,9 +40,15 @@ BRIDGE_WASM_PATH_OP = target/wasm32-unknown-unknown/release/bridge.wasm
 BRIDGE_ADDRESS_PATH = $(ADDRESS_PATH)/bridge
 BRIDGE_ADDRESS = $$(cat $(BRIDGE_ADDRESS_PATH))
 
-ALICE = $$(soroban keys address alice)
+AUTO_DEPOSIT_WALLET_WASM_PATH = target/wasm32-unknown-unknown/release/auto_deposit_wallet.wasm
+AUTO_DEPOSIT_WALLET_WASM_PATH_OP = target/wasm32-unknown-unknown/release/auto_deposit_wallet.wasm
+
+AUTO_DEPOSIT_FACTORY_WASM_PATH = target/wasm32-unknown-unknown/release/auto_deposit_wallet.wasm
+AUTO_DEPOSIT_FACTORY_WASM_PATH_OP = target/wasm32-unknown-unknown/release/auto_deposit_wallet.wasm
+
+ALICE = $$(stellar keys address alice)
 ADMIN_ALIAS = alice
-ADMIN = $$(soroban keys address $(ADMIN_ALIAS))
+ADMIN = $$(stellar keys address $(ADMIN_ALIAS))
 
 #YARO_ADDRESS=CDFVZVTV4K5S66GQXER7YVK6RB23BMPMD3HQUA3TGEZUGDL3NM3R5GDW #Futurenet
 #USDY_ADDRESS=CD7KQQY27G5WXQT2IUYJVHNQH6N2I6GEM5ND2BLZ2GHDAPB2V3KWCW7M #Futurenet
@@ -90,26 +96,26 @@ build-bridge: build-messenger build-pool
 	cargo build --target wasm32-unknown-unknown --profile $(PROFILE) --package bridge
 
 optimize-gas-oracle:
-	soroban contract optimize --wasm $(GAS_ORACLE_WASM_PATH)
+	stellar contract optimize --wasm $(GAS_ORACLE_WASM_PATH)
 
 optimize-messenger:
-	soroban contract optimize --wasm $(MESSENGER_WASM_PATH)
+	stellar contract optimize --wasm $(MESSENGER_WASM_PATH)
 
 optimize-pool:
-	soroban contract optimize --wasm $(POOL_WASM_PATH)
+	stellar contract optimize --wasm $(POOL_WASM_PATH)
 
 optimize-bridge:
-	soroban contract optimize --wasm $(BRIDGE_WASM_PATH)
+	stellar contract optimize --wasm $(BRIDGE_WASM_PATH)
 
 deploy-gas-oracle:
-	soroban contract deploy \
+	stellar contract deploy \
       --wasm $(GAS_ORACLE_WASM_PATH_OP) \
       --source $(ADMIN_ALIAS) \
       --network $(NETWORK) 	\
       > $(GAS_ORACLE_ADDRESS_PATH) && echo $(GAS_ORACLE_ADDRESS)
 
 gas-oracle-init:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -118,7 +124,7 @@ gas-oracle-init:
 		--admin $(ADMIN)
 
 gas-oracle-set-price:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -129,7 +135,7 @@ gas-oracle-set-price:
         --gas_price 50
 
 gas-oracle-set-price-1:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -140,7 +146,7 @@ gas-oracle-set-price-1:
         --gas_price 0
 
 gas-oracle-get-price-data:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -150,7 +156,7 @@ gas-oracle-get-price-data:
 		--chain_id 2
 
 gas-oracle-get-price:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -160,7 +166,7 @@ gas-oracle-get-price:
 		--chain_id 7
 
 gas-oracle-get-admin:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -169,7 +175,7 @@ gas-oracle-get-admin:
 		get_admin
 
 gas-oracle-get-gas-cost-in-native-token:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -180,7 +186,7 @@ gas-oracle-get-gas-cost-in-native-token:
 		--gas_amount 250000
 
 gas-oracle-get-transaction-gas-cost-in-usd:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -191,7 +197,7 @@ gas-oracle-get-transaction-gas-cost-in-usd:
 		--gas_amount 1
 
 gas-oracle-crossrate:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -201,13 +207,13 @@ gas-oracle-crossrate:
 		--other_chain_id 1
 
 gas-oracle-install:
-	soroban contract install \
+	stellar contract install \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
 		--wasm $(GAS_ORACLE_WASM_PATH_OP)
 
 gas-oracle-update-contract:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -217,7 +223,7 @@ gas-oracle-update-contract:
 
 
 gas-oracle-restore-contract:
-	soroban contract restore \
+	stellar contract restore \
 	--id $(GAS_ORACLE_ADDRESS) \
 	--source $(ADMIN_ALIAS) \
 	--network $(NETWORK) 	\
@@ -227,21 +233,21 @@ gas-oracle-restore-contract:
 #----------------POOL----------------------------
 
 pool-deploy:
-	soroban contract deploy \
+	stellar contract deploy \
           --wasm $(POOL_WASM_PATH_OP) \
           --source $(ADMIN_ALIAS) \
           --network $(NETWORK) 	\
           > $(POOL_ADDRESS_PATH) && echo $(POOL_ADDRESS)
 
 pool-deploy-by-hash:
-	soroban contract deploy \
+	stellar contract deploy \
           --wasm-hash <hash> \
           --source $(ADMIN_ALIAS) \
           --network $(NETWORK) 	\
           > $(POOL_ADDRESS_PATH) && echo $(POOL_ADDRESS)
 
 pool-initialize:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(POOL_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -256,7 +262,7 @@ pool-initialize:
         --admin_fee_share_bp 2000
 
 pool-set-bridge:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(POOL_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -265,7 +271,7 @@ pool-set-bridge:
 		--bridge $(BRIDGE_ADDRESS)
 
 pool-deposit:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(POOL_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -275,7 +281,7 @@ pool-deposit:
 		--amount 1000000000000
 
 pool-get-pool-info:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(POOL_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -284,7 +290,7 @@ pool-get-pool-info:
 		get_pool
 
 pool-get-admin:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(POOL_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -293,7 +299,7 @@ pool-get-admin:
 		get_admin
 
 pool-get-pending-reward:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(POOL_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -303,7 +309,7 @@ pool-get-pending-reward:
 		--user $(ADMIN)
 
 pool-get-user-deposit:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(POOL_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -313,7 +319,7 @@ pool-get-user-deposit:
 		--user $(ADMIN)
 
 pool-get-claimable-balance:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(POOL_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -323,7 +329,7 @@ pool-get-claimable-balance:
 		--user GB664P4XTBKNBK3YGPAFFCYPSW2SIO2FR6B6HC6SKFS7KGRTCDQYVUJ7
 
 pool-claim-balance:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(POOL_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -332,13 +338,13 @@ pool-claim-balance:
 		--user GB664P4XTBKNBK3YGPAFFCYPSW2SIO2FR6B6HC6SKFS7KGRTCDQYVUJ7
 
 pool-install:
-	soroban contract install \
+	stellar contract install \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
 		--wasm $(POOL_WASM_PATH_OP)
 
 pool-update-contract:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(POOL_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -347,7 +353,7 @@ pool-update-contract:
         --new_wasm_hash 8f1bf6f8b9e82b29415e93202525058012898769cbcd3b5c81affdfb0bf645f4
 
 pool-restore-contract:
-	soroban contract restore \
+	stellar contract restore \
 	--id $(POOL_ADDRESS) \
 	--source $(ADMIN_ALIAS) \
 	--network $(NETWORK) 	\
@@ -355,7 +361,7 @@ pool-restore-contract:
 	--ledgers-to-extend 535679
 
 pool-set-admin:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(POOL_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -365,14 +371,14 @@ pool-set-admin:
 
 #---------------MESSENGER---------------------------
 messenger-deploy:
-	soroban contract deploy \
+	stellar contract deploy \
 		--wasm $(MESSENGER_WASM_PATH_OP) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
 		> $(MESSENGER_ADDRESS_PATH) && echo $(MESSENGER_ADDRESS)
 
 messenger-initialize:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(MESSENGER_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -387,7 +393,7 @@ messenger-initialize:
         --secondary_validator_keys '{ "04734fc43dde79306ddf1bd5b4840d2cc9195bb48dbef92d081e71805694f5828d9cce76008f1f1a2a8a6ccd564b84937f83630d3d3af9541a5a3f3c1c1ea62c98": true }'
 
 messenger-set-gas-usage:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(MESSENGER_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -397,7 +403,7 @@ messenger-set-gas-usage:
         --gas_usage 100000
 
 define messenger-set-gas-usage-param
-	soroban contract invoke \
+	stellar contract invoke \
     		--id $(MESSENGER_ADDRESS) \
     		--source $(ADMIN_ALIAS) \
     		--network $(NETWORK) 	\
@@ -420,7 +426,7 @@ messenger-set-all-gas-usage:
 
 
 messenger-send-message:
-	soroban contract invoke \
+	stellar contract invoke \
 		  --id $(MESSENGER_ADDRESS) \
 		  --source alice \
 		  --network $(NETWORK) \
@@ -430,7 +436,7 @@ messenger-send-message:
 		  --sender $(ALICE)
 
 messenger-receive_message:
-	soroban contract invoke \
+	stellar contract invoke \
 		  --id $(MESSENGER_ADDRESS) \
 		  --source alice \
 		  --network $(NETWORK) \
@@ -444,7 +450,7 @@ messenger-receive_message:
           --secondary_recovery_id 0
 
 messenger-get-gas-usage:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(MESSENGER_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -454,7 +460,7 @@ messenger-get-gas-usage:
 		--chain_id 2
 
 messenger-get-transaction-cost:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(MESSENGER_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -464,7 +470,7 @@ messenger-get-transaction-cost:
 		--chain_id 2
 
 messenger-has-received-message:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(MESSENGER_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -474,7 +480,7 @@ messenger-has-received-message:
 		--message 0207a3508a81ab1b0043a51568079044f4e34648226124dccd21f5d89c51f3fb
 
 messenger-has-sent-message:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(MESSENGER_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -484,13 +490,13 @@ messenger-has-sent-message:
 		--message 020777b64e53254cc42d1d695036cf5f438312735b915adec350b68ff713c997
 
 messenger-install:
-	soroban contract install \
+	stellar contract install \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
 		--wasm $(MESSENGER_WASM_PATH_OP)
 
 messenger-update-contract:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(MESSENGER_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -499,7 +505,7 @@ messenger-update-contract:
         --new_wasm_hash 5accf5d0f95f58fa341bc6ac968908bd2ebc864cb9bf6eeda6c799022cde1d45
 
 messenger-restore-contract:
-	soroban contract restore \
+	stellar contract restore \
 	--id $(MESSENGER_ADDRESS) \
 	--source $(ADMIN_ALIAS) \
 	--network $(NETWORK) 	\
@@ -508,14 +514,14 @@ messenger-restore-contract:
 
 #---------------BRIDGE---------------------------
 bridge-deploy:
-	soroban contract deploy \
+	stellar contract deploy \
 		--wasm $(BRIDGE_WASM_PATH_OP) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
 		> $(BRIDGE_ADDRESS_PATH) && echo $(BRIDGE_ADDRESS)
 
 bridge-initialize:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -527,7 +533,7 @@ bridge-initialize:
         --native_token $(NATIVE_ADDRESS) \
 
 bridge-set-messenger:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -537,7 +543,7 @@ bridge-set-messenger:
 
 
 bridge-set-gas-usage:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -547,7 +553,7 @@ bridge-set-gas-usage:
 		--gas_usage 150000
 
 define bridge-set-gas-usage-param
-	soroban contract invoke \
+	stellar contract invoke \
 			--id $(BRIDGE_ADDRESS) \
 			--source $(ADMIN_ALIAS) \
 			--network $(NETWORK) 	\
@@ -569,7 +575,7 @@ bridge-set-all-gas-usage:
 	$(call bridge-set-gas-usage-param,16,150000)
 
 bridge-register-bridge:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -579,7 +585,7 @@ bridge-register-bridge:
 		--bridge_address 02361abd90805a1dfb58fa709d5eff79ce99a47b9a8358cd75c7b29021737b22
 
 define bridge-register-bridge-param
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -602,7 +608,7 @@ bridge-register-bridge-all:
 
 
 bridge-add-bridge-token:
-	soroban contract invoke \
+	stellar contract invoke \
     		--id $(BRIDGE_ADDRESS) \
     		--source $(ADMIN_ALIAS) \
     		--network $(NETWORK) 	\
@@ -612,7 +618,7 @@ bridge-add-bridge-token:
 			--token_address 93176772a423589cee546e6121968792fc9d4adf7f04d713075856614192e65a
 
 define bridge-add-bridge-token-param
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -644,7 +650,7 @@ bridge-add-bridge-token-all:
 
 
 bridge-add-pool:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -654,7 +660,7 @@ bridge-add-pool:
 		--token $(TOKEN_ADDRESS)
 
 bridge-set-rebalancer:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -663,7 +669,7 @@ bridge-set-rebalancer:
 		--rebalancer GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF
 
 bridge-swap-and-bridge:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -680,7 +686,7 @@ bridge-swap-and-bridge:
         --fee_token_amount 0
 
 bridge-swap-and-bridge-2:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -697,7 +703,7 @@ bridge-swap-and-bridge-2:
         --fee_token_amount 0
 
 bridge-swap:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -712,7 +718,7 @@ bridge-swap:
 
 
 bridge-receive:
-	soroban contract invoke \
+	stellar contract invoke \
     		--id $(BRIDGE_ADDRESS) \
     		--source $(ADMIN_ALIAS) \
     		--network $(NETWORK) 	\
@@ -728,7 +734,7 @@ bridge-receive:
 			--claimable false
 
 bridge-get-transaction-cost:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -738,7 +744,7 @@ bridge-get-transaction-cost:
 		--chain_id 2
 
 bridge-get-pool-address:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -748,7 +754,7 @@ bridge-get-pool-address:
 		--token_address 04e57ce1f8ff28bd87daf1875bff9f87c1e8bf9c7f425558d4eb2a0e511b3c3c
 
 bridge-get-config:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -757,7 +763,7 @@ bridge-get-config:
 		get_config
 
 bridge-get-gas-usage:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -767,7 +773,7 @@ bridge-get-gas-usage:
 		--chain_id 2
 
 bridge-get-another-bridge:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -777,7 +783,7 @@ bridge-get-another-bridge:
 		--chain_id 2
 
 bridge-has-received-message:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -787,13 +793,13 @@ bridge-has-received-message:
 		--message 0107155a5bc1db9cb9d8fc56150518f01011f56ca2e3f0bdeb8dee115344d75b
 
 bridge-install:
-	soroban contract install \
+	stellar contract install \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
 		--wasm $(BRIDGE_WASM_PATH_OP)
 
 bridge-update-contract:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -802,7 +808,7 @@ bridge-update-contract:
         --new_wasm_hash 4fa4fc1edb540c7c21cd73155838f11be5144e5f2a7060bc89a6b6bee5c24c09
 
 bridge-set-admin:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -812,7 +818,7 @@ bridge-set-admin:
 
 
 bridge-restore-contract:
-	soroban contract restore \
+	stellar contract restore \
 	--id $(BRIDGE_ADDRESS) \
 	--source $(ADMIN_ALIAS) \
 	--network $(NETWORK) 	\
@@ -821,7 +827,7 @@ bridge-restore-contract:
 
 #----------UTILS--------------------------
 token-transfer:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(TOKEN_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -832,7 +838,7 @@ token-transfer:
 		--amount 1000
 
 token-native-transfer:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(NATIVE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -843,7 +849,7 @@ token-native-transfer:
 		--amount 10000000000
 
 token-get-balance:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(TOKEN_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -854,7 +860,7 @@ token-get-balance:
 
 
 token-get-name:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75 \
 		--source $(ADMIN_ALIAS) \
 		--is-view \
@@ -863,47 +869,47 @@ token-get-name:
 		name
 
 wrap-token:
-	soroban contract asset deploy \
+	stellar contract asset deploy \
 		--network $(NETWORK) 	\
 		--source  $(ADMIN_ALIAS) \
 		--asset USDY:GAYODJWF27E5OQO2C6LA6Z6QXQ2EYUONMXFNL2MNMGRJP6RED2CPQKTW
 
 native-token-address:
-	soroban contract asset id \
+	stellar contract asset id \
  		--network $(NETWORK) \
  		--asset native
 
 generate-types: generate-types-gas-oracle generate-types-pool generate-types-bridge generate-types-messenger generate-types-token
 
 generate-types-gas-oracle:
-	soroban contract bindings typescript \
+	stellar contract bindings typescript \
 	--network $(NETWORK) \
 	--output-dir ./types/gas-oracle \
 	--contract-id $(GAS_ORACLE_ADDRESS)
 
 generate-types-pool:
-	soroban contract bindings typescript \
+	stellar contract bindings typescript \
 	--network $(NETWORK) \
 	--output-dir ./types/pool \
 	--contract-id $(POOL_ADDRESS)
 
 generate-types-bridge:
-	soroban contract bindings typescript \
+	stellar contract bindings typescript \
 	--network $(NETWORK) \
 	--output-dir ./types/bridge \
 	--contract-id $(BRIDGE_ADDRESS)
 
 generate-types-messenger:
-	soroban contract bindings typescript \
+	stellar contract bindings typescript \
 	--network $(NETWORK) \
 	--output-dir ./types/messenger \
 	--contract-id $(MESSENGER_ADDRESS)
 
 generate-types-token:
-	soroban contract bindings typescript \
+	stellar contract bindings typescript \
 	--network $(NETWORK) \
 	--output-dir ./types/token \
 	--contract-id $(TOKEN_ADDRESS)
 
 install-cli:
-	cargo install soroban-cli --features opt
+	brew install stellar-cli

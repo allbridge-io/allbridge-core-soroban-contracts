@@ -205,7 +205,6 @@ version = "0.1.0"
 dependencies = [
  "arrayref",
  "bridge_storage",
- "hex",
  "proc_macros",
  "shared",
  "soroban-sdk",
@@ -217,7 +216,6 @@ version = "0.1.0"
 dependencies = [
  "arrayref",
  "bridge_storage",
- "hex",
  "proc_macros",
  "shared",
  "soroban-sdk",

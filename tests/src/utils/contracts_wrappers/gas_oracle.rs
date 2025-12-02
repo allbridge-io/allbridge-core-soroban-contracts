@@ -13,8 +13,7 @@ pub struct GasOracle {
 
 impl GasOracle {
     pub fn create(env: &Env, admin: &Address) -> GasOracle {
-        #[allow(deprecated)]
-        let id = env.register_contract_wasm(None, gas_oracle::WASM);
+        let id = env.register(gas_oracle::WASM, ());
         let client = gas_oracle::Client::new(env, &id);
 
         client.initialize(admin);

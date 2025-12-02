@@ -19,8 +19,9 @@ fn messenger_init() {
     env.mock_all_auths();
 
     let admin = Address::generate(&env);
-    #[allow(deprecated)]
-    let native_token = env.register_stellar_asset_contract(admin.clone());
+    let native_token = env
+        .register_stellar_asset_contract_v2(admin.clone())
+        .address();
     let gas_oracle = Address::generate(&env);
 
     let init_config = MessengerConfig {

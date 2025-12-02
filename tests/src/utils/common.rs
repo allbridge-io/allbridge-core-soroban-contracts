@@ -140,6 +140,8 @@ fn type_name_of_event<T: FromVal<Env, Val> + ?Sized>() -> String {
 }
 
 pub fn get_latest_event<T: FromVal<Env, Val>>(env: &Env) -> Option<T> {
+    dbg!(env.events().all().iter().count());
+
     env.events()
         .all()
         .iter()
@@ -155,6 +157,15 @@ pub fn get_latest_event<T: FromVal<Env, Val>>(env: &Env) -> Option<T> {
                 .ok()
                 .flatten()
         })
+}
+
+pub fn get_latest_event_unchecked<T: FromVal<Env, Val>>(env: &Env) -> T {
+    let maybe_event = get_latest_event(env);
+
+    maybe_event.expect(&format!(
+        "Latest event of type {} not found",
+        type_name_of_event::<T>()
+    ))
 }
 
 pub fn assert_rel_eq(a: u128, b: u128, d: u128) {

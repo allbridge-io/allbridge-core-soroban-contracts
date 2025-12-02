@@ -25,8 +25,7 @@ impl Bridge {
         gas_oracle: &Address,
         native_token: Token,
     ) -> Bridge {
-        #[allow(deprecated)]
-        let id = env.register_contract_wasm(None, bridge::WASM);
+        let id = env.register(bridge::WASM, ());
         let client = bridge::Client::new(env, &id);
         let env = id.env().clone();
 

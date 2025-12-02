@@ -24,8 +24,7 @@ impl Pool {
         balance_ratio_min_bp: u128,
         admin_fee: u128,
     ) -> Pool {
-        #[allow(deprecated)]
-        let id = env.register_contract_wasm(None, pool::WASM);
+        let id = env.register(pool::WASM, ());
         let client = pool::Client::new(env, &id);
 
         unwrap_call_result(

@@ -1,4 +1,4 @@
-use soroban_sdk::{contracttype, Address};
+use soroban_sdk::{contractevent, contracttype, Address};
 
 use proc_macros::Event;
 
@@ -22,8 +22,8 @@ pub struct SwappedToVUsd {
     pub fee: u128,
 }
 
-#[derive(Event)]
-#[contracttype]
+#[contractevent(topics = ["Deposit"])]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Deposit {
     pub user: Address,
     pub amount: u128,
@@ -42,4 +42,3 @@ pub struct RewardsClaimed {
     pub user: Address,
     pub amount: u128,
 }
-

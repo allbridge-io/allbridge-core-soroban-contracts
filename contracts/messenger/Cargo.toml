@@ -14,7 +14,7 @@ proc_macros = { workspace = true }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
-hex = "0.4.3"
+hex = { workspace = true }
 
 [lints.clippy]
 redundant_clone = "warn"

@@ -69,8 +69,7 @@ pub struct Messenger {
 
 impl Messenger {
     pub fn create(env: &Env, config: MessengerConfig) -> Messenger {
-        #[allow(deprecated)]
-        let id = env.register_contract_wasm(None, messenger::WASM);
+        let id = env.register(messenger::WASM, ());
         let client = messenger::Client::new(env, &id);
 
         client.initialize(

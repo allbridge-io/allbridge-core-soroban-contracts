@@ -1,8 +1,8 @@
 use crate::{
     contracts::pool::{Deposit, Withdraw},
     utils::{
-        assert_rel_eq, float_to_uint_sp, format_diff, get_latest_event, BridgeEnv, BridgeEnvConfig,
-        Pool,
+        assert_rel_eq, float_to_uint_sp, format_diff, get_latest_event_unchecked, BridgeEnv,
+        BridgeEnvConfig, Pool,
     },
 };
 
@@ -31,11 +31,10 @@ fn deposit() {
         yaro_token.float_to_uint(deposit_amount)
     );
 
-    let deposit_event = get_latest_event::<Deposit>(&env);
+    let deposit_event = get_latest_event_unchecked::<Deposit>(&env);
 
-    assert!(deposit_event.is_some());
     assert_eq!(
-        deposit_event.unwrap(),
+        deposit_event,
         Deposit {
             user: alice.as_address(),
             amount: float_to_uint_sp(deposit_amount)
@@ -66,11 +65,10 @@ fn withdraw() {
         yaro_token.float_to_uint(withdraw_amount)
     );
 
-    let withdraw_event = get_latest_event::<Withdraw>(&env);
+    let withdraw_event = get_latest_event_unchecked::<Withdraw>(&env);
 
-    assert!(withdraw_event.is_some());
     assert_eq!(
-        withdraw_event.unwrap(),
+        withdraw_event,
         Withdraw {
             user: alice.as_address(),
             amount: float_to_uint_sp(withdraw_amount)

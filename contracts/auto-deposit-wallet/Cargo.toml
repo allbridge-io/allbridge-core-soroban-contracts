@@ -14,7 +14,6 @@ bridge_storage = { workspace = true }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
-hex = "0.4.3"
 arrayref = { workspace = true }
 
 [lints.clippy]
