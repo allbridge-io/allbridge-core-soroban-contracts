@@ -139,14 +139,13 @@ fn type_name_of_event<T: FromVal<Env, Val> + ?Sized>() -> String {
         .collect()
 }
 
-pub fn get_latest_event<T: FromVal<Env, Val>>(env: &Env) -> Option<T> {
-    dbg!(env.events().all().iter().count());
-
+pub fn get_latest_event_deprecated<T: FromVal<Env, Val>>(env: &Env) -> Option<T> {
     env.events()
         .all()
         .iter()
         .rev()
         .find_map(|(_, topic, event_data)| {
+            dbg!(&topic, &event_data);
             Symbol::try_from_val(env, &topic.last().unwrap())
                 .map(|symbol| {
                     symbol
@@ -159,8 +158,8 @@ pub fn get_latest_event<T: FromVal<Env, Val>>(env: &Env) -> Option<T> {
         })
 }
 
-pub fn get_latest_event_unchecked<T: FromVal<Env, Val>>(env: &Env) -> T {
-    let maybe_event = get_latest_event(env);
+pub fn get_latest_event_unchecked_deprecated<T: FromVal<Env, Val>>(env: &Env) -> T {
+    let maybe_event = get_latest_event_deprecated(env);
 
     maybe_event.expect(&format!(
         "Latest event of type {} not found",

@@ -81,7 +81,7 @@ build-auto-deposit-wallet:
 build-auto-deposit: build-auto-deposit-factory
 
 test: all
-	cargo test
+	CARGO_INCREMENTAL=0 cargo test
 
 build-gas-oracle:
 	 cargo build --target wasm32-unknown-unknown --profile $(PROFILE) --package gas-oracle

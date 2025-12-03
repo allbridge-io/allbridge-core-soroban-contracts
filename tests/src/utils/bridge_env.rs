@@ -17,7 +17,7 @@ use crate::{
     },
     utils::{
         assert_rel_eq, consts::BP, contract_id, desoroban_result, float_to_uint, float_to_uint_sp,
-        get_latest_event_unchecked, sign_message, unwrap_call_result, MessengerConfig,
+        get_latest_event_unchecked_deprecated, sign_message, unwrap_call_result, MessengerConfig,
     },
 };
 
@@ -374,6 +374,7 @@ impl BridgeEnv {
             )),
         );
 
+        let swapped_event = get_latest_event_unchecked_deprecated::<Swapped>(&self.env);
         let snapshot_after_swap: BalancesSnapshot = BalancesSnapshot::take(self);
         snapshot_before_swap.print_change_with(&snapshot_after_swap, Some("Swap diff"));
 
@@ -385,8 +386,6 @@ impl BridgeEnv {
         let sender_send_token_balance_key = format!("{sender_tag}_{send_token_tag}_balance");
         let recipient_receive_token_balance_key =
             format!("{recipient_tag}_{receive_token_tag}_balance");
-
-        let swapped_event = get_latest_event_unchecked::<Swapped>(&self.env);
 
         let send_pool_before = snapshot_before_swap.get_pool_info_by_tag(send_token_tag);
         let send_pool_after = snapshot_after_swap.get_pool_info_by_tag(send_token_tag);
@@ -535,6 +534,8 @@ impl BridgeEnv {
             &self.goerli_token,
             &nonce,
         );
+        let receive_fee = get_latest_event_unchecked_deprecated::<ReceiveFee>(&self.env);
+        let tokens_sent_event = get_latest_event_unchecked_deprecated::<TokensSent>(&self.env);
 
         let snapshot_after_swap = BalancesSnapshot::take(self);
         snapshot_before_swap.print_change_with(&snapshot_after_swap, Some("SwapAndBridge diff"));
@@ -560,9 +561,6 @@ impl BridgeEnv {
         let user_token_balance_key = format!("{user_tag}_{token_tag}_balance");
         let user_native_balance_key = format!("{user_tag}_native_balance");
         let bridge_token_balance_key = format!("bridge_{token_tag}_balance");
-
-        let receive_fee = get_latest_event_unchecked::<ReceiveFee>(&self.env);
-        let tokens_sent_event = get_latest_event_unchecked::<TokensSent>(&self.env);
 
         if let Some(expected_pool_diff) = expected_pool_diff {
             let (expected_v_usd, expected_token_balance_diff) = expected_pool_diff.get_uint();
@@ -638,6 +636,8 @@ impl BridgeEnv {
             receive_amount_min,
             &Some(extra_gas),
         );
+        let tokens_received_event =
+            get_latest_event_unchecked_deprecated::<TokensReceived>(&self.env);
 
         let snapshot_after_swap = BalancesSnapshot::take(self);
         snapshot_before_swap.print_change_with(&snapshot_after_swap, Some("ReceiveTokens diff"));
@@ -655,7 +655,6 @@ impl BridgeEnv {
         let receive_amount_min_sp = float_to_uint_sp(amount - receive_amount_threshold);
         let receive_amount_threshold_sp = float_to_uint_sp(receive_amount_threshold);
         let extra_gas = float_to_uint(extra_gas, 7);
-        let tokens_received_event = get_latest_event_unchecked::<TokensReceived>(&self.env);
 
         let result_amount_sp = self
             .get_token_by_tag(token_tag)
