@@ -173,17 +173,17 @@ impl AutoDepositFactoryContract {
     }
 
     pub fn deposit_wallet_address(
-        env: &Env,
+        env: Env,
         recipient_chain_id: u32,
-        recipient: &BytesN<32>,
-        recipient_token: &BytesN<32>,
+        recipient: BytesN<32>,
+        recipient_token: BytesN<32>,
         min_deposit_amount: u128,
     ) -> Result<Address, Error> {
         deposit_wallet_address(
-            env,
+            &env,
             recipient_chain_id,
-            recipient,
-            recipient_token,
+            &recipient,
+            &recipient_token,
             min_deposit_amount,
         )
     }

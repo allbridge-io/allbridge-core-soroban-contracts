@@ -1,9 +1,9 @@
 use bridge_storage::Admin;
-use shared::{require, soroban_data::SimpleSorobanData, Error};
+use shared::{require, soroban_data::SimpleSorobanData, utils::is_bytesn32_empty, Error};
 use soroban_sdk::{BytesN, Env};
 
 use crate::{
-    events::AutoDepositWalletDeployedEvent, methods::internal::get_deposit_wallet_salt,
+    events::AutoDepositWalletDeployed, methods::internal::get_deposit_wallet_salt,
     storage::config::Config,
 };
 
@@ -14,8 +14,8 @@ pub fn deploy_deposit_wallet(
     recipient_token: BytesN<32>,
     min_deposit_amount: u128,
 ) -> Result<(), Error> {
-    require!(recipient.is_empty(), Error::EmptyRecipient);
-    require!(recipient_token.is_empty(), Error::InvalidArg);
+    require!(!is_bytesn32_empty(&recipient), Error::EmptyRecipient);
+    require!(!is_bytesn32_empty(&recipient_token), Error::InvalidArg);
     let config = Config::get(&env)?;
     let admin = Admin::get(&env)?;
 
@@ -44,7 +44,7 @@ pub fn deploy_deposit_wallet(
             ),
         );
 
-    AutoDepositWalletDeployedEvent { address: deployed }.publish(&env);
+    AutoDepositWalletDeployed { address: deployed }.publish(&env);
 
     Ok(())
 }

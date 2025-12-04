@@ -1,5 +1,5 @@
 use bridge_storage::{Admin, GasOracleAddress, NativeToken};
-use shared::{require, soroban_data::SimpleSorobanData, Error};
+use shared::{soroban_data::SimpleSorobanData, Error};
 use soroban_sdk::{Address, BytesN, Env};
 
 use crate::storage::config::Config;
@@ -14,8 +14,6 @@ pub fn constructor(
     send_tx_cost: u128,
     wallet_wasm_hash: BytesN<32>,
 ) -> Result<(), Error> {
-    require!(!Config::has(&env), Error::Initialized);
-
     let config = Config::new(&env, chain_id, bridge, send_tx_cost, wallet_wasm_hash);
 
     Admin(admin).save(&env);

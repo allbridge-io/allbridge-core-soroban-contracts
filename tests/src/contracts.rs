@@ -13,3 +13,15 @@ pub mod pool {
 pub mod bridge {
     soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/bridge.wasm");
 }
+
+pub mod auto_deposit_factory {
+    soroban_sdk::contractimport!(
+        file = "../target/wasm32-unknown-unknown/release/auto_deposit_factory.wasm"
+    );
+}
+
+pub mod auto_deposit_wallet {
+    soroban_sdk::contractimport!(
+        file = "../target/wasm32-unknown-unknown/release/auto_deposit_wallet.wasm"
+    );
+}

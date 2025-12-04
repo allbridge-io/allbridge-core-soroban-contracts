@@ -92,24 +92,21 @@ impl Pool {
     }
 
     pub fn claim_rewards(&self, user: &User) -> CallResult {
-        self.client
-            .try_claim_rewards(&user.as_address())
-            .map(Result::unwrap)
-            .map_err(Result::unwrap)
+        desoroban_result(self.client.try_claim_rewards(&user.as_address()))
     }
 
     pub fn withdraw(&self, user: &User, withdraw_amount: f64) -> CallResult {
-        self.client
-            .try_withdraw(&user.as_address(), &float_to_uint_sp(withdraw_amount))
-            .map(Result::unwrap)
-            .map_err(Result::unwrap)
+        desoroban_result(
+            self.client
+                .try_withdraw(&user.as_address(), &float_to_uint_sp(withdraw_amount)),
+        )
     }
 
     pub fn withdraw_raw(&self, user: &User, withdraw_amount: u128) -> CallResult {
-        self.client
-            .try_withdraw(&user.as_address(), &withdraw_amount)
-            .map(Result::unwrap)
-            .map_err(Result::unwrap)
+        desoroban_result(
+            self.client
+                .try_withdraw(&user.as_address(), &withdraw_amount),
+        )
     }
 
     pub fn float_to_int(&self, amount: f64) -> u128 {
@@ -121,10 +118,10 @@ impl Pool {
     }
 
     pub fn deposit_by_id(&self, user: &Address, deposit_amount: f64) -> CallResult {
-        self.client
-            .try_deposit(user, &self.float_to_int(deposit_amount))
-            .map(Result::unwrap)
-            .map_err(Result::unwrap)
+        desoroban_result(
+            self.client
+                .try_deposit(user, &self.float_to_int(deposit_amount)),
+        )
     }
 
     pub fn deposit(&self, user: &User, deposit_amount: f64) -> CallResult {
@@ -146,9 +143,6 @@ impl Pool {
     }
 
     pub fn upgrade(&self, new_hash: &BytesN<32>) -> CallResult {
-        self.client
-            .try_upgrade(new_hash)
-            .map(Result::unwrap)
-            .map_err(Result::unwrap)
+        desoroban_result(self.client.try_upgrade(new_hash))
     }
 }

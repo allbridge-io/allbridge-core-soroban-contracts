@@ -2,7 +2,7 @@ use shared::{require, Error};
 use soroban_sdk::{Address, Env, Vec};
 
 use crate::{
-    events::DepositAddressCreationEvent,
+    events::DepositAddressCreation,
     methods::{internal::convert_fee_in_tokens_to_native_token, view::get_transaction_cost},
 };
 
@@ -16,7 +16,6 @@ pub fn create_deposit_wallet(
     chain_ids: Vec<u32>,
 ) -> Result<(), Error> {
     sender.require_auth();
-    require!(recipient.exists(), Error::AddressDoesntExists);
     require!(min_deposit_amount > 0, Error::ADMinDepositAmountIsZero);
 
     let fee =
@@ -24,12 +23,12 @@ pub fn create_deposit_wallet(
 
     let mut required_fee = 0;
     for id in &chain_ids {
-        required_fee += get_transaction_cost(&env, id)?;
+        required_fee += get_transaction_cost(&env, id).map_err(|_| Error::InvalidChainId)?;
     }
 
     require!(fee >= required_fee, Error::ADNotEnoughFee);
 
-    DepositAddressCreationEvent {
+    DepositAddressCreation {
         recipient,
         recipient_token,
         min_deposit_amount,

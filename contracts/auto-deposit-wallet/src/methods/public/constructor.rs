@@ -1,5 +1,5 @@
 use bridge_storage::Admin;
-use shared::{require, soroban_data::SimpleSorobanData, Error};
+use shared::{soroban_data::SimpleSorobanData, Error};
 use soroban_sdk::{Address, BytesN, Env};
 
 use crate::storage::config::Config;
@@ -14,7 +14,7 @@ pub fn constructor(
     recipient_token: BytesN<32>,
     min_deposit_amount: u128,
 ) -> Result<(), Error> {
-    require!(!Config::has(&env), Error::Initialized);
+    assert!(min_deposit_amount > 0);
 
     let config = Config::new(
         &env,

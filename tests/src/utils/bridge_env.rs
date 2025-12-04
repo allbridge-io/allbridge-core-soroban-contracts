@@ -16,8 +16,11 @@ use crate::{
         pool::Pool as PoolInfo,
     },
     utils::{
-        assert_rel_eq, consts::BP, contract_id, desoroban_result, float_to_uint, float_to_uint_sp,
-        get_latest_event_unchecked_deprecated, sign_message, unwrap_call_result, MessengerConfig,
+        assert_rel_eq,
+        auto_deposit::{AutoDepositFactory, AutoDepositWallet},
+        consts::BP,
+        contract_id, desoroban_result, float_to_uint, float_to_uint_sp, get_latest_event_unchecked,
+        sign_message, unwrap_call_result, MessengerConfig,
     },
 };
 
@@ -39,6 +42,7 @@ pub struct BridgeEnv {
     pub bridge: Bridge,
     pub gas_oracle: GasOracle,
     pub messenger: Messenger,
+    pub auto_deposit_factory: AutoDepositFactory,
     pub native_token: Token,
 
     pub primary_validator_wallet: LocalWallet,
@@ -189,6 +193,25 @@ impl BridgeEnv {
 
         bridge.client.set_gas_usage(&GOERLI_CHAIN_ID, &300_000_000);
 
+        let auto_deposit_wallet_hash = AutoDepositWallet::upload_wallet_contract(&env);
+        let auto_deposit_factory = AutoDepositFactory::create(
+            &env,
+            admin.clone(),
+            CHAIN_ID,
+            native_token.id.clone(),
+            gas_oracle.id.clone(),
+            bridge.id.clone(),
+            3_000,
+            auto_deposit_wallet_hash,
+        );
+        for token in [yusd_token.id.clone(), yaro_token.id.clone()] {
+            unwrap_call_result(&env, auto_deposit_factory.register_token(token));
+        }
+
+        auto_deposit_factory
+            .client
+            .set_gas_usage(&GOERLI_CHAIN_ID, &100_000);
+
         BridgeEnv {
             env,
 
@@ -196,6 +219,7 @@ impl BridgeEnv {
             bridge,
             gas_oracle,
             messenger,
+            auto_deposit_factory,
             native_token,
 
             primary_validator_wallet,
@@ -374,7 +398,7 @@ impl BridgeEnv {
             )),
         );
 
-        let swapped_event = get_latest_event_unchecked_deprecated::<Swapped>(&self.env);
+        let swapped_event = get_latest_event_unchecked::<Swapped>(&self.env);
         let snapshot_after_swap: BalancesSnapshot = BalancesSnapshot::take(self);
         snapshot_before_swap.print_change_with(&snapshot_after_swap, Some("Swap diff"));
 
@@ -534,8 +558,8 @@ impl BridgeEnv {
             &self.goerli_token,
             &nonce,
         );
-        let receive_fee = get_latest_event_unchecked_deprecated::<ReceiveFee>(&self.env);
-        let tokens_sent_event = get_latest_event_unchecked_deprecated::<TokensSent>(&self.env);
+        let receive_fee = get_latest_event_unchecked::<ReceiveFee>(&self.env);
+        let tokens_sent_event = get_latest_event_unchecked::<TokensSent>(&self.env);
 
         let snapshot_after_swap = BalancesSnapshot::take(self);
         snapshot_before_swap.print_change_with(&snapshot_after_swap, Some("SwapAndBridge diff"));
@@ -636,8 +660,7 @@ impl BridgeEnv {
             receive_amount_min,
             &Some(extra_gas),
         );
-        let tokens_received_event =
-            get_latest_event_unchecked_deprecated::<TokensReceived>(&self.env);
+        let tokens_received_event = get_latest_event_unchecked::<TokensReceived>(&self.env);
 
         let snapshot_after_swap = BalancesSnapshot::take(self);
         snapshot_before_swap.print_change_with(&snapshot_after_swap, Some("ReceiveTokens diff"));
