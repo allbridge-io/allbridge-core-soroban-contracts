@@ -1,6 +1,8 @@
-use soroban_sdk::{testutils::BytesN as _, Bytes, BytesN, U256};
+use soroban_sdk::{testutils::BytesN as _, BytesN};
 
-use crate::utils::{auto_deposit::AutoDepositWallet, consts::GOERLI_CHAIN_ID, BridgeEnv};
+use crate::utils::{
+    auto_deposit::AutoDepositWallet, consts::GOERLI_CHAIN_ID, gen_nonce, BridgeEnv,
+};
 
 // #[test]
 // fn swap_and_bridge() {
@@ -22,10 +24,7 @@ use crate::utils::{auto_deposit::AutoDepositWallet, consts::GOERLI_CHAIN_ID, Bri
 //     yusd_token.transfer(&alice.as_address(), &wallet_address, 25.0);
 //     let wallet = AutoDepositWallet::new(env, wallet_address);
 //
-//     let nonce = U256::from_be_bytes(
-//         env,
-//         &Bytes::from_slice(env, &BytesN::<32>::random(env).to_array()),
-//     );
+//     let nonce = gen_nonce(env);
 //
 //     wallet.swap_and_bridge(yusd_token.id.clone(), nonce);
 // }
@@ -52,10 +51,7 @@ fn factory_swap_and_bridge_no_auth() {
     let amount = yusd_token.balance_of(&wallet_address);
     let wallet = AutoDepositWallet::new(env, wallet_address);
 
-    let nonce = U256::from_be_bytes(
-        env,
-        &Bytes::from_slice(env, &BytesN::<32>::random(env).to_array()),
-    );
+    let nonce = gen_nonce(env);
 
     env.mock_auths(&[]);
     wallet.factory_swap_and_bridge(yusd_token.id.clone(), amount, nonce);

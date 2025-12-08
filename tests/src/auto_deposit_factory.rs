@@ -1,8 +1,8 @@
-use soroban_sdk::{testutils::BytesN as _, Bytes, BytesN, U256};
+use soroban_sdk::{testutils::BytesN as _, BytesN};
 
 use crate::utils::{
-    auto_deposit::DepositAddressCreation, consts::GOERLI_CHAIN_ID, get_latest_event_unchecked,
-    BridgeEnv,
+    auto_deposit::DepositAddressCreation, consts::GOERLI_CHAIN_ID, gen_nonce,
+    get_latest_event_unchecked, BridgeEnv,
 };
 
 #[test]
@@ -191,10 +191,7 @@ fn swap_and_bridge() {
     );
 
     yusd_token.transfer(&alice.as_address(), &wallet_address, 10.0);
-    let nonce = U256::from_be_bytes(
-        env,
-        &Bytes::from_slice(env, &BytesN::<32>::random(env).to_array()),
-    );
+    let nonce = gen_nonce(env);
 
     auto_deposit_factory.swap_and_bridge(wallet_address, yusd_token.id.clone(), nonce);
 }
@@ -219,10 +216,7 @@ fn swap_and_bridge_amount_too_low() {
     );
 
     yusd_token.transfer(&alice.as_address(), &wallet_address, 0.05);
-    let nonce = U256::from_be_bytes(
-        env,
-        &Bytes::from_slice(env, &BytesN::<32>::random(env).to_array()),
-    );
+    let nonce = gen_nonce(env);
 
     auto_deposit_factory.swap_and_bridge(wallet_address, yusd_token.id.clone(), nonce);
 }
