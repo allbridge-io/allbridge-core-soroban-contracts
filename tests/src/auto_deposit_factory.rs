@@ -1,9 +1,8 @@
-use soroban_sdk::{testutils::BytesN as _, BytesN};
+use soroban_sdk::{testutils::BytesN as _, Bytes, BytesN, U256};
 
 use crate::utils::{
-    auto_deposit::{AutoDepositWalletDeployed, DepositAddressCreation},
-    consts::GOERLI_CHAIN_ID,
-    get_latest_event_unchecked, BridgeEnv,
+    auto_deposit::DepositAddressCreation, consts::GOERLI_CHAIN_ID, get_latest_event_unchecked,
+    BridgeEnv,
 };
 
 #[test]
@@ -107,13 +106,12 @@ fn deploy_deposit_wallet() {
 
     let recipient = BytesN::<32>::random(env);
     let recipient_token = BytesN::<32>::random(env);
-    auto_deposit_factory.deploy_deposit_wallet(
+    let deployed_address = auto_deposit_factory.deploy_deposit_wallet(
         GOERLI_CHAIN_ID,
         recipient.clone(),
         recipient_token.clone(),
         10,
     );
-    let deployed_address = get_latest_event_unchecked::<AutoDepositWalletDeployed>(env).address;
     let expected_address = auto_deposit_factory.client.deposit_wallet_address(
         &GOERLI_CHAIN_ID,
         &recipient,
@@ -172,4 +170,59 @@ fn deploy_deposit_wallet_min_deposit_is_zero() {
         BytesN::<32>::random(env).clone(),
         0,
     );
+}
+
+#[test]
+fn swap_and_bridge() {
+    let BridgeEnv {
+        ref auto_deposit_factory,
+        ref env,
+        ref yusd_token,
+        ref alice,
+        goerli_token,
+        ..
+    } = BridgeEnv::default();
+
+    let wallet_address = auto_deposit_factory.deploy_deposit_wallet(
+        GOERLI_CHAIN_ID,
+        BytesN::<32>::random(env).clone(),
+        goerli_token,
+        10,
+    );
+
+    yusd_token.transfer(&alice.as_address(), &wallet_address, 10.0);
+    let nonce = U256::from_be_bytes(
+        env,
+        &Bytes::from_slice(env, &BytesN::<32>::random(env).to_array()),
+    );
+
+    auto_deposit_factory.swap_and_bridge(wallet_address, yusd_token.id.clone(), nonce);
+}
+
+#[test]
+#[should_panic = "Contract(ADAmountTooLow)"]
+fn swap_and_bridge_amount_too_low() {
+    let BridgeEnv {
+        ref auto_deposit_factory,
+        ref env,
+        ref yusd_token,
+        ref alice,
+        goerli_token,
+        ..
+    } = BridgeEnv::default();
+
+    let wallet_address = auto_deposit_factory.deploy_deposit_wallet(
+        GOERLI_CHAIN_ID,
+        BytesN::<32>::random(env).clone(),
+        goerli_token,
+        10,
+    );
+
+    yusd_token.transfer(&alice.as_address(), &wallet_address, 0.05);
+    let nonce = U256::from_be_bytes(
+        env,
+        &Bytes::from_slice(env, &BytesN::<32>::random(env).to_array()),
+    );
+
+    auto_deposit_factory.swap_and_bridge(wallet_address, yusd_token.id.clone(), nonce);
 }

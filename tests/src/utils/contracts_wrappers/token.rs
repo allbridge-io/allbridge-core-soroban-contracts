@@ -50,6 +50,12 @@ impl Token {
         self.airdrop(&user.as_address());
     }
 
+    pub fn transfer(&self, from: &Address, to: &Address, amount: f64) {
+        let decimals = self.client.decimals();
+        let amount = float_to_uint(amount, decimals) as i128;
+        self.client.transfer(from, to, &amount);
+    }
+
     pub fn amount_to_system_precision(&self, amount: u128) -> u128 {
         let decimals = self.client.decimals();
 

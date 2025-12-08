@@ -6,16 +6,14 @@ use crate::{methods::internal, storage::config::Config};
 pub fn swap_and_bridge(env: Env, token_address: Address, nonce: U256) -> Result<(), Error> {
     let config = Config::get(&env)?;
     let token_client = token::Client::new(&env, &token_address);
-    let amount_source = token_client.balance(&env.current_contract_address());
+    let token_amount = safe_cast::<_, u128>(token_client.balance(&env.current_contract_address()))?;
 
     let min_amount = match config.min_deposit_token_amount.get(token_address.clone()) {
         Some(v) => v,
         None => internal::register_token(&env, &token_address)?,
     };
-    let min_amount = safe_cast::<_, i128>(min_amount)?;
 
-    let amount = 0;
-    require!(amount_source >= min_amount, Error::ADAmountTooLow);
+    require!(token_amount >= min_amount, Error::ADAmountTooLow);
 
-    internal::swap_and_bridge(&env, &config, &token_address, amount, &nonce)
+    internal::swap_and_bridge(&env, &config, &token_address, token_amount, &nonce)
 }

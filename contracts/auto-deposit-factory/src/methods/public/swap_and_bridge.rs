@@ -13,10 +13,11 @@ pub fn swap_and_bridge(
     let wallet_client = wallet::Client::new(&env, &wallet);
     let token_client = token::Client::new(&env, &token);
 
-    if !wallet_client.is_token_registered(&token) {
-        wallet_client.min_deposit_token_amount(&token);
-    }
-    let min_amount = wallet_client.min_deposit_token_amount(&token);
+    let min_amount = wallet_client
+        .try_min_deposit_token_amount(&token)
+        .ok()
+        .and_then(|inner| inner.ok())
+        .unwrap_or_else(|| wallet_client.register_token(&token));
 
     let token_amount = token_client.balance(&wallet);
     let token_amount_u128 = safe_cast::<_, u128>(token_amount)?;
@@ -24,11 +25,10 @@ pub fn swap_and_bridge(
     require!(token_amount_u128 >= min_amount, Error::ADAmountTooLow);
 
     let send_tx_fee_token_amount = get_send_tx_fee_token_amount(&env, token.clone())?;
-    token_client.transfer_from(
-        &env.current_contract_address(),
+    token_client.transfer(
         &wallet,
         &env.current_contract_address(),
-        &token_amount,
+        &safe_cast(send_tx_fee_token_amount)?,
     );
     wallet_client.factory_swap_and_bridge(
         &token,

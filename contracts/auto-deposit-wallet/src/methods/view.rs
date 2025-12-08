@@ -4,9 +4,7 @@ use soroban_sdk::{Address, Env};
 use crate::storage::config::Config;
 
 pub fn is_token_registered(env: Env, token: Address) -> Result<bool, Error> {
-    let config = Config::get(&env)?;
-
-    Ok(config.min_deposit_token_amount.get(token).is_some())
+    Ok(min_deposit_token_amount(env, token).is_ok())
 }
 
 pub fn min_deposit_token_amount(env: Env, token: Address) -> Result<u128, Error> {

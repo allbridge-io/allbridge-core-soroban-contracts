@@ -87,7 +87,7 @@ impl AutoDepositFactory {
         recipient: BytesN<32>,
         recipient_token: BytesN<32>,
         min_deposit_amount: u128,
-    ) {
+    ) -> Address {
         unwrap_call_result(
             self.env(),
             desoroban_result(self.client.try_deploy_deposit_wallet(
@@ -97,6 +97,7 @@ impl AutoDepositFactory {
                 &min_deposit_amount,
             )),
         );
+        crate::utils::get_latest_event_unchecked::<AutoDepositWalletDeployed>(self.env()).address
     }
 
     pub fn swap_and_bridge(&self, wallet_address: Address, token_address: Address, nonce: U256) {

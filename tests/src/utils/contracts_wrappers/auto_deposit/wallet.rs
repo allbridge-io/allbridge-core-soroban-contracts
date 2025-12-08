@@ -16,6 +16,13 @@ impl AutoDepositWallet {
             .upload_contract_wasm(auto_deposit_wallet::WASM)
     }
 
+    pub fn new(env: &Env, id: Address) -> Self {
+        Self {
+            client: auto_deposit_wallet::Client::new(env, &id),
+            id,
+        }
+    }
+
     fn env(&self) -> &Env {
         &self.client.env
     }
@@ -38,8 +45,11 @@ impl AutoDepositWallet {
         )
     }
 
-    pub fn register_token(&self, token: Address) -> CallResult {
-        desoroban_result(self.client.try_register_token(&token))
+    pub fn register_token(&self, token: Address) {
+        unwrap_call_result(
+            self.env(),
+            desoroban_result(self.client.try_register_token(&token)),
+        );
     }
 
     pub fn register_tokens(&self, tokens: Vec<Address>) -> CallResult {
