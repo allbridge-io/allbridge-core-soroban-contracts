@@ -1,5 +1,5 @@
 use shared::Error;
-use soroban_sdk::{Address, Env, U256};
+use soroban_sdk::{token, vec, Address, Env, IntoVal, U256};
 
 use crate::{bridge, gas_oracle, messenger, storage::config::Config};
 
@@ -12,6 +12,16 @@ pub fn swap_and_bridge(
 ) -> Result<(), Error> {
     let bridge_client = bridge::Client::new(env, &config.bridge);
     let cost_in_tokens = get_bridging_cost_in_tokens(env, config, token, &bridge_client)?;
+
+    let token_client = token::Client::new(&env, &token);
+
+    env.current_contract_address().require_auth_for_args(vec![
+        env,
+        "transfer".into_val(env),
+        env.current_contract_address().to_val(),
+        config.bridge.to_val(),
+        (cost_in_tokens as i128).into_val(env),
+    ]);
 
     bridge_client.swap_and_bridge(
         &env.current_contract_address(),

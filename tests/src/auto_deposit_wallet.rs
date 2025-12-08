@@ -4,30 +4,33 @@ use crate::utils::{
     auto_deposit::AutoDepositWallet, consts::GOERLI_CHAIN_ID, gen_nonce, BridgeEnv,
 };
 
-// #[test]
-// fn swap_and_bridge() {
-//     let BridgeEnv {
-//         ref auto_deposit_factory,
-//         ref env,
-//         ref yusd_token,
-//         ref alice,
-//         goerli_token,
-//         ..
-//     } = BridgeEnv::default();
-//
-//     let wallet_address = auto_deposit_factory.deploy_deposit_wallet(
-//         GOERLI_CHAIN_ID,
-//         BytesN::<32>::random(env).clone(),
-//         goerli_token,
-//         10,
-//     );
-//     yusd_token.transfer(&alice.as_address(), &wallet_address, 25.0);
-//     let wallet = AutoDepositWallet::new(env, wallet_address);
-//
-//     let nonce = gen_nonce(env);
-//
-//     wallet.swap_and_bridge(yusd_token.id.clone(), nonce);
-// }
+#[test]
+fn swap_and_bridge() {
+    let BridgeEnv {
+        ref auto_deposit_factory,
+        ref env,
+        ref yusd_token,
+        ref alice,
+        ref bridge,
+        goerli_token,
+        ..
+    } = BridgeEnv::default();
+
+    let wallet_address = auto_deposit_factory.deploy_deposit_wallet(
+        GOERLI_CHAIN_ID,
+        BytesN::<32>::random(env).clone(),
+        goerli_token,
+        10,
+    );
+    yusd_token.transfer(&alice.as_address(), &wallet_address, 25.0);
+    // yusd_token.transfer(&wallet_address, &bridge.id, 1.0);
+
+    let wallet = AutoDepositWallet::new(env, wallet_address);
+
+    let nonce = gen_nonce(env);
+
+    wallet.swap_and_bridge(yusd_token.id.clone(), nonce);
+}
 
 #[test]
 #[should_panic = "Context(InvalidAction)"]
