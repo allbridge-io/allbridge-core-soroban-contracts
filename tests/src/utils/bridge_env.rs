@@ -201,7 +201,7 @@ impl BridgeEnv {
             native_token.id.clone(),
             gas_oracle.id.clone(),
             bridge.id.clone(),
-            3_000,
+            float_to_uint(1.0, 18),
             auto_deposit_wallet_hash,
         );
         for token in [yusd_token.id.clone(), yaro_token.id.clone()] {

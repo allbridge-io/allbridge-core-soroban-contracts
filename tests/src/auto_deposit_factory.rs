@@ -1,5 +1,6 @@
 use soroban_sdk::{testutils::BytesN as _, BytesN};
 
+use crate::contracts::bridge::{ReceiveFee, TokensSent};
 use crate::utils::{
     auto_deposit::DepositAddressCreation, consts::GOERLI_CHAIN_ID, gen_nonce,
     get_latest_event_unchecked, BridgeEnv,
@@ -15,6 +16,7 @@ fn create_deposit_wallet() {
         ..
     } = BridgeEnv::default();
 
+    let alice_balance_before = yusd_token.balance_of(&alice.as_address());
     auto_deposit_factory.create_deposit_wallet(
         alice.as_address(),
         alice.as_address(),
@@ -24,6 +26,9 @@ fn create_deposit_wallet() {
         vec![GOERLI_CHAIN_ID],
     );
     let deposit_address_creation = get_latest_event_unchecked::<DepositAddressCreation>(env);
+    let alice_balance_after = yusd_token.balance_of(&alice.as_address());
+
+    assert_eq!(alice_balance_before - alice_balance_after, 10);
 
     assert_eq!(
         deposit_address_creation,
@@ -193,7 +198,16 @@ fn swap_and_bridge() {
     yusd_token.transfer(&alice.as_address(), &wallet_address, 10.0);
     let nonce = gen_nonce(env);
 
-    auto_deposit_factory.swap_and_bridge(wallet_address, yusd_token.id.clone(), nonce);
+    assert_eq!(yusd_token.balance_of(&auto_deposit_factory.id), 0);
+
+    auto_deposit_factory.swap_and_bridge(wallet_address.clone(), yusd_token.id.clone(), nonce);
+    get_latest_event_unchecked::<ReceiveFee>(env);
+    get_latest_event_unchecked::<TokensSent>(env);
+
+    let auto_deposit_fee = yusd_token.int_to_float(yusd_token.balance_of(&auto_deposit_factory.id));
+
+    assert_eq!(auto_deposit_fee, 2.0);
+    assert_eq!(yusd_token.balance_of(&wallet_address), 0);
 }
 
 #[test]

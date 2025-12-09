@@ -1,5 +1,5 @@
 use bridge_storage::*;
-use shared::Error;
+use shared::{utils::safe_cast, Error};
 use soroban_sdk::{token, Address, Env};
 
 pub fn withdraw(
@@ -14,7 +14,7 @@ pub fn withdraw(
     let token = token::Client::new(&env, &token_address);
 
     if amount > 0 {
-        token.transfer(&contract, &sender, &(amount as i128));
+        token.transfer(&contract, &sender, &safe_cast(amount)?);
     }
 
     Ok(())

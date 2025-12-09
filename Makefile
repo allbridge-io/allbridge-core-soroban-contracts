@@ -1,10 +1,8 @@
 .DEFAULT_GOAL := all
 
-PROFILE = release
-
 all: build-auto-deposit
 
-optimize-all: optimize-gas-oracle optimize-messenger optimize-pool optimize-bridge
+optimize-all: optimize-gas-oracle optimize-messenger optimize-pool optimize-bridge optimize-auto-deposit-factory optimize-auto-deposit-wallet
 
 ADDRESS_PATH = stellar-deploy-testnet
 
@@ -15,12 +13,12 @@ MESSENGER_ADDRESS_PATH = $(ADDRESS_PATH)/messenger
 MESSENGER_ADDRESS = $$(cat $(MESSENGER_ADDRESS_PATH))
 
 GAS_ORACLE_ADDRESS_PATH = $(ADDRESS_PATH)/gas_orace
-GAS_ORACLE_WASM_PATH = target/wasm32-unknown-unknown/release/gas_oracle.wasm
-GAS_ORACLE_WASM_PATH_OP = target/wasm32-unknown-unknown/release/gas_oracle.wasm
+GAS_ORACLE_WASM_PATH = target/wasm32v1-none/release/gas_oracle.wasm
+GAS_ORACLE_WASM_PATH_OP = target/wasm32v1-none/release/gas_oracle.wasm
 GAS_ORACLE_ADDRESS = $$(cat $(GAS_ORACLE_ADDRESS_PATH))
 
-POOL_WASM_PATH = target/wasm32-unknown-unknown/release/pool.wasm
-POOL_WASM_PATH_OP = target/wasm32-unknown-unknown/release/pool.wasm
+POOL_WASM_PATH = target/wasm32v1-none/release/pool.wasm
+POOL_WASM_PATH_OP = target/wasm32v1-none/release/pool.wasm
 POOL_YARO_ADDRESS_PATH = $(ADDRESS_PATH)/pool_yaro
 POOL_YARO_ADDRESS = $$(cat $(POOL_YARO_ADDRESS_PATH))
 
@@ -30,21 +28,23 @@ POOL_USDY_ADDRESS = $$(cat $(POOL_USDY_ADDRESS_PATH))
 POOL_USDC_ADDRESS_PATH = $(ADDRESS_PATH)/pool
 POOL_USDC_ADDRESS = $$(cat $(POOL_USDC_ADDRESS_PATH))
 
-MESSENGER_WASM_PATH = target/wasm32-unknown-unknown/release/messenger.wasm
-MESSENGER_WASM_PATH_OP = target/wasm32-unknown-unknown/release/messenger.wasm
+MESSENGER_WASM_PATH = target/wasm32v1-none/release/messenger.wasm
+MESSENGER_WASM_PATH_OP = target/wasm32v1-none/release/messenger.wasm
 MESSENGER_ADDRESS_PATH = $(ADDRESS_PATH)/messenger
 MESSENGER_ADDRESS = $$(cat $(MESSENGER_ADDRESS_PATH))
 
-BRIDGE_WASM_PATH = target/wasm32-unknown-unknown/release/bridge.wasm
-BRIDGE_WASM_PATH_OP = target/wasm32-unknown-unknown/release/bridge.wasm
+BRIDGE_WASM_PATH = target/wasm32v1-none/release/bridge.wasm
+BRIDGE_WASM_PATH_OP = target/wasm32v1-none/release/bridge.wasm
 BRIDGE_ADDRESS_PATH = $(ADDRESS_PATH)/bridge
 BRIDGE_ADDRESS = $$(cat $(BRIDGE_ADDRESS_PATH))
 
-AUTO_DEPOSIT_WALLET_WASM_PATH = target/wasm32-unknown-unknown/release/auto_deposit_wallet.wasm
-AUTO_DEPOSIT_WALLET_WASM_PATH_OP = target/wasm32-unknown-unknown/release/auto_deposit_wallet.wasm
+AUTO_DEPOSIT_WALLET_WASM_PATH = target/wasm32v1-none/release/auto_deposit_wallet.wasm
+AUTO_DEPOSIT_WALLET_WASM_PATH_OP = target/wasm32v1-none/release/auto_deposit_wallet.wasm
 
-AUTO_DEPOSIT_FACTORY_WASM_PATH = target/wasm32-unknown-unknown/release/auto_deposit_wallet.wasm
-AUTO_DEPOSIT_FACTORY_WASM_PATH_OP = target/wasm32-unknown-unknown/release/auto_deposit_wallet.wasm
+AUTO_DEPOSIT_FACTORY_ADDRESS_PATH = $(ADDRESS_PATH)/auto_deposit_factory
+AUTO_DEPOSIT_FACTORY_ADDRESS = $$(cat $(AUTO_DEPOSIT_FACTORY_ADDRESS_PATH))
+AUTO_DEPOSIT_FACTORY_WASM_PATH = target/wasm32v1-none/release/auto_deposit_factory.wasm
+AUTO_DEPOSIT_FACTORY_WASM_PATH_OP = target/wasm32v1-none/release/auto_deposit_factory.wasm
 
 ALICE = $$(stellar keys address alice)
 ADMIN_ALIAS = alice
@@ -72,28 +72,28 @@ POOL_ADDRESS=$(POOL_USDC_ADDRESS)
 
 NETWORK=testnet
 
-build-auto-deposit-factory: build-bridge build-auto-deposit-wallet
-	 cargo build --target wasm32-unknown-unknown --profile $(PROFILE) --package auto-deposit-factory
-
-build-auto-deposit-wallet:
-	 cargo build --target wasm32-unknown-unknown --profile $(PROFILE) --package auto-deposit-wallet
-
-build-auto-deposit: build-auto-deposit-factory
-
 test: all
 	CARGO_INCREMENTAL=0 cargo test
 
+build-auto-deposit-factory: build-bridge build-auto-deposit-wallet
+	 stellar contract build --profile release --package auto-deposit-factory
+
+build-auto-deposit-wallet:
+	 stellar contract build --profile release --package auto-deposit-wallet
+
+build-auto-deposit: build-auto-deposit-factory
+
 build-gas-oracle:
-	 cargo build --target wasm32-unknown-unknown --profile $(PROFILE) --package gas-oracle
+	stellar contract build --profile release --package gas-oracle
 
 build-messenger: build-gas-oracle
-	 cargo build --target wasm32-unknown-unknown --profile $(PROFILE) --package messenger
+	stellar contract build --profile release --package messenger
 
 build-pool:
-	cargo build --target wasm32-unknown-unknown --profile $(PROFILE) --package pool
+	stellar contract build --profile release --package pool
 
 build-bridge: build-messenger build-pool
-	cargo build --target wasm32-unknown-unknown --profile $(PROFILE) --package bridge
+	stellar contract build --profile release --package bridge
 
 optimize-gas-oracle:
 	stellar contract optimize --wasm $(GAS_ORACLE_WASM_PATH)
@@ -106,6 +106,12 @@ optimize-pool:
 
 optimize-bridge:
 	stellar contract optimize --wasm $(BRIDGE_WASM_PATH)
+
+optimize-auto-deposit-factory:
+	stellar contract optimize --wasm $(AUTO_DEPOSIT_FACTORY_WASM_PATH)
+
+optimize-auto-deposit-wallet:
+	stellar contract optimize --wasm $(AUTO_DEPOSIT_WALLET_WASM_PATH)
 
 deploy-gas-oracle:
 	stellar contract deploy \
@@ -910,6 +916,51 @@ generate-types-token:
 	--network $(NETWORK) \
 	--output-dir ./types/token \
 	--contract-id $(TOKEN_ADDRESS)
+
+generate-types-auto-deposit-factory:
+	stellar contract bindings typescript \
+		--network $(NETWORK) \
+		--output-dir ./types/auto-deposit-factory \
+		--contract-id $(AUTO_DEPOSIT_FACTORY_ADDRESS)
+
+# ----------------------------- Auto deposit ---------------------------------------
+
+auto-deposit-wallet-upload:
+	stellar contract upload \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) \
+		--wasm $(AUTO_DEPOSIT_WALLET_WASM_PATH_OP)
+
+deploy-auto-deposit-factory:
+	stellar contract deploy \
+      --wasm $(AUTO_DEPOSIT_WALLET_WASM_PATH_OP) \
+      --source $(ADMIN_ALIAS) \
+      --network $(NETWORK) \
+      > $(AUTO_DEPOSIT_FACTORY_ADDRESS) && echo $(AUTO_DEPOSIT_FACTORY_ADDRESS)
+
+auto-deposit-factory-get-admin:
+	stellar contract invoke \
+		--id $(AUTO_DEPOSIT_FACTORY_ADDRESS) \
+		--network $(NETWORK) \
+		--source $(ADMIN_ALIAS) \
+		--is-view \
+		-- \
+		get_admin
+
+auto-deposit-factory-install:
+	stellar contract install \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) \
+		--wasm $(AUTO_DEPOSIT_FACTORY_WASM_PATH_OP)
+
+auto-deposit-factory-update-contract:
+	stellar contract invoke \
+		--id $(AUTO_DEPOSIT_FACTORY_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) \
+        -- \
+        upgrade \
+        --new_wasm_hash a16f4b45aff547518e6c1bb2ffe2e26b232562edb2405fd9be413e31d495098d
 
 install-cli:
 	brew install stellar-cli

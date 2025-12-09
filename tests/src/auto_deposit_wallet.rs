@@ -11,7 +11,6 @@ fn swap_and_bridge() {
         ref env,
         ref yusd_token,
         ref alice,
-        ref bridge,
         goerli_token,
         ..
     } = BridgeEnv::default();
@@ -23,13 +22,13 @@ fn swap_and_bridge() {
         10,
     );
     yusd_token.transfer(&alice.as_address(), &wallet_address, 25.0);
-    // yusd_token.transfer(&wallet_address, &bridge.id, 1.0);
 
-    let wallet = AutoDepositWallet::new(env, wallet_address);
-
+    let wallet = AutoDepositWallet::new(env, wallet_address.clone());
     let nonce = gen_nonce(env);
 
     wallet.swap_and_bridge(yusd_token.id.clone(), nonce);
+
+    assert_eq!(yusd_token.balance_of(&wallet_address), 0);
 }
 
 #[test]
