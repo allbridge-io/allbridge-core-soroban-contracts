@@ -11,7 +11,7 @@ use crate::{
         public::{constructor, create_deposit_wallet, deploy_deposit_wallet, swap_and_bridge},
         view::{
             deposit_wallet_address, deposit_wallet_address_by_salt, get_admin, get_gas_oracle,
-            get_gas_usage, get_send_tx_fee_token_amount,
+            get_gas_usage, get_send_tx_fee_token_amount, get_transaction_cost,
         },
     },
     storage::config::Config,
@@ -25,7 +25,6 @@ impl AutoDepositFactoryContract {
     pub fn __constructor(
         env: Env,
         admin: Address,
-        chain_id: u32,
         native_token_address: Address,
         gas_oracle_address: Address,
         bridge: Address,
@@ -35,7 +34,6 @@ impl AutoDepositFactoryContract {
         constructor(
             env,
             admin,
-            chain_id,
             native_token_address,
             gas_oracle_address,
             bridge,
@@ -50,6 +48,7 @@ impl AutoDepositFactoryContract {
         recipient: Address,
         recipient_token: Address,
         min_deposit_amount: u128,
+        gas_amount: u128,
         fee_token_amount: u128,
         chain_ids: Vec<u32>,
     ) -> Result<(), Error> {
@@ -61,6 +60,7 @@ impl AutoDepositFactoryContract {
             recipient,
             recipient_token,
             min_deposit_amount,
+            gas_amount,
             fee_token_amount,
             chain_ids,
         )
@@ -170,6 +170,10 @@ impl AutoDepositFactoryContract {
 
     pub fn get_gas_oracle(env: Env) -> Result<Address, Error> {
         get_gas_oracle(env)
+    }
+
+    pub fn get_transaction_cost(env: Env, chain_id: u32) -> Result<u128, Error> {
+        get_transaction_cost(&env, chain_id)
     }
 
     pub fn deposit_wallet_address(

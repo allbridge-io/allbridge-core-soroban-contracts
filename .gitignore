@@ -12,3 +12,4 @@ Cargo.lock
 
 .soroban
 test_snapshots
+stellar-deploy-testnet

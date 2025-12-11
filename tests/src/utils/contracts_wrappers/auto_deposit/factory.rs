@@ -29,7 +29,6 @@ impl AutoDepositFactory {
     pub fn create(
         env: &Env,
         admin: Address,
-        chain_id: u32,
         native_token_address: Address,
         gas_oracle_address: Address,
         bridge: Address,
@@ -40,7 +39,6 @@ impl AutoDepositFactory {
             auto_deposit_factory::WASM,
             (
                 admin,
-                chain_id,
                 native_token_address,
                 gas_oracle_address,
                 bridge,
@@ -63,6 +61,7 @@ impl AutoDepositFactory {
         recipient: Address,
         recipient_token: Address,
         min_deposit_amount: u128,
+        gas_amount: u128,
         fee_token_amount: u128,
         chain_ids: Vec<u32>,
     ) {
@@ -75,6 +74,7 @@ impl AutoDepositFactory {
                 &recipient,
                 &recipient_token,
                 &min_deposit_amount,
+                &gas_amount,
                 &fee_token_amount,
                 &chain_ids,
             )),

@@ -197,7 +197,6 @@ impl BridgeEnv {
         let auto_deposit_factory = AutoDepositFactory::create(
             &env,
             admin.clone(),
-            CHAIN_ID,
             native_token.id.clone(),
             gas_oracle.id.clone(),
             bridge.id.clone(),

@@ -2,8 +2,6 @@
 
 all: build-auto-deposit
 
-optimize-all: optimize-gas-oracle optimize-messenger optimize-pool optimize-bridge optimize-auto-deposit-factory optimize-auto-deposit-wallet
-
 ADDRESS_PATH = stellar-deploy-testnet
 
 #NATIVE_ADDRESS = CB64D3G7SM2RTH6JSGG34DDTFTQ5CFDKVDZJZSODMCX4NJ2HV2KN7OHT #Futurenet
@@ -41,6 +39,8 @@ BRIDGE_ADDRESS = $$(cat $(BRIDGE_ADDRESS_PATH))
 AUTO_DEPOSIT_WALLET_WASM_PATH = target/wasm32v1-none/release/auto_deposit_wallet.wasm
 AUTO_DEPOSIT_WALLET_WASM_PATH_OP = target/wasm32v1-none/release/auto_deposit_wallet.wasm
 
+AUTO_DEPOSIT_WALLET_WASM_HASH=eddf45c0751a66e124b76604d96a757adeada9978f461eb662b36994439af1aa
+
 AUTO_DEPOSIT_FACTORY_ADDRESS_PATH = $(ADDRESS_PATH)/auto_deposit_factory
 AUTO_DEPOSIT_FACTORY_ADDRESS = $$(cat $(AUTO_DEPOSIT_FACTORY_ADDRESS_PATH))
 AUTO_DEPOSIT_FACTORY_WASM_PATH = target/wasm32v1-none/release/auto_deposit_factory.wasm
@@ -76,42 +76,24 @@ test: all
 	CARGO_INCREMENTAL=0 cargo test
 
 build-auto-deposit-factory: build-bridge build-auto-deposit-wallet
-	 stellar contract build --profile release --package auto-deposit-factory
+	 stellar contract build --optimize --profile release --package auto-deposit-factory
 
 build-auto-deposit-wallet:
-	 stellar contract build --profile release --package auto-deposit-wallet
+	 stellar contract build --optimize --profile release --package auto-deposit-wallet
 
 build-auto-deposit: build-auto-deposit-factory
 
 build-gas-oracle:
-	stellar contract build --profile release --package gas-oracle
+	stellar contract build --optimize --profile release --package gas-oracle
 
 build-messenger: build-gas-oracle
-	stellar contract build --profile release --package messenger
+	stellar contract build --optimize --profile release --package messenger
 
 build-pool:
-	stellar contract build --profile release --package pool
+	stellar contract build --optimize --profile release --package pool
 
 build-bridge: build-messenger build-pool
-	stellar contract build --profile release --package bridge
-
-optimize-gas-oracle:
-	stellar contract optimize --wasm $(GAS_ORACLE_WASM_PATH)
-
-optimize-messenger:
-	stellar contract optimize --wasm $(MESSENGER_WASM_PATH)
-
-optimize-pool:
-	stellar contract optimize --wasm $(POOL_WASM_PATH)
-
-optimize-bridge:
-	stellar contract optimize --wasm $(BRIDGE_WASM_PATH)
-
-optimize-auto-deposit-factory:
-	stellar contract optimize --wasm $(AUTO_DEPOSIT_FACTORY_WASM_PATH)
-
-optimize-auto-deposit-wallet:
-	stellar contract optimize --wasm $(AUTO_DEPOSIT_WALLET_WASM_PATH)
+	stellar contract build --optimize --profile release --package bridge
 
 deploy-gas-oracle:
 	stellar contract deploy \
@@ -156,7 +138,7 @@ gas-oracle-get-price-data:
 		--id $(GAS_ORACLE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
-		--is-view \
+		--send=no \
 		-- \
 		get_gas_price \
 		--chain_id 2
@@ -166,7 +148,7 @@ gas-oracle-get-price:
 		--id $(GAS_ORACLE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
-		--is-view \
+		--send=no \
 		-- \
 		get_price \
 		--chain_id 7
@@ -176,7 +158,7 @@ gas-oracle-get-admin:
 		--id $(GAS_ORACLE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
-		--is-view \
+		--send=no \
 		-- \
 		get_admin
 
@@ -185,7 +167,7 @@ gas-oracle-get-gas-cost-in-native-token:
 		--id $(GAS_ORACLE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
-		--is-view \
+		--send=no \
 		-- \
 		get_gas_cost_in_native_token \
 		--other_chain_id 2 \
@@ -196,7 +178,7 @@ gas-oracle-get-transaction-gas-cost-in-usd:
 		--id $(GAS_ORACLE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
-		--is-view \
+		--send=no \
 		-- \
 		get_transaction_gas_cost_in_usd \
 		--other_chain_id 1 \
@@ -207,7 +189,7 @@ gas-oracle-crossrate:
 		--id $(GAS_ORACLE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
-		--is-view \
+		--send=no \
 		-- \
 		crossrate \
 		--other_chain_id 1
@@ -291,7 +273,7 @@ pool-get-pool-info:
 		--id $(POOL_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
-		--is-view \
+		--send=no \
 		-- \
 		get_pool
 
@@ -300,7 +282,7 @@ pool-get-admin:
 		--id $(POOL_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
-		--is-view \
+		--send=no \
 		-- \
 		get_admin
 
@@ -309,7 +291,7 @@ pool-get-pending-reward:
 		--id $(POOL_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
-		--is-view \
+		--send=no \
 		-- \
 		pending_reward \
 		--user $(ADMIN)
@@ -319,7 +301,7 @@ pool-get-user-deposit:
 		--id $(POOL_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
-		--is-view \
+		--send=no \
 		-- \
 		get_user_deposit \
 		--user $(ADMIN)
@@ -329,7 +311,7 @@ pool-get-claimable-balance:
 		--id $(POOL_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
-		--is-view \
+		--send=no \
 		-- \
 		get_claimable_balance \
 		--user GB664P4XTBKNBK3YGPAFFCYPSW2SIO2FR6B6HC6SKFS7KGRTCDQYVUJ7
@@ -460,7 +442,7 @@ messenger-get-gas-usage:
 		--id $(MESSENGER_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
-		--is-view \
+		--send=no \
 		-- \
 		get_gas_usage \
 		--chain_id 2
@@ -470,7 +452,7 @@ messenger-get-transaction-cost:
 		--id $(MESSENGER_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
-		--is-view \
+		--send=no \
 		-- \
 		get_transaction_cost \
 		--chain_id 2
@@ -480,7 +462,7 @@ messenger-has-received-message:
 		--id $(MESSENGER_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
-		--is-view \
+		--send=no \
 		-- \
 		has_received_message \
 		--message 0207a3508a81ab1b0043a51568079044f4e34648226124dccd21f5d89c51f3fb
@@ -490,7 +472,7 @@ messenger-has-sent-message:
 		--id $(MESSENGER_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
-		--is-view \
+		--send=no \
 		-- \
 		has_sent_message \
 		--message 020777b64e53254cc42d1d695036cf5f438312735b915adec350b68ff713c997
@@ -744,7 +726,7 @@ bridge-get-transaction-cost:
 		--id $(BRIDGE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
-		--is-view \
+		--send=no \
 		-- \
 		get_transaction_cost \
 		--chain_id 2
@@ -754,7 +736,7 @@ bridge-get-pool-address:
 		--id $(BRIDGE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
-		--is-view \
+		--send=no \
 		-- \
 		get_pool_address \
 		--token_address 04e57ce1f8ff28bd87daf1875bff9f87c1e8bf9c7f425558d4eb2a0e511b3c3c
@@ -764,7 +746,7 @@ bridge-get-config:
 		--id $(BRIDGE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
-		--is-view \
+		--send=no \
 		-- \
 		get_config
 
@@ -773,7 +755,7 @@ bridge-get-gas-usage:
 		--id $(BRIDGE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
-        --is-view \
+        --send=no \
 		-- \
 		get_gas_usage \
 		--chain_id 2
@@ -783,7 +765,7 @@ bridge-get-another-bridge:
 		--id $(BRIDGE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
-        --is-view \
+        --send=no \
 		-- \
 		get_another_bridge \
 		--chain_id 2
@@ -793,7 +775,7 @@ bridge-has-received-message:
 		--id $(BRIDGE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
-        --is-view \
+        --send=no \
 		-- \
 		has_received_message \
 		--message 0107155a5bc1db9cb9d8fc56150518f01011f56ca2e3f0bdeb8dee115344d75b
@@ -859,7 +841,7 @@ token-get-balance:
 		--id $(TOKEN_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
-		--is-view \
+		--send=no \
 		-- \
 		balance \
 		--id GDL27JZFDPBXX7B4DTWPSEWRFHGTAQM6HK365M3J6LVAOBY6VCEUGRCU
@@ -869,7 +851,7 @@ token-get-name:
 	stellar contract invoke \
 		--id CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75 \
 		--source $(ADMIN_ALIAS) \
-		--is-view \
+		--send=no \
 		--network $(NETWORK) 	\
 		-- \
 		name
@@ -933,25 +915,31 @@ auto-deposit-wallet-upload:
 
 deploy-auto-deposit-factory:
 	stellar contract deploy \
-      --wasm $(AUTO_DEPOSIT_WALLET_WASM_PATH_OP) \
+      --wasm $(AUTO_DEPOSIT_FACTORY_WASM_PATH_OP) \
       --source $(ADMIN_ALIAS) \
       --network $(NETWORK) \
-      > $(AUTO_DEPOSIT_FACTORY_ADDRESS) && echo $(AUTO_DEPOSIT_FACTORY_ADDRESS)
+			-- \
+			--admin $(ADMIN) \
+			--native_token_address $(NATIVE_ADDRESS) \
+			--gas_oracle_address $(GAS_ORACLE_ADDRESS) \
+			--bridge $(BRIDGE_ADDRESS) \
+			--send_tx_cost 1000000000000000000 \
+			--wallet_wasm_hash $(AUTO_DEPOSIT_WALLET_WASM_HASH) \
+      > $(AUTO_DEPOSIT_FACTORY_ADDRESS_PATH) && echo $(AUTO_DEPOSIT_FACTORY_ADDRESS)
 
-auto-deposit-factory-get-admin:
+auto-deposit-factory-create-deposit-wallet:
 	stellar contract invoke \
 		--id $(AUTO_DEPOSIT_FACTORY_ADDRESS) \
 		--network $(NETWORK) \
 		--source $(ADMIN_ALIAS) \
-		--is-view \
 		-- \
-		get_admin
-
-auto-deposit-factory-install:
-	stellar contract install \
-		--source $(ADMIN_ALIAS) \
-		--network $(NETWORK) \
-		--wasm $(AUTO_DEPOSIT_FACTORY_WASM_PATH_OP)
+		create_deposit_wallet \
+			--sender GD4A45PEPZBWYBDEQZYHDSEDML76J4JJTUTO2FHYFCKLD5O3YXOY6QIK \
+			--recipient GD4A45PEPZBWYBDEQZYHDSEDML76J4JJTUTO2FHYFCKLD5O3YXOY6QIK \
+			--recipient_token CAOPX7DVI3PFLHE7637YSFU6TLG6Z27Z5O3M547ANAYXQOAYCYYV6NO6 \
+			--min_deposit_amount 1 \
+			--fee_token_amount 140000000 \
+			--chain-ids [4] 
 
 auto-deposit-factory-update-contract:
 	stellar contract invoke \
@@ -960,7 +948,7 @@ auto-deposit-factory-update-contract:
 		--network $(NETWORK) \
         -- \
         upgrade \
-        --new_wasm_hash a16f4b45aff547518e6c1bb2ffe2e26b232562edb2405fd9be413e31d495098d
+        --new_wasm_hash db345359017e405e529afebf51764e46bff3b5ed7ea9fbfdbea49eac5b232c01
 
 install-cli:
 	brew install stellar-cli

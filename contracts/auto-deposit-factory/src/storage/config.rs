@@ -9,7 +9,6 @@ use soroban_sdk::{contracttype, Address, BytesN, Env, Map};
 #[data_storage_type(Instance)]
 #[extend_ttl_info_instance]
 pub struct Config {
-    pub chain_id: u32,
     pub wallet_wasm_hash: BytesN<32>,
     /// Cost of send bridgeAndSwap transaction in native tokens
     pub send_tx_cost: u128,
@@ -22,13 +21,11 @@ pub struct Config {
 impl Config {
     pub fn new(
         env: &Env,
-        chain_id: u32,
         bridge: Address,
         send_tx_cost: u128,
         wallet_wasm_hash: BytesN<32>,
     ) -> Self {
         Config {
-            chain_id,
             wallet_wasm_hash,
             send_tx_cost,
             bridge,

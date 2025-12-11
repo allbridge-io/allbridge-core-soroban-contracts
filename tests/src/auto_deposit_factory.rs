@@ -22,6 +22,7 @@ fn create_deposit_wallet() {
         alice.as_address(),
         yusd_token.id.clone(),
         10,
+        0,
         10,
         vec![GOERLI_CHAIN_ID],
     );
@@ -57,6 +58,7 @@ fn create_deposit_wallet_invalid_chain_id() {
         yusd_token.id.clone(),
         10,
         10,
+        0,
         vec![GOERLI_CHAIN_ID, 19],
     );
 }
@@ -76,7 +78,8 @@ fn create_deposit_wallet_min_deposit_is_zero() {
         alice.as_address(),
         yusd_token.id.clone(),
         0,
-        10,
+        0,
+        0,
         vec![GOERLI_CHAIN_ID],
     );
 }
@@ -96,6 +99,7 @@ fn create_deposit_wallet_not_enough_fee() {
         alice.as_address(),
         yusd_token.id.clone(),
         10,
+        0,
         0,
         vec![GOERLI_CHAIN_ID],
     );
