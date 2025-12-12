@@ -1,4 +1,8 @@
-use soroban_sdk::{contracttype, Address, BytesN, Env, U256};
+use soroban_sdk::{
+    contracttype,
+    testutils::{Events, Logs},
+    Address, BytesN, Env, U256,
+};
 
 use crate::{
     contracts::auto_deposit_factory::{self, Config},

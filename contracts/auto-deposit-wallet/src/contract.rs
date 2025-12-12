@@ -4,7 +4,7 @@ use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, Vec, U256};
 use crate::methods::{
     admin::{register_token, register_tokens, transfer_unsupported_token},
     public::{constructor, factory_swap_and_bridge, swap_and_bridge},
-    view::{is_token_registered, min_deposit_token_amount},
+    view::{get_bridging_cost_in_tokens, is_token_registered, min_deposit_token_amount},
 };
 
 #[contract]
@@ -83,5 +83,9 @@ impl AutoDepositWalletContract {
 
     pub fn min_deposit_token_amount(env: Env, token: Address) -> Result<u128, Error> {
         min_deposit_token_amount(env, token)
+    }
+
+    pub fn bridging_cost_in_tokens(env: Env, token: Address) -> Result<u128, Error> {
+        get_bridging_cost_in_tokens(env, token)
     }
 }

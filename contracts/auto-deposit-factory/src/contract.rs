@@ -6,7 +6,7 @@ use crate::{
     methods::{
         admin::{
             register_token, set_admin, set_gas_oracle, set_gas_usage, set_send_tx_cost,
-            unregister_token, withdraw, withdraw_gas_tokens,
+            set_wallet_wasm_hash, unregister_token, withdraw, withdraw_gas_tokens,
         },
         public::{constructor, create_deposit_wallet, deploy_deposit_wallet, swap_and_bridge},
         view::{
@@ -127,6 +127,12 @@ impl AutoDepositFactoryContract {
         set_admin(env, new_admin)
     }
 
+    pub fn set_wallet_wasm_hash(env: Env, wallet_wasm_hash: BytesN<32>) -> Result<(), Error> {
+        extend_ttl_instance(&env);
+
+        set_wallet_wasm_hash(env, wallet_wasm_hash)
+    }
+
     pub fn set_gas_oracle(env: Env, new_address: Address) -> Result<(), Error> {
         extend_ttl_instance(&env);
 
@@ -198,7 +204,6 @@ impl AutoDepositFactoryContract {
 
     pub fn upgrade(env: Env, new_wasm_hash: BytesN<32>) -> Result<(), Error> {
         Admin::require_exist_auth(&env)?;
-
         env.deployer().update_current_contract_wasm(new_wasm_hash);
         Ok(())
     }

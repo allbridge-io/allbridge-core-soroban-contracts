@@ -38,8 +38,7 @@ BRIDGE_ADDRESS = $$(cat $(BRIDGE_ADDRESS_PATH))
 
 AUTO_DEPOSIT_WALLET_WASM_PATH = target/wasm32v1-none/release/auto_deposit_wallet.wasm
 AUTO_DEPOSIT_WALLET_WASM_PATH_OP = target/wasm32v1-none/release/auto_deposit_wallet.wasm
-
-AUTO_DEPOSIT_WALLET_WASM_HASH=eddf45c0751a66e124b76604d96a757adeada9978f461eb662b36994439af1aa
+AUTO_DEPOSIT_WALLET_WASM_HASH=680359502d1a07632af2d4eacc95a70ea5a0af1ed0911d6b68aa5cc289e10508
 
 AUTO_DEPOSIT_FACTORY_ADDRESS_PATH = $(ADDRESS_PATH)/auto_deposit_factory
 AUTO_DEPOSIT_FACTORY_ADDRESS = $$(cat $(AUTO_DEPOSIT_FACTORY_ADDRESS_PATH))
@@ -907,7 +906,7 @@ generate-types-auto-deposit-factory:
 
 # ----------------------------- Auto deposit ---------------------------------------
 
-auto-deposit-wallet-upload:
+auto-deposit-wallet-upload: build-auto-deposit-wallet
 	stellar contract upload \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) \
@@ -923,7 +922,7 @@ deploy-auto-deposit-factory:
 			--native_token_address $(NATIVE_ADDRESS) \
 			--gas_oracle_address $(GAS_ORACLE_ADDRESS) \
 			--bridge $(BRIDGE_ADDRESS) \
-			--send_tx_cost 1000000000000000000 \
+			--send_tx_cost 10000000 \
 			--wallet_wasm_hash $(AUTO_DEPOSIT_WALLET_WASM_HASH) \
       > $(AUTO_DEPOSIT_FACTORY_ADDRESS_PATH) && echo $(AUTO_DEPOSIT_FACTORY_ADDRESS)
 
@@ -936,10 +935,33 @@ auto-deposit-factory-create-deposit-wallet:
 		create_deposit_wallet \
 			--sender GD4A45PEPZBWYBDEQZYHDSEDML76J4JJTUTO2FHYFCKLD5O3YXOY6QIK \
 			--recipient GD4A45PEPZBWYBDEQZYHDSEDML76J4JJTUTO2FHYFCKLD5O3YXOY6QIK \
-			--recipient_token CAOPX7DVI3PFLHE7637YSFU6TLG6Z27Z5O3M547ANAYXQOAYCYYV6NO6 \
+			--recipient_token $(USDY_ADDRESS) \
 			--min_deposit_amount 1 \
 			--fee_token_amount 140000000 \
-			--chain-ids [4] 
+			--chain-ids [2] 
+
+auto-deposit-factory-deploy-deposit-wallet:
+	stellar contract invoke \
+		--id $(AUTO_DEPOSIT_FACTORY_ADDRESS) \
+		--network $(NETWORK) \
+		--source $(ADMIN_ALIAS) \
+		-- \
+		deploy_deposit_wallet \
+			--recipient_chain_id 2 \
+			--recipient 000000000000000000000000BE959EED208225AAB424505571D41BF3212142C0 \
+			--recipient_token 00000000000000000000000049be77224dc061bd53699b25431b9aa7029a2cb8 \
+			--min_deposit_amount 4
+
+auto-deposit-factory-swap-and-bridge:
+	stellar contract invoke \
+		--id $(AUTO_DEPOSIT_FACTORY_ADDRESS) \
+		--network $(NETWORK) \
+		--source $(ADMIN_ALIAS) \
+		-- \
+		swap_and_bridge \
+			--wallet_address CDQLJCJCBKEHMZYKDW5C6CAXZ5Z573D6M7BOICCJJ4VW5Q63ZKUJTDAB \
+			--token_address $(USDY_ADDRESS) \
+			--nonce 241928 
 
 auto-deposit-factory-update-contract:
 	stellar contract invoke \

@@ -1,42 +1,9 @@
-use shared::{utils::safe_cast, Error};
-use soroban_sdk::{vec, Address, Env, IntoVal, U256};
+use shared::Error;
+use soroban_sdk::{Address, Env};
 
 use crate::{bridge, gas_oracle, messenger, storage::config::Config};
 
-pub fn swap_and_bridge(
-    env: &Env,
-    config: &Config,
-    token: &Address,
-    amount: u128,
-    nonce: &U256,
-) -> Result<(), Error> {
-    let bridge_client = bridge::Client::new(env, &config.bridge);
-    let cost_in_tokens = get_bridging_cost_in_tokens(env, config, token, &bridge_client)?;
-
-    env.current_contract_address().require_auth_for_args(vec![
-        env,
-        "transfer".into_val(env),
-        env.current_contract_address().to_val(),
-        config.bridge.to_val(),
-        safe_cast::<_, i128>(cost_in_tokens).into_val(env),
-    ]);
-
-    bridge_client.swap_and_bridge(
-        &env.current_contract_address(),
-        token,
-        &amount,
-        &config.recipient,
-        &config.recipient_chain_id,
-        &config.recipient_token,
-        nonce,
-        &0,
-        &cost_in_tokens,
-    );
-
-    Ok(())
-}
-
-fn get_bridging_cost_in_tokens(
+pub fn get_bridging_cost_in_tokens(
     env: &Env,
     config: &Config,
     token: &Address,
@@ -54,5 +21,5 @@ fn get_bridging_cost_in_tokens(
         + messenger_client.get_gas_usage(&config.recipient_chain_id);
     let cost = gas_oracle.get_transaction_gas_cost_in_usd(&config.recipient_chain_id, &gas_usage);
 
-    Ok(cost / from_gas_oracle_scaling_factor + 1)
+    Ok(cost / from_gas_oracle_scaling_factor)
 }
