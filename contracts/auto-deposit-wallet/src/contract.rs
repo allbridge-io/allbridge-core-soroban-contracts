@@ -40,17 +40,6 @@ impl AutoDepositWalletContract {
         swap_and_bridge(env, token_address, nonce)
     }
 
-    pub fn factory_swap_and_bridge(
-        env: Env,
-        token_address: Address,
-        amount: u128,
-        nonce: U256,
-    ) -> Result<(), Error> {
-        extend_ttl_instance(&env);
-
-        factory_swap_and_bridge(env, token_address, amount, nonce)
-    }
-
     pub fn register_token(env: Env, token: Address) -> Result<u128, Error> {
         extend_ttl_instance(&env);
 
@@ -61,6 +50,20 @@ impl AutoDepositWalletContract {
         extend_ttl_instance(&env);
 
         register_tokens(env, tokens)
+    }
+
+    // factory only
+
+    pub fn factory_swap_and_bridge(
+        env: Env,
+        token_address: Address,
+        amount: u128,
+        factory_fee_amount: u128,
+        nonce: U256,
+    ) -> Result<(), Error> {
+        extend_ttl_instance(&env);
+
+        factory_swap_and_bridge(env, token_address, amount, factory_fee_amount, nonce)
     }
 
     // admin

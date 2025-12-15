@@ -56,5 +56,5 @@ fn factory_swap_and_bridge_no_auth() {
     let nonce = gen_nonce(env);
 
     env.mock_auths(&[]);
-    wallet.factory_swap_and_bridge(yusd_token.id.clone(), amount, nonce);
+    wallet.factory_swap_and_bridge(yusd_token.id.clone(), amount, 10, nonce);
 }

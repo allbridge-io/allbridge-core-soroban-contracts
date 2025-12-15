@@ -34,12 +34,19 @@ impl AutoDepositWallet {
         )
     }
 
-    pub fn factory_swap_and_bridge(&self, token_address: Address, amount: u128, nonce: U256) {
+    pub fn factory_swap_and_bridge(
+        &self,
+        token_address: Address,
+        amount: u128,
+        factory_fee_amount: u128,
+        nonce: U256,
+    ) {
         unwrap_call_result(
             self.env(),
             desoroban_result(self.client.try_factory_swap_and_bridge(
                 &token_address,
                 &amount,
+                &factory_fee_amount,
                 &nonce,
             )),
         )

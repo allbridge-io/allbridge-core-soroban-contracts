@@ -60,4 +60,5 @@ pub enum Error {
     ADNotEnoughFee = 501,
     ADAmountTooLow = 502,
     ADBridgingIsSupported = 503,
+    ADWalletNotDeployed = 504,
 }
