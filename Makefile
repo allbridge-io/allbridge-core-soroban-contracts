@@ -912,6 +912,12 @@ auto-deposit-wallet-upload: build-auto-deposit-wallet
 		--network $(NETWORK) \
 		--wasm $(AUTO_DEPOSIT_WALLET_WASM_PATH_OP)
 
+auto-deposit-factory-upload: build-auto-deposit-factory
+	stellar contract upload \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) \
+		--wasm $(AUTO_DEPOSIT_FACTORY_WASM_PATH_OP)
+
 deploy-auto-deposit-factory:
 	stellar contract deploy \
       --wasm $(AUTO_DEPOSIT_FACTORY_WASM_PATH_OP) \
@@ -948,9 +954,9 @@ auto-deposit-factory-deploy-deposit-wallet:
 		-- \
 		deploy_deposit_wallet \
 			--recipient_chain_id 2 \
-			--recipient 000000000000000000000000BE959EED208225AAB424505571D41BF3212142C0 \
-			--recipient_token 00000000000000000000000049be77224dc061bd53699b25431b9aa7029a2cb8 \
-			--min_deposit_amount 4
+			--recipient 000000000000000000000000BE959EED208226AAB424505570D41BF3212142C0 \
+			--recipient_token 00000000000000000000000049be77224dc061bd53699b25431b9aa7031a2cb8 \
+			--min_deposit_amount 1
 
 auto-deposit-factory-swap-and-bridge:
 	stellar contract invoke \
@@ -959,7 +965,7 @@ auto-deposit-factory-swap-and-bridge:
 		--source $(ADMIN_ALIAS) \
 		-- \
 		swap_and_bridge \
-			--wallet_address CDQLJCJCBKEHMZYKDW5C6CAXZ5Z573D6M7BOICCJJ4VW5Q63ZKUJTDAB \
+			--wallet_address CB4XD4O3Q4TCGIFUKF4HKDLGWLBD2RIUKJLWK5IV7BHLRR7KVYSUIUO5 \
 			--token_address $(USDY_ADDRESS) \
 			--nonce 241928 
 
@@ -971,6 +977,39 @@ auto-deposit-factory-update-contract:
         -- \
         upgrade \
         --new_wasm_hash db345359017e405e529afebf51764e46bff3b5ed7ea9fbfdbea49eac5b232c01
+
+define auto-deposit-factory-register-token
+	stellar contract invoke \
+		--id $(AUTO_DEPOSIT_FACTORY_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) \
+		-- \
+		register_token \
+		--token_address $1
+endef
+
+auto-deposit-factory-register-all-tokens:
+	$(call auto-deposit-factory-register-token,$(USDY_ADDRESS))
+	$(call auto-deposit-factory-register-token,$(USDC_ADDRESS))
+	$(call auto-deposit-factory-register-token,$(YARO_ADDRESS))
+
+define auto-deposit-factory-set-gas-usage
+	stellar contract invoke \
+		--id $(AUTO_DEPOSIT_FACTORY_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) \
+		-- \
+		set_gas_usage \
+		--chain_id $1 \
+		--gas-usage $2
+endef
+
+auto-deposit-factory-set-all-gas-usages:
+	$(call auto-deposit-factory-set-gas-usage,2,250000)
+	$(call auto-deposit-factory-set-gas-usage,3,150000)
+	$(call auto-deposit-factory-set-gas-usage,4,3500)
+	$(call auto-deposit-factory-set-gas-usage,5,250000)
+	$(call auto-deposit-factory-set-gas-usage,6,250000)
 
 install-cli:
 	brew install stellar-cli
