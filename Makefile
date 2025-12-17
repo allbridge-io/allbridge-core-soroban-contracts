@@ -3,8 +3,8 @@
 all: build-auto-deposit
 
 include mk/vars.mk
-include mk/build.mk
 include mk/commands.mk
+include mk/build.mk
 include mk/utils.mk
 
 include mk/contracts/auto-deposit.mk
