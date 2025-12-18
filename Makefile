@@ -18,19 +18,22 @@ test: all
 
 define generate-types
 	stellar contract bindings typescript \
-		--network $(NETWORK) \
 		--output-dir ./types/$1 \
-		--contract-id $2
+		--wasm ./target/wasm32v1-none/release/$2.wasm
+	@echo "\n"
 endef
 
 generate-all-types:
 	rm -rf ./types/
-	$(call generate-types,gas-oracle,$(GAS_ORACLE_ADDRESS))
-	$(call generate-types,bridge,$(BRIDGE_ADDRESS))
-	$(call generate-types,messenger,$(MESSENGER_ADDRESS))
-	$(call generate-types,pool,$(POOL_ADDRESS))
-	$(call generate-types,token,$(TOKEN_ADDRESS))
-	$(call generate-types,auto-deposit-factory,$(AUTO_DEPOSIT_FACTORY_ADDRESS))
+	$(call generate-types,gas-oracle,gas_oracle)
+	$(call generate-types,bridge,bridge)
+	$(call generate-types,messenger,messenger)
+	$(call generate-types,pool,pool)
+	$(call generate-types,auto-deposit-factory,auto_deposit_factory)
+	stellar contract bindings typescript \
+		--network $(NETWORK) \
+		--output-dir ./types/token \
+		--contract-id $(TOKEN_ADDRESS)
 
 install-cli:
 	brew install stellar-cli
