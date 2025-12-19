@@ -12,7 +12,7 @@ shared = { workspace = true }
 proc_macros = { workspace = true }
 bridge_storage = { workspace = true }
 
-[dev_dependencies]
+[dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
 
 [lints.clippy]

@@ -35,7 +35,7 @@ pub fn hash_message(
         message_bytes.extend_from_slice(message_byte);
     }
 
-    let mut message_hash = crypto.keccak256(&message_bytes);
+    let mut message_hash = crypto.keccak256(&message_bytes).to_bytes();
 
     message_hash.set(0, source_chain_id as u8);
     message_hash.set(1, destination_chain_id as u8);

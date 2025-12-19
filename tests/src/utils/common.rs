@@ -157,6 +157,15 @@ pub fn get_latest_event<T: FromVal<Env, Val>>(env: &Env) -> Option<T> {
         })
 }
 
+pub fn get_latest_event_unchecked<T: FromVal<Env, Val>>(env: &Env) -> T {
+    let maybe_event = get_latest_event(env);
+
+    maybe_event.expect(&format!(
+        "Latest event of type {} not found",
+        type_name_of_event::<T>()
+    ))
+}
+
 pub fn assert_rel_eq(a: u128, b: u128, d: u128) {
     assert!(
         a.abs_diff(b) <= d,
@@ -171,7 +180,7 @@ pub fn assert_rel_eq(a: u128, b: u128, d: u128) {
 pub fn contract_id(address: &Address) -> BytesN<32> {
     let sc_address: ScAddress = address.try_into().unwrap();
     if let ScAddress::Contract(c) = sc_address {
-        BytesN::from_array(address.env(), &c.0)
+        BytesN::from_array(address.env(), c.0.as_ref())
     } else {
         panic!("address is not a contract {:?}", address);
     }

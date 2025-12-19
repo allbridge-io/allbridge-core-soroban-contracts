@@ -102,7 +102,7 @@ fn common_flow() {
     let alice = Address::generate(&env);
     let bob = Address::generate(&env);
 
-    let test_pool_id = env.register_contract(None, TestPoolForRewards);
+    let test_pool_id = env.register(TestPoolForRewards, ());
     let reward_manager = TestPoolForRewardsClient::new(&env, &test_pool_id);
     reward_manager.init();
 

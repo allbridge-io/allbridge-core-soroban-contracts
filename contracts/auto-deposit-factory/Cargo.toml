@@ -1,0 +1,23 @@
+[package]
+name = "auto-deposit-factory"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+shared = { workspace = true }
+proc_macros = { workspace = true }
+bridge_storage = { workspace = true }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }
+arrayref = { workspace = true }
+
+[lints.clippy]
+redundant_clone = "warn"
+unreadable_literal = "warn"
+semicolon_if_nothing_returned = "warn"
+or_fun_call = "warn"

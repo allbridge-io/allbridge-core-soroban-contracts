@@ -16,8 +16,11 @@ use crate::{
         pool::Pool as PoolInfo,
     },
     utils::{
-        assert_rel_eq, consts::BP, contract_id, desoroban_result, float_to_uint, float_to_uint_sp,
-        get_latest_event, sign_message, unwrap_call_result, MessengerConfig,
+        assert_rel_eq,
+        auto_deposit::{AutoDepositFactory, AutoDepositWallet},
+        consts::BP,
+        contract_id, desoroban_result, float_to_uint, float_to_uint_sp, get_latest_event_unchecked,
+        sign_message, unwrap_call_result, MessengerConfig,
     },
 };
 
@@ -39,6 +42,7 @@ pub struct BridgeEnv {
     pub bridge: Bridge,
     pub gas_oracle: GasOracle,
     pub messenger: Messenger,
+    pub auto_deposit_factory: AutoDepositFactory,
     pub native_token: Token,
 
     pub primary_validator_wallet: LocalWallet,
@@ -98,7 +102,9 @@ impl BridgeEnv {
         let env = Env::default();
 
         env.mock_all_auths();
-        env.budget().reset_limits(u64::MAX, u64::MAX);
+        env.cost_estimate()
+            .budget()
+            .reset_limits(u64::MAX, u64::MAX);
 
         let admin = Address::generate(&env);
 
@@ -187,6 +193,24 @@ impl BridgeEnv {
 
         bridge.client.set_gas_usage(&GOERLI_CHAIN_ID, &300_000_000);
 
+        let auto_deposit_wallet_hash = AutoDepositWallet::upload_wallet_contract(&env);
+        let auto_deposit_factory = AutoDepositFactory::create(
+            &env,
+            admin.clone(),
+            native_token.id.clone(),
+            gas_oracle.id.clone(),
+            bridge.id.clone(),
+            float_to_uint(1.0, 7),
+            auto_deposit_wallet_hash,
+        );
+        for token in [yusd_token.id.clone(), yaro_token.id.clone()] {
+            unwrap_call_result(&env, auto_deposit_factory.register_token(token));
+        }
+
+        auto_deposit_factory
+            .client
+            .set_gas_usage(&GOERLI_CHAIN_ID, &100_000);
+
         BridgeEnv {
             env,
 
@@ -194,6 +218,7 @@ impl BridgeEnv {
             bridge,
             gas_oracle,
             messenger,
+            auto_deposit_factory,
             native_token,
 
             primary_validator_wallet,
@@ -372,6 +397,7 @@ impl BridgeEnv {
             )),
         );
 
+        let swapped_event = get_latest_event_unchecked::<Swapped>(&self.env);
         let snapshot_after_swap: BalancesSnapshot = BalancesSnapshot::take(self);
         snapshot_before_swap.print_change_with(&snapshot_after_swap, Some("Swap diff"));
 
@@ -383,8 +409,6 @@ impl BridgeEnv {
         let sender_send_token_balance_key = format!("{sender_tag}_{send_token_tag}_balance");
         let recipient_receive_token_balance_key =
             format!("{recipient_tag}_{receive_token_tag}_balance");
-
-        let swapped_event = get_latest_event::<Swapped>(&self.env).unwrap();
 
         let send_pool_before = snapshot_before_swap.get_pool_info_by_tag(send_token_tag);
         let send_pool_after = snapshot_after_swap.get_pool_info_by_tag(send_token_tag);
@@ -533,6 +557,8 @@ impl BridgeEnv {
             &self.goerli_token,
             &nonce,
         );
+        let receive_fee = get_latest_event_unchecked::<ReceiveFee>(&self.env);
+        let tokens_sent_event = get_latest_event_unchecked::<TokensSent>(&self.env);
 
         let snapshot_after_swap = BalancesSnapshot::take(self);
         snapshot_before_swap.print_change_with(&snapshot_after_swap, Some("SwapAndBridge diff"));
@@ -558,9 +584,6 @@ impl BridgeEnv {
         let user_token_balance_key = format!("{user_tag}_{token_tag}_balance");
         let user_native_balance_key = format!("{user_tag}_native_balance");
         let bridge_token_balance_key = format!("bridge_{token_tag}_balance");
-
-        let receive_fee = get_latest_event::<ReceiveFee>(&self.env).unwrap();
-        let tokens_sent_event = get_latest_event::<TokensSent>(&self.env).unwrap();
 
         if let Some(expected_pool_diff) = expected_pool_diff {
             let (expected_v_usd, expected_token_balance_diff) = expected_pool_diff.get_uint();
@@ -636,6 +659,7 @@ impl BridgeEnv {
             receive_amount_min,
             &Some(extra_gas),
         );
+        let tokens_received_event = get_latest_event_unchecked::<TokensReceived>(&self.env);
 
         let snapshot_after_swap = BalancesSnapshot::take(self);
         snapshot_before_swap.print_change_with(&snapshot_after_swap, Some("ReceiveTokens diff"));
@@ -653,7 +677,6 @@ impl BridgeEnv {
         let receive_amount_min_sp = float_to_uint_sp(amount - receive_amount_threshold);
         let receive_amount_threshold_sp = float_to_uint_sp(receive_amount_threshold);
         let extra_gas = float_to_uint(extra_gas, 7);
-        let tokens_received_event = get_latest_event::<TokensReceived>(&self.env).unwrap();
 
         let result_amount_sp = self
             .get_token_by_tag(token_tag)

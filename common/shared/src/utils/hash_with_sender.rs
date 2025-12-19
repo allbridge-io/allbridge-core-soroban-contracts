@@ -8,7 +8,7 @@ pub fn hash_with_sender(env: &Env, hash: &BytesN<32>, sender: &BytesN<32>) -> By
 
     let message_slice = merge_slices_by_half::<32, 64>(&hash.to_array(), &sender.to_array());
     let message_bytes = Bytes::from_slice(env, &message_slice);
-    let mut new_hash = crypto.keccak256(&message_bytes);
+    let mut new_hash = crypto.keccak256(&message_bytes).to_bytes();
 
     new_hash.set(0, hash.get_unchecked(0));
     new_hash.set(1, hash.get_unchecked(1));

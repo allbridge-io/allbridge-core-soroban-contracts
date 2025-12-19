@@ -63,7 +63,7 @@ impl Bridge {
         Ok(pool::Client::new(env, &pool_address))
     }
 
-    pub fn get_messenger_client(&self, env: &Env) -> messenger::Client {
+    pub fn get_messenger_client(&self, env: &Env) -> messenger::Client<'_> {
         messenger::Client::new(env, &self.messenger)
     }
 }

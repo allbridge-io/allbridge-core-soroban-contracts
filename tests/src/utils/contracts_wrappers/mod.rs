@@ -1,5 +1,4 @@
-
-
+pub mod auto_deposit;
 mod bridge;
 mod gas_oracle;
 mod messenger;

@@ -15,7 +15,9 @@ pub struct Token {
 
 impl Token {
     pub fn create(env: &Env, tag: &'static str, admin: &Address) -> Token {
-        let id = env.register_stellar_asset_contract(admin.clone());
+        let id = env
+            .register_stellar_asset_contract_v2(admin.clone())
+            .address();
         let client = token::Client::new(env, &id);
         let asset_client = token::StellarAssetClient::new(env, &id);
 
@@ -46,6 +48,12 @@ impl Token {
 
     pub fn airdrop_user(&self, user: &User) {
         self.airdrop(&user.as_address());
+    }
+
+    pub fn transfer(&self, from: &Address, to: &Address, amount: f64) {
+        let decimals = self.client.decimals();
+        let amount = float_to_uint(amount, decimals) as i128;
+        self.client.transfer(from, to, &amount);
     }
 
     pub fn amount_to_system_precision(&self, amount: u128) -> u128 {

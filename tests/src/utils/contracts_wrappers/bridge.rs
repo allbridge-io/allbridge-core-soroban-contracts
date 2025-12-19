@@ -25,7 +25,7 @@ impl Bridge {
         gas_oracle: &Address,
         native_token: Token,
     ) -> Bridge {
-        let id = env.register_contract_wasm(None, bridge::WASM);
+        let id = env.register(bridge::WASM, ());
         let client = bridge::Client::new(env, &id);
         let env = id.env().clone();
 
@@ -188,6 +188,9 @@ impl Bridge {
     }
 
     pub fn upgrade(&self, new_hash: &BytesN<32>) {
-        unwrap_call_result(&self.env, desoroban_result(self.client.try_upgrade(new_hash)));
+        unwrap_call_result(
+            &self.env,
+            desoroban_result(self.client.try_upgrade(new_hash)),
+        );
     }
 }
