@@ -42,6 +42,7 @@ messenger-set-all-gas-usage:
 	$(call messenger-set-gas-usage-param,10,100000)
 	$(call messenger-set-gas-usage-param,13,4000)
 	$(call messenger-set-gas-usage-param,15,8000)
+	$(call messenger-set-gas-usage-param,16,100000)
 	$(call messenger-set-gas-usage-param,60,100000)
 
 messenger-send-message:
