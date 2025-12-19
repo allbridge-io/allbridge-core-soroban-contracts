@@ -8,7 +8,10 @@ use crate::{
             register_token, set_admin, set_gas_oracle, set_gas_usage, set_send_tx_cost,
             set_wallet_wasm_hash, unregister_token, withdraw, withdraw_gas_tokens,
         },
-        public::{constructor, create_deposit_wallet, deploy_deposit_wallet, swap_and_bridge},
+        public::{
+            constructor, create_deposit_wallet, create_swap_and_bridge, deploy_deposit_wallet,
+            swap_and_bridge,
+        },
         view::{
             deposit_wallet_address, deposit_wallet_address_by_salt, get_admin, get_gas_oracle,
             get_gas_usage, get_send_tx_fee_token_amount, get_transaction_cost,
@@ -93,6 +96,28 @@ impl AutoDepositFactoryContract {
         extend_ttl_instance(&env);
 
         swap_and_bridge(env, wallet_address, token_address, nonce)
+    }
+
+    pub fn create_swap_and_bridge(
+        env: Env,
+        recipient_chain_id: u32,
+        recipient: BytesN<32>,
+        recipient_token: BytesN<32>,
+        min_deposit_amount: u128,
+        token: Address,
+        nonce: U256,
+    ) -> Result<(), Error> {
+        extend_ttl_instance(&env);
+
+        create_swap_and_bridge(
+            env,
+            recipient_chain_id,
+            recipient,
+            recipient_token,
+            min_deposit_amount,
+            token,
+            nonce,
+        )
     }
 
     // admin

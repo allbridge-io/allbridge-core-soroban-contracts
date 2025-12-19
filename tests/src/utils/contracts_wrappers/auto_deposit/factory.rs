@@ -1,8 +1,4 @@
-use soroban_sdk::{
-    contracttype,
-    testutils::{Events, Logs},
-    Address, BytesN, Env, U256,
-};
+use soroban_sdk::{contracttype, Address, BytesN, Env, U256};
 
 use crate::{
     contracts::auto_deposit_factory::{self, Config},
@@ -109,6 +105,28 @@ impl AutoDepositFactory {
             self.env(),
             desoroban_result(self.client.try_swap_and_bridge(
                 &wallet_address,
+                &token_address,
+                &nonce,
+            )),
+        );
+    }
+
+    pub fn create_swap_and_bridge(
+        &self,
+        recipient_chain_id: u32,
+        recipient: BytesN<32>,
+        recipient_token: BytesN<32>,
+        min_deposit_amount: u128,
+        token_address: Address,
+        nonce: U256,
+    ) {
+        unwrap_call_result(
+            self.env(),
+            desoroban_result(self.client.try_create_swap_and_bridge(
+                &recipient_chain_id,
+                &recipient,
+                &recipient_token,
+                &min_deposit_amount,
                 &token_address,
                 &nonce,
             )),

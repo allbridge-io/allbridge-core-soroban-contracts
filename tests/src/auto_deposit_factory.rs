@@ -1,7 +1,7 @@
 use soroban_sdk::{testutils::BytesN as _, BytesN};
 
 use crate::contracts::bridge::{ReceiveFee, TokensSent};
-use crate::utils::auto_deposit::AutoDepositWallet;
+use crate::utils::auto_deposit::AutoDepositWalletDeployed;
 use crate::utils::{
     auto_deposit::DepositAddressCreation, consts::GOERLI_CHAIN_ID, gen_nonce,
     get_latest_event_unchecked, BridgeEnv,
@@ -208,15 +208,11 @@ fn swap_and_bridge() {
     let nonce = gen_nonce(env);
 
     assert_eq!(yusd_token.balance_of(&auto_deposit_factory.id), 0);
-    let wallet = AutoDepositWallet::new(env, wallet_address.clone());
 
     auto_deposit_factory.swap_and_bridge(wallet_address.clone(), yusd_token.id.clone(), nonce);
 
     get_latest_event_unchecked::<ReceiveFee>(env);
     get_latest_event_unchecked::<TokensSent>(env);
-
-    // let auto_deposit_fee = yusd_token.int_to_float(yusd_token.balance_of(&auto_deposit_factory.id));
-    // assert_eq!(auto_deposit_fee, 2.0);
 
     assert_eq!(yusd_token.balance_of(&wallet_address), 0);
 }
@@ -244,4 +240,44 @@ fn swap_and_bridge_amount_too_low() {
     let nonce = gen_nonce(env);
 
     auto_deposit_factory.swap_and_bridge(wallet_address, yusd_token.id.clone(), nonce);
+}
+
+#[test]
+fn create_swap_and_bridge() {
+    let BridgeEnv {
+        ref auto_deposit_factory,
+        ref env,
+        ref yusd_token,
+        ref alice,
+        goerli_token,
+        ..
+    } = BridgeEnv::default();
+
+    let recipient = BytesN::<32>::random(env);
+    let wallet_address = auto_deposit_factory.client.deposit_wallet_address(
+        &GOERLI_CHAIN_ID,
+        &recipient.clone(),
+        &goerli_token,
+        &10,
+    );
+
+    yusd_token.transfer(&alice.as_address(), &wallet_address, 35.0);
+    let nonce = gen_nonce(env);
+
+    assert_eq!(yusd_token.balance_of(&auto_deposit_factory.id), 0);
+
+    auto_deposit_factory.create_swap_and_bridge(
+        GOERLI_CHAIN_ID,
+        recipient,
+        goerli_token,
+        10,
+        yusd_token.id.clone(),
+        nonce,
+    );
+
+    get_latest_event_unchecked::<ReceiveFee>(env);
+    get_latest_event_unchecked::<TokensSent>(env);
+    get_latest_event_unchecked::<AutoDepositWalletDeployed>(env);
+
+    assert_eq!(yusd_token.balance_of(&wallet_address), 0);
 }
