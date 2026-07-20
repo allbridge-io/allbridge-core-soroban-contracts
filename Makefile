@@ -1,8 +1,8 @@
 .DEFAULT_GOAL := all
 
-all: build-bridge
+all: build-bridge build-cctp-bridge
 
-optimize-all: optimize-gas-oracle optimize-messenger optimize-pool optimize-bridge
+optimize-all: optimize-gas-oracle optimize-messenger optimize-pool optimize-bridge optimize-cctp-bridge
 
 ADDRESS_PATH = soroban-deploy-testnet
 
@@ -13,12 +13,12 @@ MESSENGER_ADDRESS_PATH = $(ADDRESS_PATH)/messenger
 MESSENGER_ADDRESS = $$(cat $(MESSENGER_ADDRESS_PATH))
 
 GAS_ORACLE_ADDRESS_PATH = $(ADDRESS_PATH)/gas_orace
-GAS_ORACLE_WASM_PATH = target/wasm32-unknown-unknown/release/gas_oracle.wasm
-GAS_ORACLE_WASM_PATH_OP = target/wasm32-unknown-unknown/release/gas_oracle.wasm
+GAS_ORACLE_WASM_PATH = target/wasm32v1-none/release/gas_oracle.wasm
+GAS_ORACLE_WASM_PATH_OP = target/wasm32v1-none/release/gas_oracle.wasm
 GAS_ORACLE_ADDRESS = $$(cat $(GAS_ORACLE_ADDRESS_PATH))
 
-POOL_WASM_PATH = target/wasm32-unknown-unknown/release/pool.wasm
-POOL_WASM_PATH_OP = target/wasm32-unknown-unknown/release/pool.wasm
+POOL_WASM_PATH = target/wasm32v1-none/release/pool.wasm
+POOL_WASM_PATH_OP = target/wasm32v1-none/release/pool.wasm
 POOL_YARO_ADDRESS_PATH = $(ADDRESS_PATH)/pool_yaro
 POOL_YARO_ADDRESS = $$(cat $(POOL_YARO_ADDRESS_PATH))
 
@@ -28,15 +28,49 @@ POOL_USDY_ADDRESS = $$(cat $(POOL_USDY_ADDRESS_PATH))
 POOL_USDC_ADDRESS_PATH = $(ADDRESS_PATH)/pool
 POOL_USDC_ADDRESS = $$(cat $(POOL_USDC_ADDRESS_PATH))
 
-MESSENGER_WASM_PATH = target/wasm32-unknown-unknown/release/messenger.wasm
-MESSENGER_WASM_PATH_OP = target/wasm32-unknown-unknown/release/messenger.wasm
+MESSENGER_WASM_PATH = target/wasm32v1-none/release/messenger.wasm
+MESSENGER_WASM_PATH_OP = target/wasm32v1-none/release/messenger.wasm
 MESSENGER_ADDRESS_PATH = $(ADDRESS_PATH)/messenger
 MESSENGER_ADDRESS = $$(cat $(MESSENGER_ADDRESS_PATH))
 
-BRIDGE_WASM_PATH = target/wasm32-unknown-unknown/release/bridge.wasm
-BRIDGE_WASM_PATH_OP = target/wasm32-unknown-unknown/release/bridge.wasm
+BRIDGE_WASM_PATH = target/wasm32v1-none/release/bridge.wasm
+BRIDGE_WASM_PATH_OP = target/wasm32v1-none/release/bridge.wasm
 BRIDGE_ADDRESS_PATH = $(ADDRESS_PATH)/bridge
 BRIDGE_ADDRESS = $$(cat $(BRIDGE_ADDRESS_PATH))
+
+CCTP_BRIDGE_WASM_PATH = target/wasm32v1-none/release/cctp_bridge.wasm
+CCTP_BRIDGE_WASM_PATH_OP = target/wasm32v1-none/release/cctp_bridge.wasm
+CCTP_BRIDGE_ADDRESS_PATH = $(ADDRESS_PATH)/cctp_bridge
+CCTP_BRIDGE_ADDRESS = $$(cat $(CCTP_BRIDGE_ADDRESS_PATH))
+
+CCTP_TOKEN_MESSENGER_MINTER_ADDRESS ?= CDNG7HXAPBWICI2E3AUBP3YZWZELJLYSB6F5CC7WLDTLTHVM74SLRTHP # testnet
+CCTP_MESSAGE_TRANSMITTER_ADDRESS ?= CBJ6MTCKKZG73PMDZCJMSFRD7DQEMI4FKDH7CGDSV4W6FHCRBCQAVVJY # testnet
+CCTP_MIN_FINALITY_THRESHOLD ?= 1000
+CCTP_MAX_FEE_SHARE ?= 100000
+CCTP_ADMIN_FEE_SHARE_BP ?= 10
+CCTP_BRIDGING_FEE_CONVERSION_FACTOR ?= 1000000000
+
+CCTP_OTHER_CHAIN_ID ?= 4
+CCTP_GAS_USAGE ?= 250000
+CCTP_OTHER_DOMAIN ?= 0
+# 32 bytes-hex. Other bridge address or CCTP bridge authority PDA on Solana
+# rucRLqMvNQnrPHcvbXW3hv64aN6CxJUaTBxFDFbSRY5
+CCTP_OTHER_BRIDGE ?= 0000000000000000000000000000000000000000000000000000000000000000
+CCTP_RECIPIENT ?= 0000000000000000000000000000000000000000000000000000000000000000
+CCTP_RECIPIENT_AUTHORITY_BASE58 ?= 7A1g9o2rXwznKdxEvxRA99AkWnbMZFzLKB5js1e9ZSVT
+CCTP_RECIPIENT_AUTHORITY ?= $(shell printf "$(CCTP_RECIPIENT_AUTHORITY_BASE58)" | bs58 -d | xxd -p -c 256)
+CCTP_AMOUNT ?= 10000000
+CCTP_GAS_AMOUNT ?= 0
+CCTP_FEE_TOKEN_AMOUNT ?= 0
+CCTP_MESSAGE_ID ?= 0000000000000000000000000000000000000000000000000000000000000000
+CCTP_MESSAGE ?= 00
+CCTP_ATTESTATION ?= 00
+
+GAS_ORACLE_SET_CHAIN_ID ?= 7
+GAS_ORACLE_OTHER_CHAIN_ID ?= $(CCTP_OTHER_CHAIN_ID)
+GAS_ORACLE_PRICE ?= 136000000000000000
+GAS_ORACLE_GAS_PRICE ?= 50
+GAS_ORACLE_GAS_AMOUNT ?= 250000
 
 ALICE = $$(stellar keys address alice)
 ADMIN_ALIAS = alice
@@ -47,8 +81,7 @@ ADMIN = $$(stellar keys address $(ADMIN_ALIAS))
 
 YARO_ADDRESS=CACOK7HB7D7SRPMH3LYYOW77T6D4D2F7TR7UEVKY2TVSUDSRDM6DZVLK #Testnet
 USDY_ADDRESS=CAOPX7DVI3PFLHE7637YSFU6TLG6Z27Z5O3M547ANAYXQOAYCYYV6NO6 #Testnet
-
-USDC_ADDRESS=CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA
+USDC_ADDRESS=CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA #Testnet
 
 #TOKEN_ADDRESS=$(YARO_ADDRESS)
 #POOL_ADDRESS_PATH=$(POOL_YARO_ADDRESS_PATH)
@@ -67,17 +100,23 @@ NETWORK=testnet
 test: all
 	cargo test
 
+install-tools:
+	@bs58 --version || cargo install bs58-cli
+
 build-gas-oracle:
-	 cargo build --target wasm32-unknown-unknown --release --package gas-oracle
+	 cargo build --target wasm32v1-none --release --package gas-oracle
 
 build-messenger: build-gas-oracle
-	 cargo build --target wasm32-unknown-unknown --release --package messenger
+	 cargo build --target wasm32v1-none --release --package messenger
 
-build-pool: 
-	cargo build --target wasm32-unknown-unknown --release --package pool
+build-pool:
+	cargo build --target wasm32v1-none --release --package pool
 
 build-bridge: build-messenger build-pool
-	cargo build --target wasm32-unknown-unknown --release --package bridge
+	cargo build --target wasm32v1-none --release --package bridge
+
+build-cctp-bridge:
+	cargo build --target wasm32v1-none --release --package cctp-bridge
 
 optimize-gas-oracle:
 	stellar contract optimize --wasm $(GAS_ORACLE_WASM_PATH)
@@ -90,6 +129,9 @@ optimize-pool:
 
 optimize-bridge:
 	stellar contract optimize --wasm $(BRIDGE_WASM_PATH)
+
+optimize-cctp-bridge:
+	stellar contract optimize --wasm $(CCTP_BRIDGE_WASM_PATH)
 
 deploy-gas-oracle:
 	stellar contract deploy \
@@ -114,9 +156,9 @@ gas-oracle-set-price:
 		--network $(NETWORK) 	\
 		-- \
 		set_price \
-		--chain_id 7 \
-        --price 136000000000000000 \
-        --gas_price 50
+		--chain_id $(GAS_ORACLE_SET_CHAIN_ID) \
+        --price $(GAS_ORACLE_PRICE) \
+        --gas_price $(GAS_ORACLE_GAS_PRICE)
 
 gas-oracle-set-price-1:
 	stellar contract invoke \
@@ -166,8 +208,8 @@ gas-oracle-get-gas-cost-in-native-token:
 		--is-view \
 		-- \
 		get_gas_cost_in_native_token \
-		--other_chain_id 2 \
-		--gas_amount 250000
+		--other_chain_id $(GAS_ORACLE_OTHER_CHAIN_ID) \
+		--gas_amount $(GAS_ORACLE_GAS_AMOUNT)
 
 gas-oracle-get-transaction-gas-cost-in-usd:
 	stellar contract invoke \
@@ -262,7 +304,7 @@ pool-deposit:
 		-- \
 		deposit \
 		--sender $(ADMIN) \
-		--amount 1000000000000
+		--amount 200000000
 
 pool-get-pool-info:
 	stellar contract invoke \
@@ -809,6 +851,354 @@ bridge-restore-contract:
 	--durability persistent \
 	--ledgers-to-extend 535679
 
+#---------------CCTP BRIDGE---------------------------
+cctp-bridge-deploy:
+	stellar contract deploy \
+		--wasm $(CCTP_BRIDGE_WASM_PATH_OP) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		> $(CCTP_BRIDGE_ADDRESS_PATH) && echo $(CCTP_BRIDGE_ADDRESS)
+
+cctp-bridge-deploy-by-hash:
+	stellar contract deploy \
+		--wasm-hash <hash> \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		> $(CCTP_BRIDGE_ADDRESS_PATH) && echo $(CCTP_BRIDGE_ADDRESS)
+
+cctp-bridge-initialize:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		initialize \
+		--admin $(ADMIN) \
+		--usdc_token $(USDC_ADDRESS) \
+		--token_messenger_minter $(CCTP_TOKEN_MESSENGER_MINTER_ADDRESS) \
+		--message_transmitter $(CCTP_MESSAGE_TRANSMITTER_ADDRESS) \
+		--gas_oracle $(GAS_ORACLE_ADDRESS) \
+		--native_token $(NATIVE_ADDRESS) \
+		--min_finality_threshold $(CCTP_MIN_FINALITY_THRESHOLD) \
+		--max_fee_share $(CCTP_MAX_FEE_SHARE) \
+		--admin_fee_share_bp $(CCTP_ADMIN_FEE_SHARE_BP) \
+		--bridging_fee_conversion_factor $(CCTP_BRIDGING_FEE_CONVERSION_FACTOR)
+
+cctp-bridge-register-chain-bridge:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		register_chain_bridge \
+		--chain_id $(CCTP_OTHER_CHAIN_ID) \
+		--gas_usage $(CCTP_GAS_USAGE) \
+		--domain $(CCTP_OTHER_DOMAIN) \
+		--other_bridge $(CCTP_OTHER_BRIDGE)
+
+cctp-bridge-update-chain-bridge:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		update_chain_bridge \
+		--chain_id $(CCTP_OTHER_CHAIN_ID) \
+		--gas_usage $(CCTP_GAS_USAGE) \
+		--domain $(CCTP_OTHER_DOMAIN) \
+		--other_bridge $(CCTP_OTHER_BRIDGE)
+
+cctp-bridge-set-admin-fee-share:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		set_admin_fee_share \
+		--admin_fee_share_bp $(CCTP_ADMIN_FEE_SHARE_BP)
+
+cctp-bridge-set-max-fee-share:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		set_max_fee_share \
+		--value $(CCTP_MAX_FEE_SHARE)
+
+cctp-bridge-set-min-finality-threshold:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		set_min_finality_threshold \
+		--value $(CCTP_MIN_FINALITY_THRESHOLD)
+
+cctp-bridge-set-gas-oracle:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		set_gas_oracle \
+		--gas_oracle $(GAS_ORACLE_ADDRESS)
+
+cctp-bridge-set-token-messenger-minter:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		set_token_messenger_minter \
+		--token_messenger_minter $(CCTP_TOKEN_MESSENGER_MINTER_ADDRESS)
+
+cctp-bridge-set-message-transmitter:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		set_message_transmitter \
+		--message_transmitter $(CCTP_MESSAGE_TRANSMITTER_ADDRESS)
+
+cctp-bridge-set-fee-conversion-factor:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		set_fee_conversion_factor \
+		--value $(CCTP_BRIDGING_FEE_CONVERSION_FACTOR)
+
+cctp-bridge-set-admin:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		set_admin \
+		--new_admin $(ALICE)
+
+
+cctp-bridge-bridge:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		bridge \
+		--sender $(ADMIN) \
+		--amount $(CCTP_AMOUNT) \
+		--recipient $(CCTP_RECIPIENT) \
+		--destination_chain_id $(CCTP_OTHER_CHAIN_ID) \
+		--gas_amount $(CCTP_GAS_AMOUNT) \
+		--fee_token_amount $(CCTP_FEE_TOKEN_AMOUNT)
+
+cctp-bridge-bridge-with-token-fee:
+	@fee_token_amount="$$( $(MAKE) -s cctp-bridge-get-bridging-cost-in-tokens CCTP_OTHER_CHAIN_ID=$(CCTP_OTHER_CHAIN_ID) | tail -n 1 | tr -d '"' )"; \
+	fee_token_amount="$$((fee_token_amount + 1))"; \
+	amount="$$(($(CCTP_AMOUNT) + fee_token_amount))"; \
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) \
+		-- \
+		bridge \
+		--sender $(ADMIN_ALIAS) \
+		--amount "$$amount" \
+		--recipient $(CCTP_RECIPIENT) \
+		--destination_chain_id $(CCTP_OTHER_CHAIN_ID) \
+		--gas_amount 0 \
+		--fee_token_amount "$$fee_token_amount"
+
+cctp-bridge-bridge-with-native-fee:
+	@gas_amount="$$( $(MAKE) -s cctp-bridge-get-transaction-cost CCTP_OTHER_CHAIN_ID=$(CCTP_OTHER_CHAIN_ID) | tail -n 1 | tr -d '"' )"; \
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) \
+		-- \
+		bridge \
+		--sender $(ADMIN_ALIAS) \
+		--amount $(CCTP_AMOUNT) \
+		--recipient $(CCTP_RECIPIENT) \
+		--destination_chain_id $(CCTP_OTHER_CHAIN_ID) \
+		--gas_amount "$$gas_amount" \
+		--fee_token_amount 0
+
+cctp-bridge-bridge-to-solana-with-token-fee: install-tools
+	@fee_token_amount="$$( $(MAKE) -s cctp-bridge-get-bridging-cost-in-tokens CCTP_OTHER_CHAIN_ID=$(CCTP_OTHER_CHAIN_ID) | tail -n 1 | tr -d '"' )"; \
+	fee_token_amount="$$((fee_token_amount + 1))"; \
+	amount="$$(($(CCTP_AMOUNT) + fee_token_amount))"; \
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) \
+		-- \
+		bridge \
+		--sender $(ADMIN_ALIAS) \
+		--amount "$$amount" \
+		--recipient $(CCTP_RECIPIENT_AUTHORITY) \
+		--destination_chain_id 4 \
+		--gas_amount 0 \
+		--fee_token_amount "$$fee_token_amount"
+
+cctp-bridge-bridge-to-solana-with-native-fee: install-tools
+	@gas_amount="$$( $(MAKE) -s cctp-bridge-get-transaction-cost CCTP_OTHER_CHAIN_ID=$(CCTP_OTHER_CHAIN_ID) | tail -n 1 | tr -d '"' )"; \
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) \
+		-- \
+		bridge \
+		--sender $(ADMIN_ALIAS) \
+		--amount $(CCTP_AMOUNT) \
+		--recipient $(CCTP_RECIPIENT_AUTHORITY) \
+		--destination_chain_id 4 \
+		--gas_amount "$$gas_amount" \
+		--fee_token_amount 0
+
+# This bridge contract is the Stellar CCTP recipient.
+# Inbound CCTP messages must target $(CCTP_BRIDGE_ADDRESS) as both mintRecipient and destinationCaller.
+cctp-bridge-receive-tokens:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		receive_tokens \
+		--sender $(ADMIN) \
+		--message_id $(CCTP_MESSAGE_ID) \
+		--message $(patsubst 0x%,%,$(CCTP_MESSAGE)) \
+		--attestation $(patsubst 0x%,%,$(CCTP_ATTESTATION)) \
+		--extra_gas_amount 0
+
+cctp-bridge-get-chain-bridge:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
+		--is-view \
+		-- \
+		get_chain_bridge \
+		--chain_id $(CCTP_OTHER_CHAIN_ID)
+
+cctp-bridge-get-domain-by-chain-id:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
+		--is-view \
+		-- \
+		get_domain_by_chain_id \
+		--chain_id $(CCTP_OTHER_CHAIN_ID)
+
+cctp-bridge-get-transaction-cost:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
+		--is-view \
+		-- \
+		get_transaction_cost \
+		--chain_id $(CCTP_OTHER_CHAIN_ID)
+
+cctp-bridge-get-bridging-cost-in-tokens:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
+		--is-view \
+		-- \
+		get_bridging_cost_in_tokens \
+		--chain_id $(CCTP_OTHER_CHAIN_ID)
+
+cctp-bridge-native-fee-balance:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
+		--is-view \
+		-- \
+		native_fee_balance
+
+cctp-bridge-bridging-fee-in-tokens:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
+		--is-view \
+		-- \
+		bridging_fee_in_tokens \
+		--token_address $(USDC_ADDRESS)
+
+cctp-bridge-get-admin:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
+		--is-view \
+		-- \
+		admin
+
+cctp-bridge-get-config-addresses:
+	$(MAKE) cctp-bridge-get-admin
+	stellar contract invoke --id $(CCTP_BRIDGE_ADDRESS) --network $(NETWORK) --source $(ADMIN_ALIAS) --is-view -- usdc_token
+	stellar contract invoke --id $(CCTP_BRIDGE_ADDRESS) --network $(NETWORK) --source $(ADMIN_ALIAS) --is-view -- token_messenger_minter
+	stellar contract invoke --id $(CCTP_BRIDGE_ADDRESS) --network $(NETWORK) --source $(ADMIN_ALIAS) --is-view -- message_transmitter
+	stellar contract invoke --id $(CCTP_BRIDGE_ADDRESS) --network $(NETWORK) --source $(ADMIN_ALIAS) --is-view -- gas_oracle
+	stellar contract invoke --id $(CCTP_BRIDGE_ADDRESS) --network $(NETWORK) --source $(ADMIN_ALIAS) --is-view -- native_token
+
+cctp-bridge-get-config-fees:
+	stellar contract invoke --id $(CCTP_BRIDGE_ADDRESS) --network $(NETWORK) --source $(ADMIN_ALIAS) --is-view -- min_finality_threshold
+	stellar contract invoke --id $(CCTP_BRIDGE_ADDRESS) --network $(NETWORK) --source $(ADMIN_ALIAS) --is-view -- max_fee_share
+	stellar contract invoke --id $(CCTP_BRIDGE_ADDRESS) --network $(NETWORK) --source $(ADMIN_ALIAS) --is-view -- admin_fee_share_bp
+	stellar contract invoke --id $(CCTP_BRIDGE_ADDRESS) --network $(NETWORK) --source $(ADMIN_ALIAS) --is-view -- bridging_fee_conversion_factor
+
+cctp-bridge-withdraw-gas-tokens:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		withdraw_gas_tokens \
+		--sender $(ADMIN) \
+		--amount 10000000
+
+cctp-bridge-withdraw-bridging-fee-in-tokens:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		withdraw_bridging_fee_in_tokens \
+		--sender $(ADMIN) \
+		--token_address $(USDC_ADDRESS)
+
+cctp-bridge-install:
+	stellar contract install \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		--wasm $(CCTP_BRIDGE_WASM_PATH_OP)
+
+cctp-bridge-update-contract:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		upgrade \
+		--new_wasm_hash <hash>
+
+cctp-bridge-restore-contract:
+	stellar contract restore \
+	--id $(CCTP_BRIDGE_ADDRESS) \
+	--source $(ADMIN_ALIAS) \
+	--network $(NETWORK) 	\
+	--durability persistent \
+	--ledgers-to-extend 535679
+
 #----------UTILS--------------------------
 token-transfer:
 	stellar contract invoke \
@@ -863,7 +1253,7 @@ native-token-address:
  		--network $(NETWORK) \
  		--asset native
 
-generate-types: generate-types-gas-oracle generate-types-pool generate-types-bridge generate-types-messenger generate-types-token
+generate-types: generate-types-gas-oracle generate-types-pool generate-types-bridge generate-types-cctp-bridge generate-types-messenger generate-types-token
 
 generate-types-gas-oracle:
 	stellar contract bindings typescript \
@@ -882,6 +1272,12 @@ generate-types-bridge:
 	--network $(NETWORK) \
 	--output-dir ./types/bridge \
 	--contract-id $(BRIDGE_ADDRESS)
+
+generate-types-cctp-bridge:
+	stellar contract bindings typescript \
+	--network $(NETWORK) \
+	--output-dir ./types/cctp-bridge \
+	--contract-id $(CCTP_BRIDGE_ADDRESS)
 
 generate-types-messenger:
 	stellar contract bindings typescript \

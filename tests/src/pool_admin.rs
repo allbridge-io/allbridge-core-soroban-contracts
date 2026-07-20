@@ -1,5 +1,5 @@
-use soroban_sdk::{testutils::Address as _, Address};
 use crate::contracts::pool;
+use soroban_sdk::{testutils::Address as _, Address};
 
 use crate::utils::{desoroban_result, unwrap_call_result, BridgeEnv, BridgeEnvConfig};
 
@@ -21,7 +21,7 @@ fn stop_deposit() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn stop_deposit_no_auth() {
     let BridgeEnv { env, yaro_pool, .. } = BridgeEnv::default();
 
@@ -43,7 +43,7 @@ fn start_deposit() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn start_deposit_no_auth() {
     let BridgeEnv { env, yaro_pool, .. } = BridgeEnv::default();
 
@@ -74,7 +74,7 @@ fn stop_withdraw() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn stop_withdraw_no_auth() {
     let BridgeEnv { env, yaro_pool, .. } = BridgeEnv::default();
 
@@ -92,7 +92,7 @@ fn start_withdraw() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn start_withdraw_no_auth() {
     let BridgeEnv { env, yaro_pool, .. } = BridgeEnv::default();
 
@@ -116,7 +116,7 @@ fn set_admin() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn set_admin_no_auth() {
     let BridgeEnv { env, yaro_pool, .. } = BridgeEnv::default();
 
@@ -138,7 +138,7 @@ fn set_stop_authority() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn set_stop_authority_no_auth() {
     let BridgeEnv { env, yaro_pool, .. } = BridgeEnv::default();
 
@@ -164,7 +164,7 @@ fn set_bridge() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn set_bridge_no_auth() {
     let BridgeEnv { env, yaro_pool, .. } = BridgeEnv::default();
 
@@ -184,7 +184,7 @@ fn set_fee_share() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn set_fee_share_no_auth() {
     let BridgeEnv { env, yaro_pool, .. } = BridgeEnv::default();
 
@@ -224,7 +224,7 @@ fn set_balance_ratio_min_bp() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn balance_ratio_min_bp_no_auth() {
     let BridgeEnv { env, yaro_pool, .. } = BridgeEnv::default();
 
@@ -244,7 +244,7 @@ fn admin_fee_share_bp() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn admin_fee_share_bp_no_auth() {
     let BridgeEnv { env, yaro_pool, .. } = BridgeEnv::default();
 
@@ -256,7 +256,7 @@ fn admin_fee_share_bp_no_auth() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn adjust_total_lp_amount_no_auth() {
     let bridge_env = BridgeEnv::create(BridgeEnvConfig {
         yaro_admin_deposit: 1_000_000_000.0,
@@ -276,20 +276,14 @@ fn adjust_total_lp_amount_no_auth() {
 fn upgrade() {
     let BridgeEnv { env, yaro_pool, .. } = BridgeEnv::default();
     let hash = env.deployer().upload_contract_wasm(pool::WASM);
-    unwrap_call_result(
-        &env,
-        yaro_pool.upgrade(&hash),
-    )
+    unwrap_call_result(&env, yaro_pool.upgrade(&hash))
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn upgrade_no_auth() {
     let BridgeEnv { env, yaro_pool, .. } = BridgeEnv::default();
     env.mock_auths(&[]);
     let hash = env.deployer().upload_contract_wasm(pool::WASM);
-    unwrap_call_result(
-        &env,
-        yaro_pool.upgrade(&hash),
-    )
+    unwrap_call_result(&env, yaro_pool.upgrade(&hash))
 }

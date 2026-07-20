@@ -1,7 +1,7 @@
+use crate::contracts::bridge;
 use shared::consts::{CHAIN_PRECISION, ORACLE_PRECISION};
 use soroban_sdk::testutils::{Address as _, BytesN as _, MockAuth, MockAuthInvoke};
 use soroban_sdk::{Address, BytesN, IntoVal};
-use crate::contracts::bridge;
 
 use crate::utils::consts::GOERLI_CHAIN_ID;
 use crate::utils::{contract_id, BridgeEnv, Pool};
@@ -58,7 +58,7 @@ fn add_pool() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn set_gas_oracle_no_auth() {
     let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
     env.mock_auths(&[]);
@@ -77,7 +77,7 @@ fn set_gas_oracle() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn set_rebalancer_no_auth() {
     let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
     env.mock_auths(&[]);
@@ -122,7 +122,7 @@ fn set_messenger() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn set_messenger_no_auth() {
     let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
     env.mock_auths(&[]);
@@ -141,7 +141,7 @@ fn set_admin() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn set_admin_no_auth() {
     let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
     env.mock_auths(&[]);
@@ -159,7 +159,7 @@ fn set_stop_authority() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn set_stop_authority_no_auth() {
     let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
     env.mock_auths(&[]);
@@ -241,7 +241,7 @@ fn sucessful_stop_swap_and_then_swap() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn stop_swap_no_auth() {
     let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
 
@@ -307,7 +307,7 @@ fn sucessful_swap_restart() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn swap_restart_no_auth() {
     let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
 
@@ -337,7 +337,7 @@ fn register_bridge() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn register_bridge_no_auth() {
     let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
     env.mock_auths(&[]);
@@ -383,7 +383,7 @@ fn add_bridge_token() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn add_bridge_token_no_auth() {
     let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
     env.mock_auths(&[]);
@@ -458,15 +458,15 @@ fn withdraw_gas_tokens() {
 #[test]
 fn upgrade() {
     let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
-    let hash =  env.deployer().upload_contract_wasm(bridge::WASM);
+    let hash = env.deployer().upload_contract_wasm(bridge::WASM);
     bridge.upgrade(&hash)
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn upgrade_no_auth() {
     let BridgeEnv { env, bridge, .. } = BridgeEnv::default();
     env.mock_auths(&[]);
-    let hash =  env.deployer().upload_contract_wasm(bridge::WASM);
+    let hash = env.deployer().upload_contract_wasm(bridge::WASM);
     bridge.upgrade(&hash)
 }
