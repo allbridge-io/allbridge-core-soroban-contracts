@@ -1,6 +1,5 @@
 #![no_std]
 
-
 pub mod consts;
 mod error;
 mod event;

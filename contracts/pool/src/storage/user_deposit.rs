@@ -1,7 +1,7 @@
-use proc_macros::{data_storage_type, SorobanData, extend_ttl_info};
+use proc_macros::{data_storage_type, extend_ttl_info, SorobanData};
+use shared::consts::DAY_IN_LEDGERS;
 use shared::soroban_data::SorobanData;
 use soroban_sdk::{contracttype, Address, Env};
-use shared::consts::DAY_IN_LEDGERS;
 
 use crate::storage::data_key::DataKey;
 

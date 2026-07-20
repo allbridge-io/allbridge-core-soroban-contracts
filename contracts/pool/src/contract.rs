@@ -1,7 +1,7 @@
 use bridge_storage::view::{get_admin, get_stop_authority};
-use shared::{utils::extend_ttl_instance, Error};
-use soroban_sdk::{contract, contractimpl, Address, Env, BytesN};
 use bridge_storage::Admin;
+use shared::{utils::extend_ttl_instance, Error};
+use soroban_sdk::{contract, contractimpl, Address, BytesN, Env};
 
 use crate::{
     methods::{
@@ -71,7 +71,7 @@ impl PoolContract {
         user: Address,
         vusd_amount: u128,
         receive_amount_min: u128,
-        zero_fee: bool
+        zero_fee: bool,
     ) -> Result<u128, Error> {
         extend_ttl_instance(&env);
 

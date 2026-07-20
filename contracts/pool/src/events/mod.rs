@@ -42,4 +42,3 @@ pub struct RewardsClaimed {
     pub user: Address,
     pub amount: u128,
 }
-
