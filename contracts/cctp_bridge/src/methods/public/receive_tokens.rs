@@ -1,4 +1,4 @@
-use shared::{require, Error, Event};
+use shared::{Error, Event};
 use soroban_sdk::{token, Address, Bytes, BytesN, Env};
 
 use crate::{
