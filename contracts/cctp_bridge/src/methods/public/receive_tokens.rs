@@ -2,8 +2,10 @@ use shared::{require, Error, Event};
 use soroban_sdk::{token, Address, Bytes, BytesN, Env};
 
 use crate::{
-    cctp_wire::parse_cctp_v2, events::TokensReceived, external::TokenMessengerMinterClient,
-    methods::internal, storage, utils::address_to_bytes32,
+    events::TokensReceived,
+    external::TokenMessengerMinterClient,
+    methods::internal::{self, ValidatedMessageData},
+    storage,
 };
 
 pub fn receive_tokens(
@@ -19,30 +21,17 @@ pub fn receive_tokens(
     }
 
     let config = storage::get_config(&env)?;
-    let parsed = parse_cctp_v2(&env, &message)?;
-
-    let source_chain_id = storage::get_chain_id_by_domain(&env, parsed.source_domain)?;
-    let self_address = env.current_contract_address();
-    let self_bytes32 = address_to_bytes32(&env, &self_address)?;
-    let token_messenger_minter_bytes32 = address_to_bytes32(&env, &config.token_messenger_minter)?;
-    require!(
-        parsed.recipient == token_messenger_minter_bytes32,
-        Error::WrongDestinationChain
-    );
-    require!(
-        parsed.destination_caller == self_bytes32,
-        Error::WrongDestinationChain
-    );
-    require!(
-        parsed.mint_recipient == self_bytes32,
-        Error::WrongDestinationChain
-    );
+    let ValidatedMessageData {
+        source_domain,
+        burn_token,
+        forward_recipient,
+    } = internal::validate_cctp_message(&env, &config, &message)?;
+    let source_chain_id = storage::get_chain_id_by_domain(&env, source_domain)?;
     let local_token = TokenMessengerMinterClient::new(&env, &config.token_messenger_minter)
-        .get_local_token(&parsed.source_domain, &parsed.burn_token)
+        .get_local_token(&source_domain, &burn_token)
         .ok_or(Error::InvalidArg)?;
-
-    let recipient = internal::parse_common_hook_data(&env, &parsed.hook_data)?;
-    let recipient_address = recipient.address();
+    let self_address = env.current_contract_address();
+    let recipient_address = forward_recipient.address();
     require!(
         recipient_address != local_token && recipient_address != self_address,
         Error::InvalidArg
@@ -57,7 +46,11 @@ pub fn receive_tokens(
         &attestation,
     )?;
 
-    token::TokenClient::new(&env, &local_token).transfer(&self_address, &recipient, &minted_amount);
+    token::TokenClient::new(&env, &local_token).transfer(
+        &self_address,
+        &forward_recipient,
+        &minted_amount,
+    );
 
     if extra_gas_amount > 0 {
         token::Client::new(&env, &config.native_token).transfer(
@@ -71,7 +64,7 @@ pub fn receive_tokens(
         message_id,
         amount: minted_amount,
         recipient: recipient_address,
-        recipient_muxed_id: recipient.id(),
+        recipient_muxed_id: forward_recipient.id(),
         source_chain_id,
         extra_gas_value: extra_gas_amount,
     }
