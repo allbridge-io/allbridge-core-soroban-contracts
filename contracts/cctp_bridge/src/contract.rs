@@ -62,29 +62,6 @@ impl CctpBridgeContract {
         )
     }
 
-    pub fn bridge_with_hook(
-        env: Env,
-        sender: Address,
-        amount: u128,
-        recipient: BytesN<32>,
-        destination_chain_id: u32,
-        gas_amount: u128,
-        fee_token_amount: u128,
-        hook_data: Bytes,
-    ) -> Result<(), Error> {
-        extend_ttl_instance(&env);
-        public::bridge_with_hook(
-            env,
-            sender,
-            amount,
-            recipient,
-            destination_chain_id,
-            gas_amount,
-            fee_token_amount,
-            hook_data,
-        )
-    }
-
     pub fn receive_tokens(
         env: Env,
         sender: Address,
