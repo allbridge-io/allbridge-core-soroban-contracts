@@ -32,10 +32,6 @@ pub fn receive_tokens(
         .ok_or(Error::InvalidArg)?;
     let self_address = env.current_contract_address();
     let recipient_address = forward_recipient.address();
-    require!(
-        recipient_address != local_token && recipient_address != self_address,
-        Error::InvalidArg
-    );
 
     let minted_amount = internal::mint_through_cctp(
         &env,
