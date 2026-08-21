@@ -14,6 +14,8 @@ pub trait GasOracle {
 #[contractclient(name = "TokenMessengerMinterClient")]
 #[allow(dead_code)]
 pub trait TokenMessengerMinter {
+    fn get_local_token(env: Env, remote_domain: u32, remote_token: BytesN<32>) -> Option<Address>;
+
     #[allow(clippy::too_many_arguments)]
     fn deposit_for_burn(
         env: Env,

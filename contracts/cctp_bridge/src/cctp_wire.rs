@@ -6,22 +6,21 @@ pub const BURN_MESSAGE_V2_VERSION: u32 = 1;
 
 const OFF_HEADER_VERSION: u32 = 0;
 const OFF_SOURCE_DOMAIN: u32 = 4;
+const OFF_RECIPIENT: u32 = 76;
 const OFF_DESTINATION_CALLER: u32 = 108;
 const HEADER_LEN: u32 = 148;
 
 const OFF_BODY_VERSION: u32 = HEADER_LEN;
 const OFF_BODY_MINT_RECIPIENT: u32 = HEADER_LEN + 36;
-const OFF_BODY_AMOUNT: u32 = HEADER_LEN + 68;
-const OFF_BODY_FEE_EXECUTED: u32 = HEADER_LEN + 164;
 const MIN_MESSAGE_LEN: u32 = HEADER_LEN + 228;
 
 #[derive(Clone)]
 pub struct CctpV2Decoded {
     pub source_domain: u32,
+    pub recipient: BytesN<32>,
     pub destination_caller: BytesN<32>,
+    pub burn_token: BytesN<32>,
     pub mint_recipient: BytesN<32>,
-    pub amount: i128,
-    pub fee_executed: i128,
     pub hook_data: Bytes,
 }
 
@@ -36,21 +35,15 @@ pub fn parse_cctp_v2(env: &Env, message: &Bytes) -> Result<CctpV2Decoded, Error>
         return Err(Error::InvalidArg);
     }
 
-    let amount = read_u128_be_from_u256(message, OFF_BODY_AMOUNT)?;
-    let fee_executed = read_u128_be_from_u256(message, OFF_BODY_FEE_EXECUTED)?;
-    if amount > i128::MAX as u128 || fee_executed > i128::MAX as u128 {
-        return Err(Error::U256Overflow);
-    }
-
     let hook_data_offset = HEADER_LEN + 228;
     let hook_data = message.slice(hook_data_offset..message.len());
 
     Ok(CctpV2Decoded {
         source_domain: read_u32_be(message, OFF_SOURCE_DOMAIN),
+        recipient: read_bytes32(env, message, OFF_RECIPIENT),
         destination_caller: read_bytes32(env, message, OFF_DESTINATION_CALLER),
+        burn_token: read_bytes32(env, message, OFF_BODY_VERSION + 4),
         mint_recipient: read_bytes32(env, message, OFF_BODY_MINT_RECIPIENT),
-        amount: amount as i128,
-        fee_executed: fee_executed as i128,
         hook_data,
     })
 }
@@ -69,17 +62,4 @@ fn read_bytes32(env: &Env, b: &Bytes, offset: u32) -> BytesN<32> {
         buf[i as usize] = b.get(offset + i).unwrap_or(0);
     }
     BytesN::from_array(env, &buf)
-}
-
-fn read_u128_be_from_u256(b: &Bytes, offset: u32) -> Result<u128, Error> {
-    for i in 0..16u32 {
-        if b.get(offset + i).unwrap_or(0) != 0 {
-            return Err(Error::U256Overflow);
-        }
-    }
-    let mut acc: u128 = 0;
-    for j in 16..32u32 {
-        acc = (acc << 8) | (b.get(offset + j).unwrap_or(0) as u128);
-    }
-    Ok(acc)
 }

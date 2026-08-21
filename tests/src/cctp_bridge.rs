@@ -20,6 +20,23 @@ pub struct TokenMessengerMock;
 
 #[contractimpl]
 impl TokenMessengerMock {
+    pub fn set_local_token(env: Env, token: Option<Address>) {
+        env.storage()
+            .instance()
+            .set(&soroban_sdk::symbol_short!("local"), &token);
+    }
+
+    pub fn get_local_token(
+        env: Env,
+        _remote_domain: u32,
+        _remote_token: BytesN<32>,
+    ) -> Option<Address> {
+        env.storage()
+            .instance()
+            .get(&soroban_sdk::symbol_short!("local"))
+            .flatten()
+    }
+
     #[allow(clippy::too_many_arguments)]
     pub fn deposit_for_burn(
         env: Env,
@@ -119,7 +136,38 @@ pub struct MessageTransmitterMock;
 
 #[contractimpl]
 impl MessageTransmitterMock {
+    pub fn initialize(env: Env, token: Address) {
+        env.storage()
+            .instance()
+            .set(&soroban_sdk::symbol_short!("token"), &token);
+        env.storage()
+            .instance()
+            .set(&soroban_sdk::symbol_short!("mint"), &true);
+    }
+
+    pub fn set_mint_enabled(env: Env, enabled: bool) {
+        env.storage()
+            .instance()
+            .set(&soroban_sdk::symbol_short!("mint"), &enabled);
+    }
+
     pub fn receive_message(env: Env, caller: Address, message: Bytes, attestation: Bytes) -> bool {
+        let mint_enabled: bool = env
+            .storage()
+            .instance()
+            .get(&soroban_sdk::symbol_short!("mint"))
+            .unwrap();
+        if mint_enabled {
+            let amount = read_u128_be_from_u256(&message, 216);
+            let fee = read_u128_be_from_u256(&message, 312);
+            let minted_amount = i128::try_from((amount - fee) * 10).unwrap();
+            let token: Address = env
+                .storage()
+                .instance()
+                .get(&soroban_sdk::symbol_short!("token"))
+                .unwrap();
+            soroban_sdk::token::StellarAssetClient::new(&env, &token).mint(&caller, &minted_amount);
+        }
         env.storage().instance().set(
             &soroban_sdk::symbol_short!("recv"),
             &(caller, message, attestation),
@@ -138,6 +186,8 @@ struct Fixture {
     native: soroban_sdk::token::Client<'static>,
     native_admin: soroban_sdk::token::StellarAssetClient<'static>,
     token_messenger: TokenMessengerMockClient<'static>,
+    token_messenger_id: Address,
+    message_transmitter: MessageTransmitterMockClient<'static>,
     gas_oracle: gas_oracle::Client<'static>,
     other_bridge: BytesN<32>,
     recipient_account: Address,
@@ -163,6 +213,10 @@ fn fixture() -> Fixture {
 
     let token_messenger_id = env.register_contract(None, TokenMessengerMock);
     let message_transmitter_id = env.register_contract(None, MessageTransmitterMock);
+    let token_messenger = TokenMessengerMockClient::new(&env, &token_messenger_id);
+    token_messenger.set_local_token(&Some(usdc_id.clone()));
+    let message_transmitter = MessageTransmitterMockClient::new(&env, &message_transmitter_id);
+    message_transmitter.initialize(&usdc_id);
     let bridge_id = env.register_contract_wasm(None, cctp_bridge::WASM);
     let bridge = cctp_bridge::Client::new(&env, &bridge_id);
 
@@ -191,7 +245,9 @@ fn fixture() -> Fixture {
         usdc_admin: soroban_sdk::token::StellarAssetClient::new(&env, &usdc_id),
         native: soroban_sdk::token::Client::new(&env, &native_id),
         native_admin: soroban_sdk::token::StellarAssetClient::new(&env, &native_id),
-        token_messenger: TokenMessengerMockClient::new(&env, &token_messenger_id),
+        token_messenger,
+        token_messenger_id,
+        message_transmitter,
         gas_oracle,
         other_bridge,
         recipient_account,
@@ -240,6 +296,7 @@ fn admin_registers_and_updates_chain_bridge() {
     let old_domain_message = inbound_cctp_message(
         &f.env,
         DOMAIN,
+        &f.token_messenger_id,
         &address_to_bytes32(&f.env, &f.bridge_id),
         &BytesN::random(&f.env),
         &address_to_bytes32(&f.env, &f.bridge_id),
@@ -463,6 +520,7 @@ fn receive_tokens_forwards_to_g_address_from_hook_data() {
     let message = inbound_cctp_message(
         &f.env,
         DOMAIN,
+        &f.token_messenger_id,
         &bridge_bytes,
         &burn_token,
         &bridge_bytes,
@@ -475,15 +533,8 @@ fn receive_tokens_forwards_to_g_address_from_hook_data() {
     let message_id = BytesN::random(&f.env);
 
     f.usdc_admin.trust(&recipient);
-    f.usdc_admin.mint(&f.bridge_id, &9_990_000);
-
-    f.bridge.receive_tokens(
-        &sender,
-        &message_id,
-        &message,
-        &attestation,
-        &0,
-    );
+    f.bridge
+        .receive_tokens(&sender, &message_id, &message, &attestation, &0);
 
     assert_eq!(f.usdc.balance(&recipient), 9_990_000);
 }
@@ -501,6 +552,7 @@ fn receive_tokens_uses_explicit_message_id() {
     let message = inbound_cctp_message(
         &f.env,
         DOMAIN,
+        &f.token_messenger_id,
         &bridge_bytes,
         &burn_token,
         &bridge_bytes,
@@ -512,15 +564,8 @@ fn receive_tokens_uses_explicit_message_id() {
     let message_id = BytesN::random(&f.env);
 
     f.usdc_admin.trust(&recipient);
-    f.usdc_admin.mint(&f.bridge_id, &9_990_000);
-
-    f.bridge.receive_tokens(
-        &sender,
-        &message_id,
-        &message,
-        &Bytes::new(&f.env),
-        &0,
-    );
+    f.bridge
+        .receive_tokens(&sender, &message_id, &message, &Bytes::new(&f.env), &0);
 
     let all_events = f.env.events().all();
     let event: cctp_bridge::TokensReceived = all_events
@@ -556,6 +601,7 @@ fn receive_tokens_forwards_to_m_address_from_hook_data_and_emits_muxed_id() {
     let message = inbound_cctp_message(
         &f.env,
         DOMAIN,
+        &f.token_messenger_id,
         &bridge_bytes,
         &burn_token,
         &bridge_bytes,
@@ -566,8 +612,6 @@ fn receive_tokens_forwards_to_m_address_from_hook_data_and_emits_muxed_id() {
     );
 
     f.usdc_admin.trust(&g_account);
-    f.usdc_admin.mint(&f.bridge_id, &9_990_000);
-
     f.bridge.receive_tokens(
         &sender,
         &BytesN::random(&f.env),
@@ -604,6 +648,7 @@ fn receive_tokens_rejects_invalid_hook_len() {
     let message = inbound_cctp_message(
         &f.env,
         DOMAIN,
+        &f.token_messenger_id,
         &bridge_bytes,
         &burn_token,
         &bridge_bytes,
@@ -612,8 +657,6 @@ fn receive_tokens_rejects_invalid_hook_len() {
         &f.other_bridge,
         &hook_data,
     );
-
-    f.usdc_admin.mint(&f.bridge_id, &9_990_000);
 
     let result = f.bridge.try_receive_tokens(
         &sender,
@@ -637,6 +680,7 @@ fn receive_tokens_rejects_invalid_strkey() {
     let message = inbound_cctp_message(
         &f.env,
         DOMAIN,
+        &f.token_messenger_id,
         &bridge_bytes,
         &burn_token,
         &bridge_bytes,
@@ -670,6 +714,7 @@ fn receive_tokens_accepts_any_source_sender_from_registered_domain() {
     let message = inbound_cctp_message(
         &f.env,
         DOMAIN,
+        &f.token_messenger_id,
         &bridge_bytes,
         &burn_token,
         &bridge_bytes,
@@ -680,8 +725,6 @@ fn receive_tokens_accepts_any_source_sender_from_registered_domain() {
     );
 
     f.usdc_admin.trust(&recipient);
-    f.usdc_admin.mint(&f.bridge_id, &9_990_000);
-
     f.bridge.receive_tokens(
         &sender,
         &BytesN::random(&f.env),
@@ -709,6 +752,7 @@ fn receive_tokens_rejects_mint_recipient_that_is_not_bridge() {
     let message = inbound_cctp_message(
         &f.env,
         DOMAIN,
+        &f.token_messenger_id,
         &bridge_bytes,
         &burn_token,
         &recipient_bytes,
@@ -744,6 +788,7 @@ fn receive_tokens_rejects_destination_caller_that_is_not_bridge() {
     let message = inbound_cctp_message(
         &f.env,
         DOMAIN,
+        &f.token_messenger_id,
         &wrong_caller,
         &burn_token,
         &bridge_bytes,
@@ -762,6 +807,107 @@ fn receive_tokens_rejects_destination_caller_that_is_not_bridge() {
     );
 
     assert!(result.is_err());
+}
+
+#[test]
+fn receive_tokens_rejects_recipient_that_is_not_token_messenger() {
+    let f = fixture();
+    let bridge_bytes = address_to_bytes32(&f.env, &f.bridge_id);
+    let hook_data = common_hook_data(
+        &f.env,
+        b"GA3D5KRYM6CB7OWQ6TWYRR3Z4T7GNZLKERYNZGGA5SOAOPIFY6YQHES5",
+    );
+    let message = inbound_cctp_message(
+        &f.env,
+        DOMAIN,
+        &Address::generate(&f.env),
+        &bridge_bytes,
+        &BytesN::random(&f.env),
+        &bridge_bytes,
+        1_000_000,
+        1_000,
+        &f.other_bridge,
+        &hook_data,
+    );
+
+    let result = f.bridge.try_receive_tokens(
+        &Address::generate(&f.env),
+        &BytesN::random(&f.env),
+        &message,
+        &Bytes::new(&f.env),
+        &0,
+    );
+
+    assert!(result.is_err());
+}
+
+#[test]
+fn receive_tokens_rejects_burn_token_without_local_usdc_route() {
+    let f = fixture();
+    f.token_messenger.set_local_token(&None);
+    let bridge_bytes = address_to_bytes32(&f.env, &f.bridge_id);
+    let hook_data = common_hook_data(
+        &f.env,
+        b"GA3D5KRYM6CB7OWQ6TWYRR3Z4T7GNZLKERYNZGGA5SOAOPIFY6YQHES5",
+    );
+    let message = inbound_cctp_message(
+        &f.env,
+        DOMAIN,
+        &f.token_messenger_id,
+        &bridge_bytes,
+        &BytesN::random(&f.env),
+        &bridge_bytes,
+        1_000_000,
+        1_000,
+        &f.other_bridge,
+        &hook_data,
+    );
+
+    let result = f.bridge.try_receive_tokens(
+        &Address::generate(&f.env),
+        &BytesN::random(&f.env),
+        &message,
+        &Bytes::new(&f.env),
+        &0,
+    );
+
+    assert!(result.is_err());
+}
+
+#[test]
+fn receive_tokens_does_not_spend_existing_usdc_when_no_tokens_are_minted() {
+    let f = fixture();
+    let recipient = f.recipient_account.clone();
+    let bridge_bytes = address_to_bytes32(&f.env, &f.bridge_id);
+    let recipient_strkey = MuxedAddress::from(&recipient).to_strkey();
+    let hook_data = common_hook_data_from_bytes(&f.env, &recipient_strkey.to_bytes());
+    let message = inbound_cctp_message(
+        &f.env,
+        DOMAIN,
+        &f.token_messenger_id,
+        &bridge_bytes,
+        &BytesN::random(&f.env),
+        &bridge_bytes,
+        1_000_000,
+        1_000,
+        &f.other_bridge,
+        &hook_data,
+    );
+    f.usdc_admin.trust(&recipient);
+    f.usdc_admin.mint(&f.bridge_id, &9_990_000);
+    f.message_transmitter.set_mint_enabled(&false);
+
+    let result = f.bridge.try_receive_tokens(
+        &Address::generate(&f.env),
+        &BytesN::random(&f.env),
+        &message,
+        &Bytes::new(&f.env),
+        &0,
+    );
+
+    assert!(result.is_err());
+    assert_eq!(f.usdc.balance(&recipient), 0);
+    assert_eq!(f.usdc.balance(&f.bridge_id), 9_990_000);
 }
 
 fn address_to_bytes32(env: &Env, address: &Address) -> BytesN<32> {
@@ -799,6 +945,7 @@ fn write_u256_from_u128(buf: &mut [u8], offset: usize, value: u128) {
 fn inbound_cctp_message(
     env: &Env,
     source_domain: u32,
+    recipient: &Address,
     destination_caller: &BytesN<32>,
     burn_token: &BytesN<32>,
     mint_recipient: &BytesN<32>,
@@ -810,6 +957,7 @@ fn inbound_cctp_message(
     let mut buf = [0u8; 376];
     write_u32_be(&mut buf, 0, 1);
     write_u32_be(&mut buf, 4, source_domain);
+    buf[76..108].copy_from_slice(&address_to_bytes32(env, recipient).to_array());
     buf[108..140].copy_from_slice(&destination_caller.to_array());
     write_u32_be(&mut buf, 148, 1);
     buf[152..184].copy_from_slice(&burn_token.to_array());
@@ -820,4 +968,12 @@ fn inbound_cctp_message(
     let mut message = Bytes::from_array(env, &buf);
     message.append(hook_data);
     message
+}
+
+fn read_u128_be_from_u256(bytes: &Bytes, offset: u32) -> u128 {
+    let mut value = 0u128;
+    for index in 16..32u32 {
+        value = (value << 8) | bytes.get(offset + index).unwrap() as u128;
+    }
+    value
 }
