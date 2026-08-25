@@ -20,6 +20,7 @@ fn deposit() {
 
     let balance_before = yaro_token.balance_of(&alice.as_address());
     yaro_pool.deposit(&alice, deposit_amount).unwrap();
+    let deposit_event = get_latest_event::<Deposit>(&env);
     let balance_after = yaro_token.balance_of(&alice.as_address());
 
     assert_eq!(
@@ -30,8 +31,6 @@ fn deposit() {
         balance_before - balance_after,
         yaro_token.float_to_uint(deposit_amount)
     );
-
-    let deposit_event = get_latest_event::<Deposit>(&env);
 
     assert!(deposit_event.is_some());
     assert_eq!(
@@ -58,6 +57,7 @@ fn withdraw() {
 
     let balance_before = yaro_token.balance_of(&alice.as_address());
     yaro_pool.withdraw(&alice, withdraw_amount).unwrap();
+    let withdraw_event = get_latest_event::<Withdraw>(&env);
     let balance_after = yaro_token.balance_of(&alice.as_address());
 
     assert_eq!(yaro_pool.user_deposit(&alice).lp_amount, 0);
@@ -65,8 +65,6 @@ fn withdraw() {
         balance_after - balance_before,
         yaro_token.float_to_uint(withdraw_amount)
     );
-
-    let withdraw_event = get_latest_event::<Withdraw>(&env);
 
     assert!(withdraw_event.is_some());
     assert_eq!(

@@ -10,9 +10,9 @@ use ethers_core::types::Signature;
 use ethers_signers::LocalWallet;
 use soroban_sdk::{
     testutils::Events,
-    xdr::{ScError, ScVal},
+    xdr::{ContractEventBody, ScError, ScVal},
     Address, BytesN, ConversionError, Env, Error as SorobanError, FromVal, InvokeError, Symbol,
-    TryFromVal, Val, U256,
+    TryFromVal, TryIntoVal, Val, U256,
 };
 
 use soroban_sdk::xdr::ScAddress;
@@ -22,8 +22,8 @@ use super::consts::SP;
 pub const SYSTEM_PRECISION: u32 = 3;
 
 pub type CallResult<T = ()> = Result<T, SorobanError>;
-pub type SorobanCallResult<T, E = ConversionError> =
-    Result<Result<T, E>, Result<SorobanError, InvokeError>>;
+pub type SorobanCallResult<T, E = SorobanError, C = ConversionError> =
+    Result<Result<T, C>, Result<E, InvokeError>>;
 
 pub fn error_code_to_error(v: u32) -> shared::Error {
     // don't try this at home
@@ -46,8 +46,17 @@ pub fn unwrap_call_result<T>(env: &Env, call_result: CallResult<T>) -> T {
     }
 }
 
-pub fn desoroban_result<T, E: Debug>(soroban_result: SorobanCallResult<T, E>) -> CallResult<T> {
-    soroban_result.map(Result::unwrap).map_err(Result::unwrap)
+pub fn desoroban_result<T, E, C>(soroban_result: SorobanCallResult<T, E, C>) -> CallResult<T>
+where
+    E: Debug + Into<SorobanError>,
+    C: Debug,
+{
+    match soroban_result {
+        Ok(Ok(value)) => Ok(value),
+        Ok(Err(error)) => panic!("conversion error: {error:?}"),
+        Err(Ok(error)) => Err(error.into()),
+        Err(Err(error)) => panic!("invoke error: {error:?}"),
+    }
 }
 
 pub fn gen_nonce(env: &Env) -> U256 {
@@ -142,10 +151,14 @@ fn type_name_of_event<T: FromVal<Env, Val> + ?Sized>() -> String {
 pub fn get_latest_event<T: FromVal<Env, Val>>(env: &Env) -> Option<T> {
     env.events()
         .all()
+        .events()
         .iter()
         .rev()
-        .find_map(|(_, topic, event_data)| {
-            Symbol::try_from_val(env, &topic.last().unwrap())
+        .find_map(|event| {
+            let ContractEventBody::V0(body) = &event.body;
+            let topic: Val = body.topics.last()?.try_into_val(env).ok()?;
+            let event_data: Val = body.data.try_into_val(env).ok()?;
+            Symbol::try_from_val(env, &topic)
                 .map(|symbol| {
                     symbol
                         .to_string()
@@ -171,7 +184,7 @@ pub fn assert_rel_eq(a: u128, b: u128, d: u128) {
 pub fn contract_id(address: &Address) -> BytesN<32> {
     let sc_address: ScAddress = address.try_into().unwrap();
     if let ScAddress::Contract(c) = sc_address {
-        BytesN::from_array(address.env(), &c.0)
+        BytesN::from_array(address.env(), &c.0 .0)
     } else {
         panic!("address is not a contract {:?}", address);
     }

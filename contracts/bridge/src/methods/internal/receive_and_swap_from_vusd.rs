@@ -17,6 +17,6 @@ pub fn receive_and_swap_from_v_usd(
         recipient,
         &v_usd_amount,
         &receive_amount_min,
-        &config.rebalancer.eq(recipient)
+        &config.rebalancer.eq(recipient),
     ))
 }

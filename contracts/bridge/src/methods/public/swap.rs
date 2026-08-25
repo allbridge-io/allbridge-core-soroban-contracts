@@ -16,7 +16,7 @@ pub fn swap(
     token: BytesN<32>,
     receive_token: BytesN<32>,
     recipient: Address,
-    receive_amount_min: u128
+    receive_amount_min: u128,
 ) -> Result<(), Error> {
     Bridge::get(&env)?.assert_can_swap()?;
     sender.require_auth();
@@ -27,7 +27,7 @@ pub fn swap(
         &receive_token,
         &recipient,
         v_usd_amount,
-        receive_amount_min
+        receive_amount_min,
     )?;
 
     Swapped {

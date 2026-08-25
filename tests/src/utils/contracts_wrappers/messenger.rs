@@ -94,10 +94,7 @@ impl Messenger {
     pub fn send_message(&self, sender: &User, message_hash: &BytesN<32>) -> BytesN<32> {
         unwrap_call_result(
             &self.env,
-            desoroban_result::<(), soroban_sdk::ConversionError>(
-                self.client
-                    .try_send_message(message_hash, &sender.as_address()),
-            ),
+            desoroban_result(self.client.try_send_message(message_hash, &sender.as_address())),
         );
 
         message_hash.clone()
@@ -177,6 +174,9 @@ impl Messenger {
     }
 
     pub fn upgrade(&self, new_hash: &BytesN<32>) {
-        unwrap_call_result(&self.env, desoroban_result(self.client.try_upgrade(new_hash)));
+        unwrap_call_result(
+            &self.env,
+            desoroban_result(self.client.try_upgrade(new_hash)),
+        );
     }
 }

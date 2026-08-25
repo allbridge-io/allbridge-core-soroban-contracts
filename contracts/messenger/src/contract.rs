@@ -1,7 +1,7 @@
 use bridge_storage::view::{get_admin, get_gas_oracle, get_gas_usage};
+use bridge_storage::Admin;
 use shared::{soroban_data::SimpleSorobanData, utils::extend_ttl_instance, Error};
 use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, Map};
-use bridge_storage::Admin;
 
 use crate::{
     methods::{

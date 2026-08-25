@@ -68,6 +68,9 @@ impl GasOracle {
     }
 
     pub fn upgrade(&self, new_hash: &BytesN<32>) {
-        unwrap_call_result(&self.env, desoroban_result(self.client.try_upgrade(new_hash)));
+        unwrap_call_result(
+            &self.env,
+            desoroban_result(self.client.try_upgrade(new_hash)),
+        );
     }
 }

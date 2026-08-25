@@ -1,8 +1,8 @@
 .DEFAULT_GOAL := all
 
-all: build-bridge
+all: build-bridge build-cctp-bridge
 
-optimize-all: optimize-gas-oracle optimize-messenger optimize-pool optimize-bridge
+optimize-all: optimize-gas-oracle optimize-messenger optimize-pool optimize-bridge optimize-cctp-bridge
 
 ADDRESS_PATH = soroban-deploy-testnet
 
@@ -13,12 +13,12 @@ MESSENGER_ADDRESS_PATH = $(ADDRESS_PATH)/messenger
 MESSENGER_ADDRESS = $$(cat $(MESSENGER_ADDRESS_PATH))
 
 GAS_ORACLE_ADDRESS_PATH = $(ADDRESS_PATH)/gas_orace
-GAS_ORACLE_WASM_PATH = target/wasm32-unknown-unknown/release/gas_oracle.wasm
-GAS_ORACLE_WASM_PATH_OP = target/wasm32-unknown-unknown/release/gas_oracle.wasm
+GAS_ORACLE_WASM_PATH = target/wasm32v1-none/release/gas_oracle.wasm
+GAS_ORACLE_WASM_PATH_OP = target/wasm32v1-none/release/gas_oracle.wasm
 GAS_ORACLE_ADDRESS = $$(cat $(GAS_ORACLE_ADDRESS_PATH))
 
-POOL_WASM_PATH = target/wasm32-unknown-unknown/release/pool.wasm
-POOL_WASM_PATH_OP = target/wasm32-unknown-unknown/release/pool.wasm
+POOL_WASM_PATH = target/wasm32v1-none/release/pool.wasm
+POOL_WASM_PATH_OP = target/wasm32v1-none/release/pool.wasm
 POOL_YARO_ADDRESS_PATH = $(ADDRESS_PATH)/pool_yaro
 POOL_YARO_ADDRESS = $$(cat $(POOL_YARO_ADDRESS_PATH))
 
@@ -28,27 +28,60 @@ POOL_USDY_ADDRESS = $$(cat $(POOL_USDY_ADDRESS_PATH))
 POOL_USDC_ADDRESS_PATH = $(ADDRESS_PATH)/pool
 POOL_USDC_ADDRESS = $$(cat $(POOL_USDC_ADDRESS_PATH))
 
-MESSENGER_WASM_PATH = target/wasm32-unknown-unknown/release/messenger.wasm
-MESSENGER_WASM_PATH_OP = target/wasm32-unknown-unknown/release/messenger.wasm
+MESSENGER_WASM_PATH = target/wasm32v1-none/release/messenger.wasm
+MESSENGER_WASM_PATH_OP = target/wasm32v1-none/release/messenger.wasm
 MESSENGER_ADDRESS_PATH = $(ADDRESS_PATH)/messenger
 MESSENGER_ADDRESS = $$(cat $(MESSENGER_ADDRESS_PATH))
 
-BRIDGE_WASM_PATH = target/wasm32-unknown-unknown/release/bridge.wasm
-BRIDGE_WASM_PATH_OP = target/wasm32-unknown-unknown/release/bridge.wasm
+BRIDGE_WASM_PATH = target/wasm32v1-none/release/bridge.wasm
+BRIDGE_WASM_PATH_OP = target/wasm32v1-none/release/bridge.wasm
 BRIDGE_ADDRESS_PATH = $(ADDRESS_PATH)/bridge
 BRIDGE_ADDRESS = $$(cat $(BRIDGE_ADDRESS_PATH))
 
-ALICE = $$(soroban keys address alice)
+CCTP_BRIDGE_WASM_PATH = target/wasm32v1-none/release/cctp_bridge.wasm
+CCTP_BRIDGE_WASM_PATH_OP = target/wasm32v1-none/release/cctp_bridge.wasm
+CCTP_BRIDGE_ADDRESS_PATH = $(ADDRESS_PATH)/cctp_bridge
+CCTP_BRIDGE_ADDRESS = $$(cat $(CCTP_BRIDGE_ADDRESS_PATH))
+
+CCTP_TOKEN_MESSENGER_MINTER_ADDRESS ?= CDNG7HXAPBWICI2E3AUBP3YZWZELJLYSB6F5CC7WLDTLTHVM74SLRTHP # testnet
+CCTP_MESSAGE_TRANSMITTER_ADDRESS ?= CBJ6MTCKKZG73PMDZCJMSFRD7DQEMI4FKDH7CGDSV4W6FHCRBCQAVVJY # testnet
+CCTP_MIN_FINALITY_THRESHOLD ?= 1000
+CCTP_MAX_FEE_SHARE ?= 100000
+CCTP_ADMIN_FEE_SHARE_BP ?= 10
+CCTP_BRIDGING_FEE_CONVERSION_FACTOR ?= 1000000000
+
+CCTP_OTHER_CHAIN_ID ?= 4
+CCTP_GAS_USAGE ?= 250000
+CCTP_OTHER_DOMAIN ?= 0
+# 32 bytes-hex. Other bridge address or CCTP bridge authority PDA on Solana
+# rucRLqMvNQnrPHcvbXW3hv64aN6CxJUaTBxFDFbSRY5
+CCTP_OTHER_BRIDGE ?= 0000000000000000000000000000000000000000000000000000000000000000
+CCTP_RECIPIENT ?= 0000000000000000000000000000000000000000000000000000000000000000
+CCTP_RECIPIENT_AUTHORITY_BASE58 ?= 7A1g9o2rXwznKdxEvxRA99AkWnbMZFzLKB5js1e9ZSVT
+CCTP_RECIPIENT_AUTHORITY ?= $(shell printf "$(CCTP_RECIPIENT_AUTHORITY_BASE58)" | bs58 -d | xxd -p -c 256)
+CCTP_AMOUNT ?= 10000000
+CCTP_GAS_AMOUNT ?= 0
+CCTP_FEE_TOKEN_AMOUNT ?= 0
+CCTP_MESSAGE_ID ?= 0000000000000000000000000000000000000000000000000000000000000000
+CCTP_MESSAGE ?= 00
+CCTP_ATTESTATION ?= 00
+
+GAS_ORACLE_SET_CHAIN_ID ?= 7
+GAS_ORACLE_OTHER_CHAIN_ID ?= $(CCTP_OTHER_CHAIN_ID)
+GAS_ORACLE_PRICE ?= 136000000000000000
+GAS_ORACLE_GAS_PRICE ?= 50
+GAS_ORACLE_GAS_AMOUNT ?= 250000
+
+ALICE = $$(stellar keys address alice)
 ADMIN_ALIAS = alice
-ADMIN = $$(soroban keys address $(ADMIN_ALIAS))
+ADMIN = $$(stellar keys address $(ADMIN_ALIAS))
 
 #YARO_ADDRESS=CDFVZVTV4K5S66GQXER7YVK6RB23BMPMD3HQUA3TGEZUGDL3NM3R5GDW #Futurenet
 #USDY_ADDRESS=CD7KQQY27G5WXQT2IUYJVHNQH6N2I6GEM5ND2BLZ2GHDAPB2V3KWCW7M #Futurenet
 
 YARO_ADDRESS=CACOK7HB7D7SRPMH3LYYOW77T6D4D2F7TR7UEVKY2TVSUDSRDM6DZVLK #Testnet
 USDY_ADDRESS=CAOPX7DVI3PFLHE7637YSFU6TLG6Z27Z5O3M547ANAYXQOAYCYYV6NO6 #Testnet
-
-USDC_ADDRESS=CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA
+USDC_ADDRESS=CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA #Testnet
 
 #TOKEN_ADDRESS=$(YARO_ADDRESS)
 #POOL_ADDRESS_PATH=$(POOL_YARO_ADDRESS_PATH)
@@ -67,39 +100,48 @@ NETWORK=testnet
 test: all
 	cargo test
 
+install-tools:
+	@bs58 --version || cargo install bs58-cli
+
 build-gas-oracle:
-	 cargo build --target wasm32-unknown-unknown --release --package gas-oracle
+	 cargo build --target wasm32v1-none --release --package gas-oracle
 
 build-messenger: build-gas-oracle
-	 cargo build --target wasm32-unknown-unknown --release --package messenger
+	 cargo build --target wasm32v1-none --release --package messenger
 
-build-pool: 
-	cargo build --target wasm32-unknown-unknown --release --package pool
+build-pool:
+	cargo build --target wasm32v1-none --release --package pool
 
 build-bridge: build-messenger build-pool
-	cargo build --target wasm32-unknown-unknown --release --package bridge
+	cargo build --target wasm32v1-none --release --package bridge
+
+build-cctp-bridge:
+	cargo build --target wasm32v1-none --release --package cctp-bridge
 
 optimize-gas-oracle:
-	soroban contract optimize --wasm $(GAS_ORACLE_WASM_PATH)
+	stellar contract optimize --wasm $(GAS_ORACLE_WASM_PATH)
 
 optimize-messenger:
-	soroban contract optimize --wasm $(MESSENGER_WASM_PATH)
+	stellar contract optimize --wasm $(MESSENGER_WASM_PATH)
 
 optimize-pool:
-	soroban contract optimize --wasm $(POOL_WASM_PATH)
+	stellar contract optimize --wasm $(POOL_WASM_PATH)
 
 optimize-bridge:
-	soroban contract optimize --wasm $(BRIDGE_WASM_PATH)
+	stellar contract optimize --wasm $(BRIDGE_WASM_PATH)
+
+optimize-cctp-bridge:
+	stellar contract optimize --wasm $(CCTP_BRIDGE_WASM_PATH)
 
 deploy-gas-oracle:
-	soroban contract deploy \
+	stellar contract deploy \
       --wasm $(GAS_ORACLE_WASM_PATH_OP) \
       --source $(ADMIN_ALIAS) \
       --network $(NETWORK) 	\
       > $(GAS_ORACLE_ADDRESS_PATH) && echo $(GAS_ORACLE_ADDRESS)
 
 gas-oracle-init:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -108,18 +150,18 @@ gas-oracle-init:
 		--admin $(ADMIN)
 
 gas-oracle-set-price:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
 		-- \
 		set_price \
-		--chain_id 7 \
-        --price 136000000000000000 \
-        --gas_price 50
+		--chain_id $(GAS_ORACLE_SET_CHAIN_ID) \
+        --price $(GAS_ORACLE_PRICE) \
+        --gas_price $(GAS_ORACLE_GAS_PRICE)
 
 gas-oracle-set-price-1:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -130,7 +172,7 @@ gas-oracle-set-price-1:
         --gas_price 0
 
 gas-oracle-get-price-data:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -140,7 +182,7 @@ gas-oracle-get-price-data:
 		--chain_id 2
 
 gas-oracle-get-price:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -150,7 +192,7 @@ gas-oracle-get-price:
 		--chain_id 7
 
 gas-oracle-get-admin:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -159,18 +201,18 @@ gas-oracle-get-admin:
 		get_admin
 
 gas-oracle-get-gas-cost-in-native-token:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
 		--is-view \
 		-- \
 		get_gas_cost_in_native_token \
-		--other_chain_id 2 \
-		--gas_amount 250000
+		--other_chain_id $(GAS_ORACLE_OTHER_CHAIN_ID) \
+		--gas_amount $(GAS_ORACLE_GAS_AMOUNT)
 
 gas-oracle-get-transaction-gas-cost-in-usd:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -181,7 +223,7 @@ gas-oracle-get-transaction-gas-cost-in-usd:
 		--gas_amount 1
 
 gas-oracle-crossrate:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -191,13 +233,13 @@ gas-oracle-crossrate:
 		--other_chain_id 1
 
 gas-oracle-install:
-	soroban contract install \
+	stellar contract install \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
 		--wasm $(GAS_ORACLE_WASM_PATH_OP)
 
 gas-oracle-update-contract:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(GAS_ORACLE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -207,7 +249,7 @@ gas-oracle-update-contract:
 
 
 gas-oracle-restore-contract:
-	soroban contract restore \
+	stellar contract restore \
 	--id $(GAS_ORACLE_ADDRESS) \
 	--source $(ADMIN_ALIAS) \
 	--network $(NETWORK) 	\
@@ -217,21 +259,21 @@ gas-oracle-restore-contract:
 #----------------POOL----------------------------
 
 pool-deploy:
-	soroban contract deploy \
+	stellar contract deploy \
           --wasm $(POOL_WASM_PATH_OP) \
           --source $(ADMIN_ALIAS) \
           --network $(NETWORK) 	\
           > $(POOL_ADDRESS_PATH) && echo $(POOL_ADDRESS)
 
 pool-deploy-by-hash:
-	soroban contract deploy \
+	stellar contract deploy \
           --wasm-hash <hash> \
           --source $(ADMIN_ALIAS) \
           --network $(NETWORK) 	\
           > $(POOL_ADDRESS_PATH) && echo $(POOL_ADDRESS)
 
 pool-initialize:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(POOL_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -246,7 +288,7 @@ pool-initialize:
         --admin_fee_share_bp 2000
 
 pool-set-bridge:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(POOL_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -255,17 +297,17 @@ pool-set-bridge:
 		--bridge $(BRIDGE_ADDRESS)
 
 pool-deposit:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(POOL_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
 		-- \
 		deposit \
 		--sender $(ADMIN) \
-		--amount 1000000000000
+		--amount 200000000
 
 pool-get-pool-info:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(POOL_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -274,7 +316,7 @@ pool-get-pool-info:
 		get_pool
 
 pool-get-admin:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(POOL_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -283,7 +325,7 @@ pool-get-admin:
 		get_admin
 
 pool-get-pending-reward:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(POOL_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -293,7 +335,7 @@ pool-get-pending-reward:
 		--user $(ADMIN)
 
 pool-get-user-deposit:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(POOL_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -303,7 +345,7 @@ pool-get-user-deposit:
 		--user $(ADMIN)
 
 pool-get-claimable-balance:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(POOL_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -313,7 +355,7 @@ pool-get-claimable-balance:
 		--user GB664P4XTBKNBK3YGPAFFCYPSW2SIO2FR6B6HC6SKFS7KGRTCDQYVUJ7
 
 pool-claim-balance:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(POOL_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -322,13 +364,13 @@ pool-claim-balance:
 		--user GB664P4XTBKNBK3YGPAFFCYPSW2SIO2FR6B6HC6SKFS7KGRTCDQYVUJ7
 
 pool-install:
-	soroban contract install \
+	stellar contract install \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
 		--wasm $(POOL_WASM_PATH_OP)
 
 pool-update-contract:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(POOL_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -337,7 +379,7 @@ pool-update-contract:
         --new_wasm_hash 8f1bf6f8b9e82b29415e93202525058012898769cbcd3b5c81affdfb0bf645f4
 
 pool-restore-contract:
-	soroban contract restore \
+	stellar contract restore \
 	--id $(POOL_ADDRESS) \
 	--source $(ADMIN_ALIAS) \
 	--network $(NETWORK) 	\
@@ -345,7 +387,7 @@ pool-restore-contract:
 	--ledgers-to-extend 535679
 
 pool-set-admin:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(POOL_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -355,14 +397,14 @@ pool-set-admin:
 
 #---------------MESSENGER---------------------------
 messenger-deploy:
-	soroban contract deploy \
+	stellar contract deploy \
 		--wasm $(MESSENGER_WASM_PATH_OP) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
 		> $(MESSENGER_ADDRESS_PATH) && echo $(MESSENGER_ADDRESS)
 
 messenger-initialize:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(MESSENGER_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -377,7 +419,7 @@ messenger-initialize:
         --secondary_validator_keys '{ "04734fc43dde79306ddf1bd5b4840d2cc9195bb48dbef92d081e71805694f5828d9cce76008f1f1a2a8a6ccd564b84937f83630d3d3af9541a5a3f3c1c1ea62c98": true }'
 
 messenger-set-gas-usage:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(MESSENGER_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -387,7 +429,7 @@ messenger-set-gas-usage:
         --gas_usage 100000
 
 define messenger-set-gas-usage-param
-	soroban contract invoke \
+	stellar contract invoke \
     		--id $(MESSENGER_ADDRESS) \
     		--source $(ADMIN_ALIAS) \
     		--network $(NETWORK) 	\
@@ -410,7 +452,7 @@ messenger-set-all-gas-usage:
 
 
 messenger-send-message:
-	soroban contract invoke \
+	stellar contract invoke \
 		  --id $(MESSENGER_ADDRESS) \
 		  --source alice \
 		  --network $(NETWORK) \
@@ -420,7 +462,7 @@ messenger-send-message:
 		  --sender $(ALICE)
 
 messenger-receive_message:
-	soroban contract invoke \
+	stellar contract invoke \
 		  --id $(MESSENGER_ADDRESS) \
 		  --source alice \
 		  --network $(NETWORK) \
@@ -434,7 +476,7 @@ messenger-receive_message:
           --secondary_recovery_id 0
 
 messenger-get-gas-usage:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(MESSENGER_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -444,7 +486,7 @@ messenger-get-gas-usage:
 		--chain_id 2
 
 messenger-get-transaction-cost:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(MESSENGER_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -454,7 +496,7 @@ messenger-get-transaction-cost:
 		--chain_id 2
 
 messenger-has-received-message:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(MESSENGER_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -464,7 +506,7 @@ messenger-has-received-message:
 		--message 0207a3508a81ab1b0043a51568079044f4e34648226124dccd21f5d89c51f3fb
 
 messenger-has-sent-message:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(MESSENGER_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -474,13 +516,13 @@ messenger-has-sent-message:
 		--message 020777b64e53254cc42d1d695036cf5f438312735b915adec350b68ff713c997
 
 messenger-install:
-	soroban contract install \
+	stellar contract install \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
 		--wasm $(MESSENGER_WASM_PATH_OP)
 
 messenger-update-contract:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(MESSENGER_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -489,7 +531,7 @@ messenger-update-contract:
         --new_wasm_hash 5accf5d0f95f58fa341bc6ac968908bd2ebc864cb9bf6eeda6c799022cde1d45
 
 messenger-restore-contract:
-	soroban contract restore \
+	stellar contract restore \
 	--id $(MESSENGER_ADDRESS) \
 	--source $(ADMIN_ALIAS) \
 	--network $(NETWORK) 	\
@@ -498,14 +540,14 @@ messenger-restore-contract:
 
 #---------------BRIDGE---------------------------
 bridge-deploy:
-	soroban contract deploy \
+	stellar contract deploy \
 		--wasm $(BRIDGE_WASM_PATH_OP) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
 		> $(BRIDGE_ADDRESS_PATH) && echo $(BRIDGE_ADDRESS)
 
 bridge-initialize:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -517,7 +559,7 @@ bridge-initialize:
         --native_token $(NATIVE_ADDRESS) \
 
 bridge-set-messenger:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -527,7 +569,7 @@ bridge-set-messenger:
 
 
 bridge-set-gas-usage:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -537,7 +579,7 @@ bridge-set-gas-usage:
 		--gas_usage 150000
 
 define bridge-set-gas-usage-param
-	soroban contract invoke \
+	stellar contract invoke \
 			--id $(BRIDGE_ADDRESS) \
 			--source $(ADMIN_ALIAS) \
 			--network $(NETWORK) 	\
@@ -559,7 +601,7 @@ bridge-set-all-gas-usage:
 	$(call bridge-set-gas-usage-param,16,150000)
 
 bridge-register-bridge:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -569,7 +611,7 @@ bridge-register-bridge:
 		--bridge_address 02361abd90805a1dfb58fa709d5eff79ce99a47b9a8358cd75c7b29021737b22
 
 define bridge-register-bridge-param
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -592,7 +634,7 @@ bridge-register-bridge-all:
 
 
 bridge-add-bridge-token:
-	soroban contract invoke \
+	stellar contract invoke \
     		--id $(BRIDGE_ADDRESS) \
     		--source $(ADMIN_ALIAS) \
     		--network $(NETWORK) 	\
@@ -602,7 +644,7 @@ bridge-add-bridge-token:
 			--token_address 93176772a423589cee546e6121968792fc9d4adf7f04d713075856614192e65a
 
 define bridge-add-bridge-token-param
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -634,7 +676,7 @@ bridge-add-bridge-token-all:
 
 
 bridge-add-pool:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -644,7 +686,7 @@ bridge-add-pool:
 		--token $(TOKEN_ADDRESS)
 
 bridge-set-rebalancer:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -653,7 +695,7 @@ bridge-set-rebalancer:
 		--rebalancer GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF
 
 bridge-swap-and-bridge:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -670,7 +712,7 @@ bridge-swap-and-bridge:
         --fee_token_amount 0
 
 bridge-swap-and-bridge-2:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -687,7 +729,7 @@ bridge-swap-and-bridge-2:
         --fee_token_amount 0
 
 bridge-swap:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -702,7 +744,7 @@ bridge-swap:
 
 
 bridge-receive:
-	soroban contract invoke \
+	stellar contract invoke \
     		--id $(BRIDGE_ADDRESS) \
     		--source $(ADMIN_ALIAS) \
     		--network $(NETWORK) 	\
@@ -718,7 +760,7 @@ bridge-receive:
 			--claimable false
 
 bridge-get-transaction-cost:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -728,7 +770,7 @@ bridge-get-transaction-cost:
 		--chain_id 2
 
 bridge-get-pool-address:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -738,7 +780,7 @@ bridge-get-pool-address:
 		--token_address 04e57ce1f8ff28bd87daf1875bff9f87c1e8bf9c7f425558d4eb2a0e511b3c3c
 
 bridge-get-config:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -747,7 +789,7 @@ bridge-get-config:
 		get_config
 
 bridge-get-gas-usage:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -757,7 +799,7 @@ bridge-get-gas-usage:
 		--chain_id 2
 
 bridge-get-another-bridge:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -767,7 +809,7 @@ bridge-get-another-bridge:
 		--chain_id 2
 
 bridge-has-received-message:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--network $(NETWORK) 	\
 		--source $(ADMIN_ALIAS) \
@@ -777,13 +819,13 @@ bridge-has-received-message:
 		--message 0107155a5bc1db9cb9d8fc56150518f01011f56ca2e3f0bdeb8dee115344d75b
 
 bridge-install:
-	soroban contract install \
+	stellar contract install \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
 		--wasm $(BRIDGE_WASM_PATH_OP)
 
 bridge-update-contract:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -792,7 +834,7 @@ bridge-update-contract:
         --new_wasm_hash 4fa4fc1edb540c7c21cd73155838f11be5144e5f2a7060bc89a6b6bee5c24c09
 
 bridge-set-admin:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(BRIDGE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -802,8 +844,356 @@ bridge-set-admin:
 
 
 bridge-restore-contract:
-	soroban contract restore \
+	stellar contract restore \
 	--id $(BRIDGE_ADDRESS) \
+	--source $(ADMIN_ALIAS) \
+	--network $(NETWORK) 	\
+	--durability persistent \
+	--ledgers-to-extend 535679
+
+#---------------CCTP BRIDGE---------------------------
+cctp-bridge-deploy:
+	stellar contract deploy \
+		--wasm $(CCTP_BRIDGE_WASM_PATH_OP) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		> $(CCTP_BRIDGE_ADDRESS_PATH) && echo $(CCTP_BRIDGE_ADDRESS)
+
+cctp-bridge-deploy-by-hash:
+	stellar contract deploy \
+		--wasm-hash <hash> \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		> $(CCTP_BRIDGE_ADDRESS_PATH) && echo $(CCTP_BRIDGE_ADDRESS)
+
+cctp-bridge-initialize:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		initialize \
+		--admin $(ADMIN) \
+		--usdc_token $(USDC_ADDRESS) \
+		--token_messenger_minter $(CCTP_TOKEN_MESSENGER_MINTER_ADDRESS) \
+		--message_transmitter $(CCTP_MESSAGE_TRANSMITTER_ADDRESS) \
+		--gas_oracle $(GAS_ORACLE_ADDRESS) \
+		--native_token $(NATIVE_ADDRESS) \
+		--min_finality_threshold $(CCTP_MIN_FINALITY_THRESHOLD) \
+		--max_fee_share $(CCTP_MAX_FEE_SHARE) \
+		--admin_fee_share_bp $(CCTP_ADMIN_FEE_SHARE_BP) \
+		--bridging_fee_conversion_factor $(CCTP_BRIDGING_FEE_CONVERSION_FACTOR)
+
+cctp-bridge-register-chain-bridge:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		register_chain_bridge \
+		--chain_id $(CCTP_OTHER_CHAIN_ID) \
+		--gas_usage $(CCTP_GAS_USAGE) \
+		--domain $(CCTP_OTHER_DOMAIN) \
+		--other_bridge $(CCTP_OTHER_BRIDGE)
+
+cctp-bridge-update-chain-bridge:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		update_chain_bridge \
+		--chain_id $(CCTP_OTHER_CHAIN_ID) \
+		--gas_usage $(CCTP_GAS_USAGE) \
+		--domain $(CCTP_OTHER_DOMAIN) \
+		--other_bridge $(CCTP_OTHER_BRIDGE)
+
+cctp-bridge-set-admin-fee-share:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		set_admin_fee_share \
+		--admin_fee_share_bp $(CCTP_ADMIN_FEE_SHARE_BP)
+
+cctp-bridge-set-max-fee-share:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		set_max_fee_share \
+		--value $(CCTP_MAX_FEE_SHARE)
+
+cctp-bridge-set-min-finality-threshold:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		set_min_finality_threshold \
+		--value $(CCTP_MIN_FINALITY_THRESHOLD)
+
+cctp-bridge-set-gas-oracle:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		set_gas_oracle \
+		--gas_oracle $(GAS_ORACLE_ADDRESS)
+
+cctp-bridge-set-token-messenger-minter:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		set_token_messenger_minter \
+		--token_messenger_minter $(CCTP_TOKEN_MESSENGER_MINTER_ADDRESS)
+
+cctp-bridge-set-message-transmitter:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		set_message_transmitter \
+		--message_transmitter $(CCTP_MESSAGE_TRANSMITTER_ADDRESS)
+
+cctp-bridge-set-fee-conversion-factor:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		set_fee_conversion_factor \
+		--value $(CCTP_BRIDGING_FEE_CONVERSION_FACTOR)
+
+cctp-bridge-set-admin:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		set_admin \
+		--new_admin $(ALICE)
+
+
+cctp-bridge-bridge:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		bridge \
+		--sender $(ADMIN) \
+		--amount $(CCTP_AMOUNT) \
+		--recipient $(CCTP_RECIPIENT) \
+		--destination_chain_id $(CCTP_OTHER_CHAIN_ID) \
+		--gas_amount $(CCTP_GAS_AMOUNT) \
+		--fee_token_amount $(CCTP_FEE_TOKEN_AMOUNT)
+
+cctp-bridge-bridge-with-token-fee:
+	@fee_token_amount="$$( $(MAKE) -s cctp-bridge-get-bridging-cost-in-tokens CCTP_OTHER_CHAIN_ID=$(CCTP_OTHER_CHAIN_ID) | tail -n 1 | tr -d '"' )"; \
+	fee_token_amount="$$((fee_token_amount + 1))"; \
+	amount="$$(($(CCTP_AMOUNT) + fee_token_amount))"; \
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) \
+		-- \
+		bridge \
+		--sender $(ADMIN_ALIAS) \
+		--amount "$$amount" \
+		--recipient $(CCTP_RECIPIENT) \
+		--destination_chain_id $(CCTP_OTHER_CHAIN_ID) \
+		--gas_amount 0 \
+		--fee_token_amount "$$fee_token_amount"
+
+cctp-bridge-bridge-with-native-fee:
+	@gas_amount="$$( $(MAKE) -s cctp-bridge-get-transaction-cost CCTP_OTHER_CHAIN_ID=$(CCTP_OTHER_CHAIN_ID) | tail -n 1 | tr -d '"' )"; \
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) \
+		-- \
+		bridge \
+		--sender $(ADMIN_ALIAS) \
+		--amount $(CCTP_AMOUNT) \
+		--recipient $(CCTP_RECIPIENT) \
+		--destination_chain_id $(CCTP_OTHER_CHAIN_ID) \
+		--gas_amount "$$gas_amount" \
+		--fee_token_amount 0
+
+cctp-bridge-bridge-to-solana-with-token-fee: install-tools
+	@fee_token_amount="$$( $(MAKE) -s cctp-bridge-get-bridging-cost-in-tokens CCTP_OTHER_CHAIN_ID=$(CCTP_OTHER_CHAIN_ID) | tail -n 1 | tr -d '"' )"; \
+	fee_token_amount="$$((fee_token_amount + 1))"; \
+	amount="$$(($(CCTP_AMOUNT) + fee_token_amount))"; \
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) \
+		-- \
+		bridge \
+		--sender $(ADMIN_ALIAS) \
+		--amount "$$amount" \
+		--recipient $(CCTP_RECIPIENT_AUTHORITY) \
+		--destination_chain_id 4 \
+		--gas_amount 0 \
+		--fee_token_amount "$$fee_token_amount"
+
+cctp-bridge-bridge-to-solana-with-native-fee: install-tools
+	@gas_amount="$$( $(MAKE) -s cctp-bridge-get-transaction-cost CCTP_OTHER_CHAIN_ID=$(CCTP_OTHER_CHAIN_ID) | tail -n 1 | tr -d '"' )"; \
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) \
+		-- \
+		bridge \
+		--sender $(ADMIN_ALIAS) \
+		--amount $(CCTP_AMOUNT) \
+		--recipient $(CCTP_RECIPIENT_AUTHORITY) \
+		--destination_chain_id 4 \
+		--gas_amount "$$gas_amount" \
+		--fee_token_amount 0
+
+# This bridge contract is the Stellar CCTP recipient.
+# Inbound CCTP messages must target $(CCTP_BRIDGE_ADDRESS) as both mintRecipient and destinationCaller.
+cctp-bridge-receive-tokens:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		receive_tokens \
+		--sender $(ADMIN) \
+		--message_id $(CCTP_MESSAGE_ID) \
+		--message $(patsubst 0x%,%,$(CCTP_MESSAGE)) \
+		--attestation $(patsubst 0x%,%,$(CCTP_ATTESTATION)) \
+		--extra_gas_amount 0
+
+cctp-bridge-get-chain-bridge:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
+		--is-view \
+		-- \
+		get_chain_bridge \
+		--chain_id $(CCTP_OTHER_CHAIN_ID)
+
+cctp-bridge-get-domain-by-chain-id:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
+		--is-view \
+		-- \
+		get_domain_by_chain_id \
+		--chain_id $(CCTP_OTHER_CHAIN_ID)
+
+cctp-bridge-get-transaction-cost:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
+		--is-view \
+		-- \
+		get_transaction_cost \
+		--chain_id $(CCTP_OTHER_CHAIN_ID)
+
+cctp-bridge-get-bridging-cost-in-tokens:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
+		--is-view \
+		-- \
+		get_bridging_cost_in_tokens \
+		--chain_id $(CCTP_OTHER_CHAIN_ID)
+
+cctp-bridge-native-fee-balance:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
+		--is-view \
+		-- \
+		native_fee_balance
+
+cctp-bridge-bridging-fee-in-tokens:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
+		--is-view \
+		-- \
+		bridging_fee_in_tokens \
+		--token_address $(USDC_ADDRESS)
+
+cctp-bridge-get-admin:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--network $(NETWORK) 	\
+		--source $(ADMIN_ALIAS) \
+		--is-view \
+		-- \
+		admin
+
+cctp-bridge-get-config-addresses:
+	$(MAKE) cctp-bridge-get-admin
+	stellar contract invoke --id $(CCTP_BRIDGE_ADDRESS) --network $(NETWORK) --source $(ADMIN_ALIAS) --is-view -- usdc_token
+	stellar contract invoke --id $(CCTP_BRIDGE_ADDRESS) --network $(NETWORK) --source $(ADMIN_ALIAS) --is-view -- token_messenger_minter
+	stellar contract invoke --id $(CCTP_BRIDGE_ADDRESS) --network $(NETWORK) --source $(ADMIN_ALIAS) --is-view -- message_transmitter
+	stellar contract invoke --id $(CCTP_BRIDGE_ADDRESS) --network $(NETWORK) --source $(ADMIN_ALIAS) --is-view -- gas_oracle
+	stellar contract invoke --id $(CCTP_BRIDGE_ADDRESS) --network $(NETWORK) --source $(ADMIN_ALIAS) --is-view -- native_token
+
+cctp-bridge-get-config-fees:
+	stellar contract invoke --id $(CCTP_BRIDGE_ADDRESS) --network $(NETWORK) --source $(ADMIN_ALIAS) --is-view -- min_finality_threshold
+	stellar contract invoke --id $(CCTP_BRIDGE_ADDRESS) --network $(NETWORK) --source $(ADMIN_ALIAS) --is-view -- max_fee_share
+	stellar contract invoke --id $(CCTP_BRIDGE_ADDRESS) --network $(NETWORK) --source $(ADMIN_ALIAS) --is-view -- admin_fee_share_bp
+	stellar contract invoke --id $(CCTP_BRIDGE_ADDRESS) --network $(NETWORK) --source $(ADMIN_ALIAS) --is-view -- bridging_fee_conversion_factor
+
+cctp-bridge-withdraw-gas-tokens:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		withdraw_gas_tokens \
+		--sender $(ADMIN) \
+		--amount 10000000
+
+cctp-bridge-withdraw-bridging-fee-in-tokens:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		withdraw_bridging_fee_in_tokens \
+		--sender $(ADMIN) \
+		--token_address $(USDC_ADDRESS)
+
+cctp-bridge-install:
+	stellar contract install \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		--wasm $(CCTP_BRIDGE_WASM_PATH_OP)
+
+cctp-bridge-update-contract:
+	stellar contract invoke \
+		--id $(CCTP_BRIDGE_ADDRESS) \
+		--source $(ADMIN_ALIAS) \
+		--network $(NETWORK) 	\
+		-- \
+		upgrade \
+		--new_wasm_hash <hash>
+
+cctp-bridge-restore-contract:
+	stellar contract restore \
+	--id $(CCTP_BRIDGE_ADDRESS) \
 	--source $(ADMIN_ALIAS) \
 	--network $(NETWORK) 	\
 	--durability persistent \
@@ -811,7 +1201,7 @@ bridge-restore-contract:
 
 #----------UTILS--------------------------
 token-transfer:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(TOKEN_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -822,7 +1212,7 @@ token-transfer:
 		--amount 1000
 
 token-native-transfer:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(NATIVE_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -833,7 +1223,7 @@ token-native-transfer:
 		--amount 10000000000
 
 token-get-balance:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id $(TOKEN_ADDRESS) \
 		--source $(ADMIN_ALIAS) \
 		--network $(NETWORK) 	\
@@ -844,7 +1234,7 @@ token-get-balance:
 
 
 token-get-name:
-	soroban contract invoke \
+	stellar contract invoke \
 		--id CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75 \
 		--source $(ADMIN_ALIAS) \
 		--is-view \
@@ -853,47 +1243,53 @@ token-get-name:
 		name
 
 wrap-token:
-	soroban contract asset deploy \
+	stellar contract asset deploy \
 		--network $(NETWORK) 	\
 		--source  $(ADMIN_ALIAS) \
 		--asset USDY:GAYODJWF27E5OQO2C6LA6Z6QXQ2EYUONMXFNL2MNMGRJP6RED2CPQKTW
 
 native-token-address:
-	soroban contract asset id \
+	stellar contract asset id \
  		--network $(NETWORK) \
  		--asset native
 
-generate-types: generate-types-gas-oracle generate-types-pool generate-types-bridge generate-types-messenger generate-types-token
+generate-types: generate-types-gas-oracle generate-types-pool generate-types-bridge generate-types-cctp-bridge generate-types-messenger generate-types-token
 
 generate-types-gas-oracle:
-	soroban contract bindings typescript \
+	stellar contract bindings typescript \
 	--network $(NETWORK) \
 	--output-dir ./types/gas-oracle \
 	--contract-id $(GAS_ORACLE_ADDRESS)
 
 generate-types-pool:
-	soroban contract bindings typescript \
+	stellar contract bindings typescript \
 	--network $(NETWORK) \
 	--output-dir ./types/pool \
 	--contract-id $(POOL_ADDRESS)
 
 generate-types-bridge:
-	soroban contract bindings typescript \
+	stellar contract bindings typescript \
 	--network $(NETWORK) \
 	--output-dir ./types/bridge \
 	--contract-id $(BRIDGE_ADDRESS)
 
+generate-types-cctp-bridge:
+	stellar contract bindings typescript \
+	--network $(NETWORK) \
+	--output-dir ./types/cctp-bridge \
+	--contract-id $(CCTP_BRIDGE_ADDRESS)
+
 generate-types-messenger:
-	soroban contract bindings typescript \
+	stellar contract bindings typescript \
 	--network $(NETWORK) \
 	--output-dir ./types/messenger \
 	--contract-id $(MESSENGER_ADDRESS)
 
 generate-types-token:
-	soroban contract bindings typescript \
+	stellar contract bindings typescript \
 	--network $(NETWORK) \
 	--output-dir ./types/token \
 	--contract-id $(TOKEN_ADDRESS)
 
 install-cli:
-	cargo install soroban-cli --features opt
+	cargo install --locked stellar-cli

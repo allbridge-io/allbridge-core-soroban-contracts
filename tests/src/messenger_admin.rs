@@ -1,8 +1,8 @@
+use crate::contracts::messenger;
 use soroban_sdk::{
     testutils::{Address as _, BytesN as _},
     Address, BytesN,
 };
-use crate::contracts::messenger;
 
 use crate::utils::{consts::GOERLI_CHAIN_ID, unwrap_call_result};
 use crate::utils::{desoroban_result, BridgeEnv};
@@ -18,7 +18,7 @@ fn set_other_chain_ids() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn set_other_chain_ids_no_auth() {
     let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
 
@@ -43,7 +43,7 @@ fn set_gas_oracle() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn set_gas_oracle_no_auth() {
     let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
 
@@ -68,7 +68,7 @@ fn set_gas_admin() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn set_gas_admin_no_auth() {
     let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
 
@@ -89,7 +89,7 @@ fn set_primary_validator() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn set_primary_validator_no_auth() {
     let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
 
@@ -114,7 +114,7 @@ fn add_secondary_validator() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn add_secondary_validator_no_auth() {
     let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
 
@@ -143,7 +143,7 @@ fn remove_secondary_validator() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn remove_secondary_validator_no_auth() {
     let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
 
@@ -171,7 +171,7 @@ fn set_gas_usage() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn set_gas_usage_no_auth() {
     let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
 
@@ -187,15 +187,15 @@ fn set_gas_usage_no_auth() {
 #[test]
 fn upgrade() {
     let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
-    let hash =  env.deployer().upload_contract_wasm(messenger::WASM);
+    let hash = env.deployer().upload_contract_wasm(messenger::WASM);
     messenger.upgrade(&hash)
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn upgrade_no_auth() {
     let BridgeEnv { env, messenger, .. } = BridgeEnv::default();
     env.mock_auths(&[]);
-    let hash =  env.deployer().upload_contract_wasm(messenger::WASM);
+    let hash = env.deployer().upload_contract_wasm(messenger::WASM);
     messenger.upgrade(&hash)
 }

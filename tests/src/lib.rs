@@ -6,6 +6,8 @@ pub mod utils;
 
 mod bridge;
 mod bridge_admin;
+mod cctp_bridge;
+mod cctp_message_identity;
 mod gas_oracle;
 mod messenger;
 mod messenger_admin;

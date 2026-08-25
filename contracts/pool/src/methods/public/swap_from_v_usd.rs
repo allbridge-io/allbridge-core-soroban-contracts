@@ -11,7 +11,7 @@ pub fn swap_from_v_usd(
     user: Address,
     vusd_amount: u128,
     receive_amount_min: u128,
-    zero_fee: bool
+    zero_fee: bool,
 ) -> Result<u128, Error> {
     let mut pool = Pool::get(&env)?;
 

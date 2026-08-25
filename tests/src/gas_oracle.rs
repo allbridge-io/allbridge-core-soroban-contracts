@@ -1,9 +1,9 @@
+use crate::contracts::gas_oracle;
 use shared::consts::CHAIN_ID;
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{Address, Env};
-use crate::contracts::gas_oracle;
 
-use crate::utils::{GasOracle};
+use crate::utils::GasOracle;
 
 struct GasOracleEnv {
     pub admin: Address,
@@ -40,7 +40,7 @@ fn test_initialize_already_initialized() {
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn set_admin_no_auth() {
     let gas_oracle_env = GasOracleEnv::setup();
 
@@ -126,15 +126,21 @@ fn test_get_gas_cost_in_native_token() {
 #[test]
 fn upgrade() {
     let gas_oracle_env = GasOracleEnv::setup();
-    let hash =  gas_oracle_env.env.deployer().upload_contract_wasm(gas_oracle::WASM);
+    let hash = gas_oracle_env
+        .env
+        .deployer()
+        .upload_contract_wasm(gas_oracle::WASM);
     gas_oracle_env.gas_oracle.upgrade(&hash)
 }
 
 #[test]
-#[should_panic = "Context(InvalidAction)"]
+#[should_panic = "invoke error: Abort"]
 fn upgrade_no_auth() {
     let gas_oracle_env = GasOracleEnv::setup();
     gas_oracle_env.env.mock_auths(&[]);
-    let hash =  gas_oracle_env.env.deployer().upload_contract_wasm(gas_oracle::WASM);
+    let hash = gas_oracle_env
+        .env
+        .deployer()
+        .upload_contract_wasm(gas_oracle::WASM);
     gas_oracle_env.gas_oracle.upgrade(&hash)
 }
