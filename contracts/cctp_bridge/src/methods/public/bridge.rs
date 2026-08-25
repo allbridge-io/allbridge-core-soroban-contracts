@@ -43,6 +43,9 @@ pub fn bridge(
     let bridge_amount = amount - fee_token_amount;
     let mut admin_fee =
         bridge_amount * config.admin_fee_share_bp as u128 / internal::admin_fee_denominator();
+    if config.admin_fee_share_bp > 0 && admin_fee == 0 {
+        admin_fee = 1;
+    }
     let mut net_burn_amount = bridge_amount - admin_fee;
     let dust = net_burn_amount % 10;
     if dust > 0 {

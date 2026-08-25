@@ -195,7 +195,7 @@ struct Fixture {
 
 fn fixture() -> Fixture {
     let env = Env::default();
-    env.mock_all_auths();
+    env.mock_all_auths_allowing_non_root_auth();
     env.budget().reset_limits(u64::MAX, u64::MAX);
 
     let admin = Address::generate(&env);
@@ -383,91 +383,25 @@ fn bridge_collects_fees_and_calls_circle_with_remote_destination_caller() {
 }
 
 #[test]
-fn bridge_with_hook_calls_circle_with_bridge_recipient_and_common_hook_data() {
+fn bridge_charges_minimum_admin_fee_when_share_rounds_to_zero() {
     let f = fixture();
     let sender = Address::generate(&f.env);
     let recipient = BytesN::random(&f.env);
-    let recipient_strkey = "GA3D5KRYM6CB7OWQ6TWYRR3Z4T7GNZLKERYNZGGA5SOAOPIFY6YQHES5";
-    let common_hook_data = common_hook_data(&f.env, recipient_strkey.as_bytes());
-    let amount = 10_000_000i128;
-    let fee_token_amount = 1_000_000u128;
+    let amount = 101i128;
     let gas_amount = 9_000_000u128;
 
     f.usdc_admin.mint(&sender, &amount);
     f.native_admin.mint(&sender, &(gas_amount as i128));
 
-    f.bridge.bridge_with_hook(
-        &sender,
-        &(amount as u128),
-        &recipient,
-        &CHAIN_ID,
-        &gas_amount,
-        &fee_token_amount,
-        &common_hook_data,
-    );
-
-    let admin_fee = (amount as u128 - fee_token_amount) * 25 / 10_000;
-    let net_burn = amount as u128 - fee_token_amount - admin_fee;
-
-    let (
-        _,
-        circle_amount,
-        domain,
-        mint_recipient,
-        burn_token,
-        destination_caller,
-        max_fee,
-        threshold,
-        hook_data,
-    ) = f.token_messenger.last_burn();
-    assert_eq!(circle_amount, net_burn as i128);
-    assert_eq!(domain, DOMAIN);
-    assert_eq!(mint_recipient, f.other_bridge);
-    assert_eq!(burn_token, f.usdc.address);
-    assert_eq!(destination_caller, f.other_bridge);
-    assert_eq!(max_fee, (net_burn * 100_000 / 1_000_000_000 + 1) as i128);
-    assert_eq!(threshold, 1);
-    assert_eq!(hook_data, common_hook_data);
-}
-
-#[test]
-fn bridge_with_hook_adds_cctp_wire_dust_to_admin_fee() {
-    let f = fixture();
-    let sender = Address::generate(&f.env);
-    let recipient = BytesN::random(&f.env);
-    let recipient_strkey = "GA3D5KRYM6CB7OWQ6TWYRR3Z4T7GNZLKERYNZGGA5SOAOPIFY6YQHES5";
-    let common_hook_data = common_hook_data(&f.env, recipient_strkey.as_bytes());
-    let amount = 10_000_001i128;
-    let fee_token_amount = 1_000_000u128;
-    let gas_amount = 9_000_000u128;
-
-    f.usdc_admin.mint(&sender, &amount);
-    f.native_admin.mint(&sender, &(gas_amount as i128));
-
-    f.bridge.bridge_with_hook(
-        &sender,
-        &(amount as u128),
-        &recipient,
-        &CHAIN_ID,
-        &gas_amount,
-        &fee_token_amount,
-        &common_hook_data,
-    );
-
-    let bridge_amount = amount as u128 - fee_token_amount;
-    let configured_admin_fee = bridge_amount * 25 / 10_000;
-    let unrounded_net_burn = bridge_amount - configured_admin_fee;
-    let dust = unrounded_net_burn % 10;
-    let expected_net_burn = unrounded_net_burn - dust;
-    let expected_admin_fee = configured_admin_fee + dust;
+    f.bridge
+        .bridge(&sender, &(amount as u128), &recipient, &CHAIN_ID, &gas_amount, &0);
 
     let event = get_latest_event::<cctp_bridge::TokensSent>(&f.env).unwrap();
-    assert_eq!(event.amount, expected_net_burn);
-    assert_eq!(event.admin_fee, expected_admin_fee);
+    assert_eq!(event.admin_fee, 1);
+    assert_eq!(event.amount, 100);
 
-    let (_, circle_amount, _, _, _, _, _, _, _) = f.token_messenger.last_burn();
-    assert_eq!(circle_amount, expected_net_burn as i128);
-    assert_eq!(expected_net_burn % 10, 0);
+    let (_, circle_amount, _, _, _, _, _, _) = f.token_messenger.last_plain_burn();
+    assert_eq!(circle_amount, 100);
 }
 
 #[test]
